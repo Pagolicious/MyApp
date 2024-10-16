@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext'
 type NamePageProps = NativeStackScreenProps<RootStackParamList, 'NamePage'>
 
 const NamePage = ({ navigation }: NamePageProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser } = useAuth()
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -25,7 +25,7 @@ const NamePage = ({ navigation }: NamePageProps) => {
     firestore()
       .collection("users")
       .doc(currentUser.uid)
-      .set({
+      .update({
         first_name: firstName,
         last_name: lastName
       })
