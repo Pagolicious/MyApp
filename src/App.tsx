@@ -3,6 +3,7 @@ import React from 'react';
 //Navigation
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 //Screens
 import SignUpScreen from './screens/SignUpScreen';
@@ -32,45 +33,48 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 
 function App(): React.JSX.Element {
   return (
-    <AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
 
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName='SignUpScreen'>
-          <Stack.Screen
-            name='SignUpScreen'
-            component={SignUpScreen}
-          />
-          <Stack.Screen
-            name='LoginScreen'
-            component={LoginScreen}
-          />
-          <Stack.Screen
-            name='NamePage'
-            component={NamePage}
-          />
-          <Stack.Screen
-            name='FindOrStart'
-            component={FindOrStart}
-          />
-          <Stack.Screen
-            name='FindGroup'
-            component={FindGroup}
-          />
-          <Stack.Screen
-            name='StartGroup'
-            component={StartGroup}
-          />
-          <Stack.Screen
-            name='GroupsScreen'
-            component={GroupsScreen}
-          />
-          <Stack.Screen
-            name='MyGroupScreen'
-            component={MyGroupScreen}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </AuthProvider>
+      <AuthProvider>
+
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName='SignUpScreen'>
+            <Stack.Screen
+              name='SignUpScreen'
+              component={SignUpScreen}
+            />
+            <Stack.Screen
+              name='LoginScreen'
+              component={LoginScreen}
+            />
+            <Stack.Screen
+              name='NamePage'
+              component={NamePage}
+            />
+            <Stack.Screen
+              name='FindOrStart'
+              component={FindOrStart}
+            />
+            <Stack.Screen
+              name='FindGroup'
+              component={FindGroup}
+            />
+            <Stack.Screen
+              name='StartGroup'
+              component={StartGroup}
+            />
+            <Stack.Screen
+              name='GroupsScreen'
+              component={GroupsScreen}
+            />
+            <Stack.Screen
+              name='MyGroupScreen'
+              component={MyGroupScreen}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </AuthProvider>
+    </GestureHandlerRootView>
 
   )
 }

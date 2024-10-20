@@ -14,6 +14,7 @@ import firestore from '@react-native-firebase/firestore'
 
 // AuthContext
 import { useAuth } from '../context/AuthContext'
+import { TextInput } from 'react-native-gesture-handler';
 
 type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>
 
@@ -25,8 +26,13 @@ interface Group {
   fromTime: string;
   toTime: string;
   createdBy: string;
+  details: string;
 }
 
+interface Applicant {
+  uid: string;
+  note?: string;
+}
 
 const GroupsScreen = ({ route }: GroupsProps) => {
 
@@ -36,9 +42,13 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   const [loading, setLoading] = useState(true)
   const [userHasGroup, setUserHasGroup] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
+  const [applyModalVisible, setApplyModalVisible] = useState(false)
   const [skillLevel, setSkillLevel] = useState(0)
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState('')
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [note, setNote] = useState('')
+  // const [appliedGroup, setAppliedGroup] = useState([{}])
   // const [selectedCardId, setSelectedCardId] = useState<string | null>(null); // New state for selected card ID
 
 
@@ -96,6 +106,38 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     }
   }
 
+  const applyForGroup = async (selectedGroup: Group | null) => {
+    if (!selectedGroup) {
+      Alert.alert('Error', 'No group selected')
+      return
+    }
+    const applicantData = {
+      uid: currentUser.uid,
+      note: note
+    };
+    try {
+      await firestore()
+        .collection("groups")
+        .doc(selectedGroup.id)
+        .update({
+          applicants: firestore.FieldValue.arrayUnion(applicantData)
+        })
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group.id === selectedGroup.id
+            ? { ...group, applicants: [...(group.applicants || []), applicantData] }
+            : group
+        )
+      )
+      setApplyModalVisible(false)
+    }
+    catch (error) {
+      console.error("Error saving user data: ", error)
+      Alert.alert('Error', 'Could not apply for group')
+    }
+
+  }
+
   const checkUserSkillLevel = async (activity: string) => {
     if (!currentUser) return;
 
@@ -129,7 +171,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     } else {
       Animated.timing(animationValue, {
         toValue: 0, // Collapsed
-        duration: 300,
+        duration: 100,
         easing: Easing.in(Easing.ease),
         useNativeDriver: false,
       }).start();
@@ -147,11 +189,16 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
   const handleCardPress = async (item: Group) => {
     await checkUserSkillLevel(item.activity);
+    setSelectedGroup(item); // Store the selected group
     if (!hasSkillLevel) {
       setModalVisible(true);
       setSelectedActivity(item.activity);
+    } else {
+      setApplyModalVisible(true);
+
     }
   };
+
 
 
   if (loading) {
@@ -187,7 +234,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
               {/* Modal Content */}
               <Text style={styles.modalTitleText}>Skill level</Text>
-              <Text style={styles.modalText}>Before you move on we need to know your skill level on this sport</Text>
+              <Text style={styles.modalText}>We need to know your skill level for this activity</Text>
               <StarRating
                 rating={skillLevel}
                 onChange={setSkillLevel}
@@ -196,13 +243,13 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
                 <Text style={styles.modalObervationText}>You can NOT change your skill level later</Text>
                 <TouchableOpacity
-                  style={styles.addSkillLevelButton}
+                  style={styles.submitBtn}
                   onPress={async () => {
-                    addSkillLevel;
+                    addSkillLevel()
                   }}
 
                 >
-                  <Text style={styles.addSkillLevelText}>Submit</Text>
+                  <Text style={styles.submitBtnText}>Submit</Text>
                 </TouchableOpacity>
               </Animated.View>
 
@@ -210,6 +257,55 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           </View>
         </Modal>
       )}
+      {currentUser.uid && hasSkillLevel && (
+        <Modal
+          animationType="fade"
+          transparent
+          visible={applyModalVisible}
+          onRequestClose={() => setApplyModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+
+              {/* Close Button in top-right corner */}
+              <TouchableOpacity
+                style={styles.closeIcon}
+                onPress={() => setApplyModalVisible(false)}
+              >
+                <Text style={styles.closeText}>✖</Text>
+              </TouchableOpacity>
+
+              {/* Modal Content */}
+              <Text style={styles.modalTitleText}>Apply For Group</Text>
+              <Text style={styles.modalText}>Group Details:</Text>
+              <View style={styles.modalDetailContainer}>
+                <Text style={styles.modalDetailText}>{selectedGroup?.details}</Text>
+              </View>
+              <View>
+                <Text style={styles.modalText}>Your message to the group:</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="This is optional"
+                  value={note}
+                  onChangeText={setNote}
+                  multiline={true} // Allow multiple lines
+                  numberOfLines={4} // Set number of lines to display by default
+                  textAlignVertical="top" // Align text to the top of the input
+                />
+              </View>
+              <TouchableOpacity
+                style={styles.submitBtn}
+                onPress={async () => {
+                  applyForGroup(selectedGroup)
+                }}
+              >
+                <Text style={styles.submitBtnText}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       <FlatList
         data={groups}
         keyExtractor={(item) => item.id}
@@ -229,7 +325,9 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               <View style={[
                 styles.card,
                 item.createdBy === currentUser.uid && { backgroundColor: 'lightblue' },
-                // selectedCardId === item.id && styles.extendedCard
+                item.applicants && Array.isArray(item.applicants) && item.applicants.some((applicant: Applicant) => applicant.uid === currentUser.uid)
+                  ? { backgroundColor: '#AFE1AF' }
+                  : {}
               ]} >
                 <View style={styles.column}>
                   {/* Card Content: Activity & Location */}
@@ -335,6 +433,28 @@ const styles = StyleSheet.create({
     // position: 'relative', // Needed for positioning the close button
 
   },
+  modalDetailContainer: {
+    width: 300,
+    height: 120,
+    borderRadius: 5,
+    backgroundColor: "#F9F6EE",
+    borderWidth: 1,
+    borderColor: "grey"
+  },
+  input: {
+    height: 120,
+    width: 300,
+    borderColor: 'gray',
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: 'white',
+    fontSize: 16,
+  },
+  modalDetailText: {
+    padding: 10,
+    color: "black"
+  },
   closeIcon: {
     position: 'absolute',
     top: 5,
@@ -367,7 +487,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginVertical: 10,
   },
-  addSkillLevelButton: {
+  submitBtn: {
     backgroundColor: "green",
     padding: 10,
     width: 100,
@@ -375,7 +495,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 15
   },
-  addSkillLevelText: {
+  submitBtnText: {
     color: "white",
     fontWeight: "bold"
 

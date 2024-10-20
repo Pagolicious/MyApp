@@ -163,7 +163,7 @@ const StartGroup = () => {
           <Text style={styles.headerText}>Start a Group</Text>
         </View>
         <View style={styles.bodyContainer}>
-          <Text style={styles.bodyLabel}>Acticity</Text>
+          <Text style={styles.bodyLabel}>Activity</Text>
           <TextInput
             style={styles.input}
             placeholder="Tennis"
