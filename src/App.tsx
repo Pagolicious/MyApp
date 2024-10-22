@@ -14,6 +14,8 @@ import FindGroup from './screens/FindGroup';
 import StartGroup from './screens/StartGroup';
 import GroupsScreen from './screens/GroupsScreen';
 import MyGroupScreen from './screens/MyGroupScreen';
+import GroupChatScreen from './screens/GroupChatScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
 //AuthContext
 import { AuthProvider } from './context/AuthContext';
@@ -24,9 +26,11 @@ export type RootStackParamList = {
   NamePage: { uid: string };
   FindOrStart: undefined;
   FindGroup: undefined;
-  StartGroup: { uid: string };
+  StartGroup: undefined;
   GroupsScreen: undefined;
   MyGroupScreen: undefined;
+  GroupChatScreen: undefined;
+  ProfileScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -70,6 +74,14 @@ function App(): React.JSX.Element {
             <Stack.Screen
               name='MyGroupScreen'
               component={MyGroupScreen}
+            />
+            <Stack.Screen
+              name='GroupChatScreen'
+              component={GroupChatScreen}
+            />
+            <Stack.Screen
+              name='ProfileScreen'
+              component={ProfileScreen}
             />
           </Stack.Navigator>
         </NavigationContainer>

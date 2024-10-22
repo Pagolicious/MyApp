@@ -7,6 +7,9 @@ import { RootStackParamList } from '../App'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
+//Components
+import FooterNav from '../components/FooterNav'
+import MyButton from '../components/MyButton'
 //AuthContext
 import { useAuth } from '../context/AuthContext'
 
@@ -25,29 +28,18 @@ const FindOrStart = () => {
   }
   return (
     <View style={styles.container}>
-      <Pressable
-        style={({ pressed }) => [
-          {
-            backgroundColor: pressed ? '#0056b3' : '#007BFF'
-          },
-          styles.button
-        ]}
-        onPress={() => navigation.navigate("FindGroup")}
-      >
-        <Text style={styles.buttonText}>Find a Group</Text>
-      </Pressable>
+      <View style={styles.content}>
+      </View>
 
-      <Pressable
-        style={({ pressed }) => [
-          {
-            backgroundColor: pressed ? '#0056b3' : '#007BFF'
-          },
-          styles.button
-        ]}
-        onPress={() => navigation.navigate("StartGroup", { uid: currentUser.uid })}
-      >
-        <Text style={styles.buttonText}>Start a Group</Text>
-      </Pressable>
+      <View style={styles.buttons}>
+        <MyButton title={"Find a Group"} onPress={() => navigation.navigate("FindGroup")} />
+        <MyButton title={"Start a Group"} onPress={() => navigation.navigate("StartGroup")} />
+      </View>
+
+      {/* <View style={styles.flexEnd}> */}
+      <FooterNav />
+
+      {/* </View> */}
 
     </View>
   )
@@ -56,24 +48,18 @@ const FindOrStart = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+  },
+  content: {
+    width: "100%",
+    height: 400,
+    backgroundColor: "grey",
+  },
+  buttons: {
     padding: 15,
   },
-  button: {
-    padding: 15,
-    borderRadius: 20,
-    marginVertical: 30,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  underline: {
-    width: 150,
-    height: 2,
-    backgroundColor: "black"
-  }
+  // flexEnd: {
+  //   justifyContent: "flex-end"
+  // }
+
 })
 export default FindOrStart

@@ -7,6 +7,7 @@ import { RootStackParamList } from '../App'
 import StarRating from 'react-native-star-rating-widget';
 
 //Components
+import GroupNav from '../components/GroupNav'
 import FooterNav from '../components/FooterNav'
 
 //Firebase
@@ -305,7 +306,9 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           </View>
         </Modal>
       )}
-
+      {userHasGroup && (
+        <GroupNav route={route} />
+      )}
       <FlatList
         data={groups}
         keyExtractor={(item) => item.id}
@@ -356,9 +359,9 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
       />
 
-      {userHasGroup && (
-        <FooterNav route={route} />
-      )}
+      <FooterNav />
+
+
     </View>
 
   )
@@ -499,7 +502,8 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold"
 
-  }
+  },
+
 })
 
 export default GroupsScreen

@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 //Components
 import MyButton from '../components/MyButton'
+import FooterNav from '../components/FooterNav'
 
 const FindGroup = () => {
 
@@ -53,6 +54,7 @@ const FindGroup = () => {
       </View>
       <MyButton title={"Find a Group"} onPress={SearchGroup} />
 
+      <FooterNav />
 
     </View>
   )

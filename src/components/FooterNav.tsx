@@ -15,66 +15,65 @@ import firestore from '@react-native-firebase/firestore'
 import { useAuth } from '../context/AuthContext'
 
 
-type FooterNavProps = {
-  route: RouteProp<RootStackParamList, 'MyGroupScreen'> | RouteProp<RootStackParamList, 'GroupsScreen'> | RouteProp<RootStackParamList, 'FindOrStart'>
-}
+// type FooterNavProps = {
+//   route: RouteProp<RootStackParamList, 'FindOrStart'> | RouteProp<RootStackParamList, 'GroupChatScreen'> | RouteProp<RootStackParamList, 'ProfileScreen'>
+// }
 
-const FooterNav = ({ route }: FooterNavProps) => {
+const FooterNav = () => {
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { currentUser } = useAuth()
-  const [buttonText, setButtonText] = useState('Browse')
+  // const [buttonText, setButtonText] = useState('Browse')
+  const [groupStatus, setGroupStatus] = useState({ hasCreatedGroup: false, isInGroup: false });
 
   if (!currentUser) return
 
   useEffect(() => {
-    if (route.name === 'GroupsScreen') {
-      setButtonText('Go Back')
-    } else {
-      setButtonText('Browse')
-    }
-  }, [route]);
+    const checkUserGroupStatus = async () => {
+      if (!currentUser) return;
 
-  const handleBrowsePress = () => {
-    if (route.name === 'GroupsScreen') {
-      navigation.goBack();
-    } else {
-      navigation.navigate("GroupsScreen")
-    }
-  };
-
-  const handleDelistMyGroup = async () => {
-    2
-
-    const userGroup = await firestore()
-      .collection('groups')
-      .where('createdBy', '==', currentUser.uid)
-      .get()
-
-    if (!userGroup.empty) {
-      userGroup.forEach(async (doc) => {
-        const groupId = doc.id
-        await firestore()
+      try {
+        // Check if user has created a group
+        const createdGroupSnapshot = await firestore()
           .collection('groups')
-          .doc(groupId)
-          .delete();
-        Alert.alert('Success', 'Group deleted successfully!')
-      })
-    }
-  }
+          .where('createdBy', '==', currentUser.uid)
+          .get();
+
+        const hasCreatedGroup = !createdGroupSnapshot.empty;
+
+        // Check if user is part of any group as an applicant
+        const joinedGroupSnapshot = await firestore()
+          .collection('groups')
+          .where('member', 'array-contains', { uid: currentUser.uid })
+          .get();
+
+        const isInGroup = !joinedGroupSnapshot.empty;
+
+        // Update the state with the group status
+        setGroupStatus({ hasCreatedGroup, isInGroup });
+
+      } catch (error) {
+        const errorMessage = (error as { message?: string }).message || 'An error occurred';
+        Alert.alert('Error', errorMessage);
+      }
+    };
+
+    checkUserGroupStatus();
+  }, [currentUser]);
+
 
   return (
     <View style={styles.container}>
       <View style={styles.footer}>
         <View style={styles.contentRow}>
-          <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
-            <Text style={styles.title}>{buttonText}</Text>
-          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate("FindOrStart")} style={styles.button}>
-            <Text style={styles.title}>Edit</Text>
+            <Text style={styles.title}>Home</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelistMyGroup} style={styles.button}>
-            <Text style={styles.title}>Delist</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("GroupChatScreen")} style={styles.button}>
+            <Text style={styles.title}>Group Chat</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")} style={styles.button}>
+            <Text style={styles.title}>Profile</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -95,10 +94,12 @@ const styles = StyleSheet.create({
     backgroundColor: "grey",
     justifyContent: "center",
 
+
   },
   contentRow: {
     flexDirection: "row",
     justifyContent: "space-evenly",
+
   },
   button: {
     height: 50,

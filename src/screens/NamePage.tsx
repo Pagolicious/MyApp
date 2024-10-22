@@ -20,12 +20,12 @@ const NamePage = ({ navigation }: NamePageProps) => {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
-  const addName = () => {
+  const addName = async () => {
     if (!currentUser) return // Ensure currentUser is defined
-    firestore()
+    await firestore()
       .collection("users")
       .doc(currentUser.uid)
-      .update({
+      .set({
         first_name: firstName,
         last_name: lastName
       })
