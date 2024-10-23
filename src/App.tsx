@@ -28,7 +28,7 @@ export type RootStackParamList = {
   FindGroup: undefined;
   StartGroup: undefined;
   GroupsScreen: undefined;
-  MyGroupScreen: undefined;
+  MyGroupScreen: { groupId: string };
   GroupChatScreen: undefined;
   ProfileScreen: undefined;
 };

@@ -72,7 +72,7 @@ const StartGroup = () => {
       })
       .then(() => {
         Alert.alert('Group Submitted');
-        navigation.navigate("MyGroupScreen");
+        navigation.navigate("MyGroupScreen", { groupId: groupId });
       })
       .catch((error) => {
         Alert.alert('Error submitting group', error.message)

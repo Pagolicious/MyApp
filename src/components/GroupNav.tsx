@@ -69,7 +69,7 @@ const GroupNav = ({ route }: GroupNavProps) => {
           <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
             <Text style={styles.title}>{buttonText}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("MyGroupScreen")} style={styles.button}>
+          <TouchableOpacity onPress={() => navigation.navigate("FindOrStart")} style={styles.button}>
             <Text style={styles.title}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleDelistMyGroup} style={styles.button}>

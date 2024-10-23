@@ -90,7 +90,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   const addSkillLevel = async () => {
     if (!currentUser || !selectedActivity) return; // Ensure currentUser and selectedActivity are defined
 
-    const skillLevelKey = `${selectedActivity.toLowerCase()}_skill_level`;
+    const skillLevelKey = `${selectedActivity.toLowerCase()}_skillLevel`;
     try {
       await firestore()
         .collection("users")
@@ -142,7 +142,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   const checkUserSkillLevel = async (activity: string) => {
     if (!currentUser) return;
 
-    const skillLevelKey = `${activity.toLowerCase()}_skill_level`;
+    const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
 
     try {
       const userDoc = await firestore().collection('users').doc(currentUser.uid).get();

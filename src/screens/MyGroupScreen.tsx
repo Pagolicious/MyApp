@@ -9,6 +9,7 @@ import StarRating from 'react-native-star-rating-widget';
 //Components
 import GroupNav from '../components/GroupNav'
 import FooterNav from '../components/FooterNav'
+
 //Firebase
 import firestore from '@react-native-firebase/firestore'
 
@@ -19,66 +20,136 @@ import { TextInput } from 'react-native-gesture-handler';
 
 type MyGroupScreenProps = NativeStackScreenProps<RootStackParamList, 'MyGroupScreen'>
 
+interface Group {
+  id: string;
+  activity: string;
+  location: string;
+  fromDate: string;
+  fromTime: string;
+  toTime: string;
+  createdBy: string;
+  details: string;
+  applicants: Applicant[];
+  members: Member[]
+}
+
 type Applicant = {
   uid: string;
   firstName: string;
+  lastName: string;
   skillLevel: string | number;
   note?: string;
 };
+
+interface Member {
+  uid: string;
+  firstName: string;
+  lastName: string;
+  skillLevel: string;
+}
+
 
 const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
 
   const { currentUser } = useAuth()
   const [applicants, setApplicants] = useState<any[]>([])
   const [modalVisible, setModalVisible] = useState(false)
-  const [selectedApplicants, setSelectedApplicants] = useState<Applicant | null>(null);
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [currentGroupData, setCurrentGroupData] = useState<Group | null>(null);
+  const { groupId } = route.params;
 
-  const fetchApplicants = async () => {
-    if (!currentUser) return; // Make sure the current user is defined
-    try {
-      const groupsSnapshot = await firestore()
-        .collection('groups')
-        .where('createdBy', '==', currentUser.uid)
-        .get();
+  // const fetchApplicants = () => {
 
-      const applicantsPromises = groupsSnapshot.docs.flatMap(async (doc) => {
-        const groupData = doc.data()
-        const groupActivity = groupData.activity.toLowerCase()
-
-        const applicantsList = (groupData.applicants || []).map(async (applicant: { uid: string; note?: string }) => {
-          // Fetch first name based on uid
-          const userDoc = await firestore().collection('users').doc(applicant.uid).get()
-          const userData = userDoc.data();
-          const skillLevel = userData?.[`${groupActivity}_skill_level`] || 'Unknown';
-
-          return {
-            uid: applicant.uid,
-            firstName: userData?.first_name || 'Unknown',
-            note: applicant.note || '',
-            skillLevel: skillLevel,
-          }
-        })
-
-        return Promise.all(applicantsList);
-      });
-
-      // Wait for all promises to resolve
-      const resolvedApplicants = await Promise.all(applicantsPromises);
-      setApplicants(resolvedApplicants.flat()); // Flatten the array
-
-    } catch (error) {
-      const errorMessage = (error as { message?: string }).message || "An unknown error occurred";
-      Alert.alert(errorMessage);
-    }
-  }
 
   useEffect(() => {
-    fetchApplicants()
-  }, [])
+    if (!currentUser) return; // Make sure the current user is defined
+
+
+    const unsubscribe = firestore()
+      .collection('groups')
+      .where('createdBy', '==', currentUser.uid)
+      .onSnapshot(async (groupsSnapshot) => {
+        const applicantsPromises = groupsSnapshot.docs.flatMap(async (doc) => {
+          const groupData = {
+            id: doc.id,
+            ...doc.data(),
+          } as Group
+
+          setCurrentGroupData(groupData)
+
+          const groupActivity = groupData.activity.toLowerCase();
+
+          const applicantsList = (groupData.applicants || []).map(async (applicant: { uid: string; note?: string }) => {
+            // Fetch first name based on uid
+            const userDoc = await firestore().collection('users').doc(applicant.uid).get();
+            const userData = userDoc.data();
+            const skillLevel = userData?.[`${groupActivity}_skillLevel`] || 'Unknown';
+
+            return {
+              uid: applicant.uid,
+              firstName: userData?.firstName || 'Unknown',
+              lastName: userData?.lastName || 'Unknown',
+              note: applicant.note || '',
+              skillLevel: skillLevel,
+            };
+          });
+
+          return Promise.all(applicantsList);
+        });
+
+        const resolvedApplicants = await Promise.all(applicantsPromises);
+        setApplicants(resolvedApplicants.flat()); // Flatten the array
+      }, (error) => {
+        const errorMessage = (error as { message?: string }).message || 'An unknown error occurred';
+        Alert.alert(errorMessage);
+      });
+
+    // Clean up the listener when the component unmounts
+    return () => unsubscribe();
+
+    // Set up a real-time listener
+
+  }, [currentUser]);
 
   const handleCardPress = (item: Applicant) => {
     setModalVisible(true)
-    setSelectedApplicants(item)
+    setSelectedApplicant(item)
+  }
+
+  const inviteToGroup = async (selectedApplicant: Applicant | null) => {
+    setModalVisible(false)
+    if (!selectedApplicant) {
+      Alert.alert('Error', 'No applicant selected');
+      return;
+    }
+    try {
+      const groupRef = firestore().collection("groups").doc(groupId);
+      const memberToAdd = {
+        uid: selectedApplicant.uid,
+        firstName: selectedApplicant.firstName,
+        lastName: selectedApplicant.lastName,
+        skillLevel: selectedApplicant.skillLevel,
+      };
+
+      await
+        groupRef.update({
+          members: firestore.FieldValue.arrayUnion(memberToAdd)
+        })
+
+      if (currentGroupData && currentGroupData.applicants) {
+        const applicantToRemove = currentGroupData.applicants.find(applicant => applicant.uid === selectedApplicant.uid);
+        if (applicantToRemove) {
+          // Remove the applicant from the applicants list
+          await groupRef.update({
+            applicants: firestore.FieldValue.arrayRemove(applicantToRemove)
+          });
+        }
+      }
+
+    } catch (error) {
+      console.error("Error saving user data: ", error)
+      Alert.alert('Error', 'Could not apply for group')
+    }
   }
 
 
@@ -129,8 +200,16 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
             <Text style={styles.modalTitleText}>Invite</Text>
             <Text style={styles.modalText}>Do you want to invite this person to your group?</Text>
             <View style={styles.modalNoteContainer}>
-              <Text style={styles.modalNoteText}>{selectedApplicants?.note}</Text>
+              <Text style={styles.modalNoteText}>{selectedApplicant?.note}</Text>
             </View>
+            <TouchableOpacity
+              style={styles.submitBtn}
+              onPress={async () => {
+                inviteToGroup(selectedApplicant)
+              }}
+            >
+              <Text style={styles.submitBtnText}>Submit</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -238,5 +317,18 @@ const styles = StyleSheet.create({
   modalNoteText: {
     padding: 10,
     color: "black"
+  },
+  submitBtn: {
+    backgroundColor: "green",
+    padding: 10,
+    width: 100,
+    alignItems: "center",
+    borderRadius: 5,
+    marginTop: 15
+  },
+  submitBtnText: {
+    color: "white",
+    fontWeight: "bold"
+
   },
 })

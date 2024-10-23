@@ -26,8 +26,8 @@ const NamePage = ({ navigation }: NamePageProps) => {
       .collection("users")
       .doc(currentUser.uid)
       .set({
-        first_name: firstName,
-        last_name: lastName
+        firstName: firstName,
+        lastName: lastName
       })
       .then(() => {
         Alert.alert('Form Submitted', `${firstName} ${lastName}`)
@@ -45,8 +45,8 @@ const NamePage = ({ navigation }: NamePageProps) => {
       const userDoc = await firestore().collection('users').doc(currentUser.uid).get()
       if (userDoc.exists) {
         const userData = userDoc.data();
-        setFirstName(userData?.first_name || '');  // Set first name if it exists
-        setLastName(userData?.last_name || '');    // Set last name if it exists
+        setFirstName(userData?.firstName || '');  // Set first name if it exists
+        setLastName(userData?.lastName || '');    // Set last name if it exists
       }
     } catch (error) {
       console.error("Error fetching user data: ", error)
