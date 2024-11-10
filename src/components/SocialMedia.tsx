@@ -1,35 +1,33 @@
-import { Image, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import {Image, StyleSheet, View} from 'react-native';
+import React from 'react';
 
 const SocialMedia = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../assets/SocialMediaIcons/facebook.png")}
+        source={require('../assets/SocialMediaIcons/facebook.png')}
         style={styles.icons}
       />
       <Image
-        source={require("../assets/SocialMediaIcons/twitter.png")}
+        source={require('../assets/SocialMediaIcons/twitter.png')}
         style={styles.twitterIcon}
-
       />
       <Image
-        source={require("../assets/SocialMediaIcons/google.png")}
+        source={require('../assets/SocialMediaIcons/google.png')}
         style={styles.icons}
-
       />
     </View>
-  )
-}
+  );
+};
 
-export default SocialMedia
+export default SocialMedia;
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    width: "100%",
-    alignItems: "center"
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    width: '100%',
+    alignItems: 'center',
   },
   icons: {
     height: 40,
@@ -38,6 +36,6 @@ const styles = StyleSheet.create({
   twitterIcon: {
     height: 60,
     width: 60,
-    marginTop: 15
-  }
-})
+    marginTop: 15,
+  },
+});

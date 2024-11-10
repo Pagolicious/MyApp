@@ -1,23 +1,33 @@
-import { StyleSheet, Text, View, Alert, Modal, TouchableOpacity, FlatList, Button, Animated, Easing } from 'react-native'
-import React, { useState, useEffect, useRef } from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  Alert,
+  Modal,
+  TouchableOpacity,
+  FlatList,
+  Animated,
+  Easing,
+} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 
 //Navigation
-import { NativeStackScreenProps } from "@react-navigation/native-stack"
-import { RootStackParamList } from '../App'
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 import StarRating from 'react-native-star-rating-widget';
 
 //Components
-import GroupNav from '../components/GroupNav'
-import FooterNav from '../components/FooterNav'
+import GroupNav from '../components/GroupNav';
+import FooterNav from '../components/FooterNav';
 
 //Firebase
-import firestore from '@react-native-firebase/firestore'
+import firestore from '@react-native-firebase/firestore';
 
 // AuthContext
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext';
 import { TextInput } from 'react-native-gesture-handler';
 
-type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>
+type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
 
 interface Group {
   id: string;
@@ -36,116 +46,118 @@ interface Applicant {
 }
 
 const GroupsScreen = ({ route }: GroupsProps) => {
+  const { currentUser } = useAuth();
 
-  const { currentUser } = useAuth()
-
-  const [groups, setGroups] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [userHasGroup, setUserHasGroup] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [applyModalVisible, setApplyModalVisible] = useState(false)
-  const [skillLevel, setSkillLevel] = useState(0)
+  const [groups, setGroups] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userHasGroup, setUserHasGroup] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [applyModalVisible, setApplyModalVisible] = useState(false);
+  const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState('')
+  const [selectedActivity, setSelectedActivity] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [note, setNote] = useState('')
+  const [note, setNote] = useState('');
   // const [appliedGroup, setAppliedGroup] = useState([{}])
   // const [selectedCardId, setSelectedCardId] = useState<string | null>(null); // New state for selected card ID
 
+  const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
 
-  const animationValue = useRef(new Animated.Value(0)).current // Initialize animated value
-
-
-  if (!currentUser) return // Ensure currentUser is defined
+  if (!currentUser) {
+    return;
+  } // Ensure currentUser is defined
 
   const fetchGroups = async () => {
     try {
-      const groupCollection = await firestore().collection('groups').get()
+      const groupCollection = await firestore().collection('groups').get();
       const groupList = groupCollection.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      setGroups(groupList)
+      setGroups(groupList);
 
       const userGroup = await firestore()
         .collection('groups')
         .where('createdBy', '==', currentUser.uid)
-        .get()
+        .get();
 
-      setUserHasGroup(!userGroup.empty) // If the query returns results, set to true
-
+      setUserHasGroup(!userGroup.empty); // If the query returns results, set to true
     } catch (error) {
-      const errorMessage = (error as { message?: string }).message || "An unknown error occurred"
-      Alert.alert(errorMessage)
+      const errorMessage =
+        (error as { message?: string }).message || 'An unknown error occurred';
+      Alert.alert(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    fetchGroups()
-  }, [])
+  };
 
   const addSkillLevel = async () => {
-    if (!currentUser || !selectedActivity) return; // Ensure currentUser and selectedActivity are defined
+    if (!currentUser || !selectedActivity) {
+      return;
+    }
 
     const skillLevelKey = `${selectedActivity.toLowerCase()}_skillLevel`;
     try {
       await firestore()
-        .collection("users")
+        .collection('users')
         .doc(currentUser.uid)
         .update({
-          [skillLevelKey]: skillLevel
-        })
-      setModalVisible(false)
+          [skillLevelKey]: skillLevel,
+        });
+      setModalVisible(false);
       setHasSkillLevel(true); // Set hasSkillLevel to true after saving
+    } catch (error) {
+      console.error('Error saving user data: ', error);
+      Alert.alert('Error', 'Could not save user data');
     }
-    catch (error) {
-      console.error("Error saving user data: ", error)
-      Alert.alert('Error', 'Could not save user data')
-    }
-  }
+  };
 
   const applyForGroup = async (selectedGroup: Group | null) => {
     if (!selectedGroup) {
-      Alert.alert('Error', 'No group selected')
-      return
+      Alert.alert('Error', 'No group selected');
+      return;
     }
     const applicantData = {
       uid: currentUser.uid,
-      note: note
+      note: note,
     };
     try {
       await firestore()
-        .collection("groups")
+        .collection('groups')
         .doc(selectedGroup.id)
         .update({
-          applicants: firestore.FieldValue.arrayUnion(applicantData)
-        })
-      setGroups((prevGroups) =>
-        prevGroups.map((group) =>
+          applicants: firestore.FieldValue.arrayUnion(applicantData),
+        });
+      setGroups(prevGroups =>
+        prevGroups.map(group =>
           group.id === selectedGroup.id
-            ? { ...group, applicants: [...(group.applicants || []), applicantData] }
-            : group
-        )
-      )
-      setApplyModalVisible(false)
+            ? {
+              ...group,
+              applicants: [...(group.applicants || []), applicantData],
+            }
+            : group,
+        ),
+      );
+      setApplyModalVisible(false);
+    } catch (error) {
+      console.error('Error saving user data: ', error);
+      Alert.alert('Error', 'Could not apply for group');
     }
-    catch (error) {
-      console.error("Error saving user data: ", error)
-      Alert.alert('Error', 'Could not apply for group')
-    }
-
-  }
+  };
 
   const checkUserSkillLevel = async (activity: string) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      return;
+    }
 
     const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
 
     try {
-      const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+      const userDoc = await firestore()
+        .collection('users')
+        .doc(currentUser.uid)
+        .get();
       const userData = userDoc.data();
 
       if (userData && userData[skillLevelKey] !== undefined) {
@@ -156,12 +168,14 @@ const GroupsScreen = ({ route }: GroupsProps) => {
         setHasSkillLevel(false); // User does not have a skill level yet
       }
     } catch (error) {
-      console.error("Error fetching user skill level: ", error);
+      console.error('Error fetching user skill level: ', error);
       Alert.alert('Error', 'Could not fetch user skill level');
     }
   };
 
   useEffect(() => {
+    fetchGroups();
+
     if (skillLevel > 0) {
       Animated.timing(animationValue, {
         toValue: 1, // Fully expanded
@@ -196,11 +210,8 @@ const GroupsScreen = ({ route }: GroupsProps) => {
       setSelectedActivity(item.activity);
     } else {
       setApplyModalVisible(true);
-
     }
   };
-
-
 
   if (loading) {
     return (
@@ -221,39 +232,39 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           animationType="fade"
           transparent
           visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
+          onRequestClose={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalView}>
               {/* Close Button in top-right corner */}
               <TouchableOpacity
                 style={styles.closeIcon}
-                onPress={() => setModalVisible(false)}
-              >
+                onPress={() => setModalVisible(false)}>
                 <Text style={styles.closeText}>✖</Text>
               </TouchableOpacity>
 
               {/* Modal Content */}
               <Text style={styles.modalTitleText}>Skill level</Text>
-              <Text style={styles.modalText}>We need to know your skill level for this activity</Text>
+              <Text style={styles.modalText}>
+                We need to know your skill level for this activity
+              </Text>
               <StarRating
                 rating={skillLevel}
                 onChange={setSkillLevel}
                 enableHalfStar={false}
               />
-              <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
-                <Text style={styles.modalObervationText}>You can NOT change your skill level later</Text>
+              <Animated.View
+                style={[styles.modalExtendedContent, animatedStyle]}>
+                <Text style={styles.modalObervationText}>
+                  You can NOT change your skill level later
+                </Text>
                 <TouchableOpacity
                   style={styles.submitBtn}
                   onPress={async () => {
-                    addSkillLevel()
-                  }}
-
-                >
+                    addSkillLevel();
+                  }}>
                   <Text style={styles.submitBtnText}>Submit</Text>
                 </TouchableOpacity>
               </Animated.View>
-
             </View>
           </View>
         </Modal>
@@ -263,16 +274,13 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           animationType="fade"
           transparent
           visible={applyModalVisible}
-          onRequestClose={() => setApplyModalVisible(false)}
-        >
+          onRequestClose={() => setApplyModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalView}>
-
               {/* Close Button in top-right corner */}
               <TouchableOpacity
                 style={styles.closeIcon}
-                onPress={() => setApplyModalVisible(false)}
-              >
+                onPress={() => setApplyModalVisible(false)}>
                 <Text style={styles.closeText}>✖</Text>
               </TouchableOpacity>
 
@@ -280,7 +288,9 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               <Text style={styles.modalTitleText}>Apply For Group</Text>
               <Text style={styles.modalText}>Group Details:</Text>
               <View style={styles.modalDetailContainer}>
-                <Text style={styles.modalDetailText}>{selectedGroup?.details}</Text>
+                <Text style={styles.modalDetailText}>
+                  {selectedGroup?.details}
+                </Text>
               </View>
               <View>
                 <Text style={styles.modalText}>Your message to the group:</Text>
@@ -297,21 +307,18 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={async () => {
-                  applyForGroup(selectedGroup)
-                }}
-              >
+                  applyForGroup(selectedGroup);
+                }}>
                 <Text style={styles.submitBtnText}>Submit</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Modal>
       )}
-      {userHasGroup && (
-        <GroupNav route={route} />
-      )}
+      {userHasGroup && <GroupNav route={route} />}
       <FlatList
         data={groups}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View>
             {/* Card */}
@@ -324,14 +331,20 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
             }}> */}
             <TouchableOpacity onPress={() => handleCardPress(item)}>
-
-              <View style={[
-                styles.card,
-                item.createdBy === currentUser.uid && { backgroundColor: 'lightblue' },
-                item.applicants && Array.isArray(item.applicants) && item.applicants.some((applicant: Applicant) => applicant.uid === currentUser.uid)
-                  ? { backgroundColor: '#AFE1AF' }
-                  : {}
-              ]} >
+              <View
+                style={[
+                  styles.card,
+                  item.createdBy === currentUser.uid && {
+                    backgroundColor: 'lightblue',
+                  },
+                  item.applicants &&
+                    Array.isArray(item.applicants) &&
+                    item.applicants.some(
+                      (applicant: Applicant) => applicant.uid === currentUser.uid,
+                    )
+                    ? { backgroundColor: '#AFE1AF' }
+                    : {},
+                ]}>
                 <View style={styles.column}>
                   {/* Card Content: Activity & Location */}
                   <View style={styles.cardContentActivity}>
@@ -342,7 +355,9 @@ const GroupsScreen = ({ route }: GroupsProps) => {
                   {/* Card Content: Date & Time */}
                   <View style={styles.cardContentDate}>
                     <Text style={styles.cardText}>{item.fromDate}</Text>
-                    <Text style={styles.cardText}>{item.fromTime} - {item.toTime}</Text>
+                    <Text style={styles.cardText}>
+                      {item.fromTime} - {item.toTime}
+                    </Text>
                   </View>
 
                   {/* Card Content: People */}
@@ -351,40 +366,35 @@ const GroupsScreen = ({ route }: GroupsProps) => {
                   </View>
                 </View>
               </View>
-              <View style={styles.line}></View>
+              <View style={styles.line} />
             </TouchableOpacity>
           </View>
-
         )}
-
       />
 
       <FooterNav />
-
-
     </View>
-
-  )
-}
+  );
+};
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   header: {
     height: 150,
-    backgroundColor: "#EAD8B1",
+    backgroundColor: '#EAD8B1',
     padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 30,
-    fontWeight: "bold",
-    color: "black"
+    fontWeight: 'bold',
+    color: 'black',
   },
   card: {
-    backgroundColor: "#6A9AB0",
-    padding: 15
+    backgroundColor: '#6A9AB0',
+    padding: 15,
   },
   // extendedCard: {
   //   height: 300
@@ -393,34 +403,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   cardContentActivity: {
-    flex: 1
+    flex: 1,
   },
   cardContentDate: {
-    flex: 1
+    flex: 1,
   },
   cardContentPeople: {
-    justifyContent: "center"
+    justifyContent: 'center',
   },
   cardText: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "black"
-
+    fontWeight: 'bold',
+    color: 'black',
   },
   cardTextPeople: {
     fontSize: 24,
-    fontWeight: "bold"
+    fontWeight: 'bold',
   },
   line: {
     height: 1,
-    width: "100%",
-    backgroundColor: "black"
+    width: '100%',
+    backgroundColor: 'black',
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
     width: 350,
@@ -434,15 +443,14 @@ const styles = StyleSheet.create({
     // shadowRadius: 4,
     // elevation: 5,
     // position: 'relative', // Needed for positioning the close button
-
   },
   modalDetailContainer: {
     width: 300,
     height: 120,
     borderRadius: 5,
-    backgroundColor: "#F9F6EE",
+    backgroundColor: '#F9F6EE',
     borderWidth: 1,
-    borderColor: "grey"
+    borderColor: 'grey',
   },
   input: {
     height: 120,
@@ -456,7 +464,7 @@ const styles = StyleSheet.create({
   },
   modalDetailText: {
     padding: 10,
-    color: "black"
+    color: 'black',
   },
   closeIcon: {
     position: 'absolute',
@@ -470,40 +478,37 @@ const styles = StyleSheet.create({
   },
   modalTitleText: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "black"
-
+    fontWeight: 'bold',
+    color: 'black',
   },
   modalText: {
     marginTop: 20,
     fontSize: 18,
     // fontWeight: 'bold',
-    color: "black",
+    color: 'black',
     marginBottom: 20,
   },
   modalExtendedContent: {
-    alignItems: "center"
+    alignItems: 'center',
   },
   modalObervationText: {
     fontSize: 14,
-    color: "red",
-    fontWeight: "bold",
+    color: 'red',
+    fontWeight: 'bold',
     marginVertical: 10,
   },
   submitBtn: {
-    backgroundColor: "green",
+    backgroundColor: 'green',
     padding: 10,
     width: 100,
-    alignItems: "center",
+    alignItems: 'center',
     borderRadius: 5,
-    marginTop: 15
+    marginTop: 15,
   },
   submitBtnText: {
-    color: "white",
-    fontWeight: "bold"
-
+    color: 'white',
+    fontWeight: 'bold',
   },
+});
 
-})
-
-export default GroupsScreen
+export default GroupsScreen;

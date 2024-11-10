@@ -1,6 +1,6 @@
 // GroupCard.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 
 interface Group {
   id: string;
@@ -18,13 +18,14 @@ interface GroupCardProps {
   onPress: () => void;
 }
 
-const GroupCard = ({ group, currentUserUid, onPress }: GroupCardProps) => {
+const GroupCard = ({group, currentUserUid, onPress}: GroupCardProps) => {
   return (
     <TouchableOpacity onPress={onPress}>
-      <View style={[
-        styles.card,
-        group.createdBy === currentUserUid && { backgroundColor: 'lightblue' },
-      ]}>
+      <View
+        style={[
+          styles.card,
+          group.createdBy === currentUserUid && {backgroundColor: 'lightblue'},
+        ]}>
         <View style={styles.column}>
           <View style={styles.cardContentActivity}>
             <Text style={styles.cardText}>{group.activity}</Text>
@@ -32,23 +33,23 @@ const GroupCard = ({ group, currentUserUid, onPress }: GroupCardProps) => {
           </View>
           <View style={styles.cardContentDate}>
             <Text style={styles.cardText}>{group.fromDate}</Text>
-            <Text style={styles.cardText}>{group.fromTime} - {group.toTime}</Text>
+            <Text style={styles.cardText}>
+              {group.fromTime} - {group.toTime}
+            </Text>
           </View>
           <View style={styles.cardContentPeople}>
             <Text style={styles.cardTextPeople}>+2</Text>
           </View>
         </View>
-
       </View>
-      <View style={styles.line}></View>
-
+      <View style={styles.line} />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#6A9AB0",
+    backgroundColor: '#6A9AB0',
     padding: 15,
   },
   column: {
@@ -61,20 +62,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardContentPeople: {
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   cardText: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "black",
+    fontWeight: 'bold',
+    color: 'black',
   },
   cardTextPeople: {
     fontSize: 24,
-    fontWeight: "bold",
-  }, line: {
+    fontWeight: 'bold',
+  },
+  line: {
     height: 1,
-    width: "100%",
-    backgroundColor: "black"
+    width: '100%',
+    backgroundColor: 'black',
   },
 });
 

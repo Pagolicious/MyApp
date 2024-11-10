@@ -1,52 +1,115 @@
-import { StyleSheet, Text, View, Alert, Platform, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  Alert,
+  Platform,
+  TouchableOpacity,
+
+} from 'react-native';
+import React, { useEffect, useState } from 'react';
 
 //Navigation
-import { NativeStackScreenProps } from "@react-navigation/native-stack"
-import { RootStackParamList } from '../App'
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
 //Components
-import MyButton from '../components/MyButton'
-import MyTextInput from '../components/MyTextInput'
-import SocialMedia from '../components/SocialMedia'
+import MyButton from '../components/MyButton';
+import MyTextInput from '../components/MyTextInput';
+import SocialMedia from '../components/SocialMedia';
 
 //Firebase
-import auth from "@react-native-firebase/auth"
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import messaging from '@react-native-firebase/messaging';
+import inAppMessaging from '@react-native-firebase/in-app-messaging';
+import FirebaseMessagingService from '../services/FirebaseMessagingService';
 
-
-type NameProps = NativeStackScreenProps<RootStackParamList, 'SignUpScreen'>
+type NameProps = NativeStackScreenProps<RootStackParamList, 'SignUpScreen'>;
 
 const SignUpScreen = ({ navigation }: NameProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-  const signUp = () => {
-    auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        Alert.alert("User Created! Please Login")
-        navigation.navigate("LoginScreen")
-      })
-      .catch(err => {
-        const errorMessage = err.message || "An unknown error occurred"
-        Alert.alert(errorMessage)
+    if (enabled) {
+      console.log('Authorization status:', authStatus);
+    }
+  };
+
+  const signUp = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Passwords do not match');
+      return;
+    }
+    try {
+      // Create user with email and password
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        email,
+        password,
+      );
+      const userId = userCredential.user.uid;
+
+      // Generate the FCM token
+      const fcmToken = await messaging().getToken();
+
+      // Save the user data along with the FCM token to Firestore
+      await firestore().collection('users').doc(userId).set({
+        email: email,
+        fcmToken: fcmToken,
+        createdAt: firestore.FieldValue.serverTimestamp(), // Track when the user was created
       });
 
+      Alert.alert('User Created! Please Login');
+      navigation.navigate('LoginScreen');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as Error).message || 'An unknown error occurred';
+      Alert.alert(errorMessage);
+    }
   }
+  useEffect(() => {
+    requestUserPermission();
+
+    inAppMessaging().setMessagesDisplaySuppressed(false);
+
+    FirebaseMessagingService.setupMessagingHandlers(navigation);
+
+    return () => {
+      // Cleanup if necessary
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.imageBackground}>
         <Text style={styles.title}>MyApp</Text>
         <View style={styles.inputContainer}>
-          <MyTextInput value={email} onChangeText={setEmail} placeholder="Email" />
-          <MyTextInput value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry />
-          <MyTextInput value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Confirm Password" secureTextEntry />
+          <MyTextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+          />
+          <MyTextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            secureTextEntry
+          />
+          <MyTextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm Password"
+            secureTextEntry
+          />
 
-
-          <MyButton onPress={signUp} title={"Sign Up"} />
+          <MyButton onPress={signUp} title={'Sign Up'} />
           <View style={styles.lineContainer}>
             <View style={styles.line} />
             <Text style={styles.textOr}>Or</Text>
@@ -57,86 +120,84 @@ const SignUpScreen = ({ navigation }: NameProps) => {
           <SocialMedia />
           <View style={styles.containerHaveAccount}>
             <Text style={styles.textHaveAccount}>Already have an account?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('LoginScreen')}>
               <Text style={styles.buttonSignIn}>Sign In</Text>
             </TouchableOpacity>
           </View>
-
         </View>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   imageBackground: {
-    backgroundColor: "#C41E3A",
-    height: "100%",
-    alignItems: "center",
-    paddingHorizontal: 20
+    backgroundColor: '#C41E3A',
+    height: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 40,
-    color: "white",
-    marginTop: Platform.OS == "android" ? 60 : 110
+    color: 'white',
+    marginTop: Platform.OS == 'android' ? 60 : 110,
   },
   inputContainer: {
     height: 550,
-    width: "100%",
-    backgroundColor: "white",
+    width: '100%',
+    backgroundColor: 'white',
     borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 30,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   textHaveAccount: {
-    alignSelf: "center",
+    alignSelf: 'center',
     marginRight: 10,
-    color: "black",
+    color: 'black',
     marginBottom: 5,
     marginTop: 15,
-    fontSize: 12
+    fontSize: 12,
   },
   containerHaveAccount: {
-    flexDirection: "row"
+    flexDirection: 'row',
   },
   buttonSignIn: {
-    alignSelf: "center",
+    alignSelf: 'center',
     marginRight: 10,
-    color: "blue",
+    color: 'blue',
     marginBottom: 5,
     marginTop: 15,
-    fontSize: 12
+    fontSize: 12,
   },
   lineContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 30,
-    marginBottom: 20
+    marginBottom: 20,
   },
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: "grey",
-    marginHorizontal: 10
+    backgroundColor: 'grey',
+    marginHorizontal: 10,
   },
   textOr: {
     fontSize: 16,
-    textAlign: "center",
-    color: "black"
+    textAlign: 'center',
+    color: 'black',
   },
   signInText: {
     fontSize: 12,
     marginBottom: 5,
-    color: "black",
+    color: 'black',
+  },
+});
 
-  }
-
-})
-
-export default SignUpScreen
+export default SignUpScreen;

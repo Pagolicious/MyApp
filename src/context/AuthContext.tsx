@@ -1,18 +1,26 @@
-import React, { createContext, useEffect, useState, ReactNode, useContext } from 'react';
+import React, {
+  createContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useContext,
+} from 'react';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 interface AuthContextType {
-  currentUser: FirebaseAuthTypes.User | null; // Use the User type from FirebaseAuthTypes
+  currentUser: FirebaseAuthTypes.User | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseAuthTypes.User | null>(null);
 
-  // Set up an effect to track the authentication state
+  // Set up persistence and track authentication state
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(user => {
       setCurrentUser(user); // Update state with the current user

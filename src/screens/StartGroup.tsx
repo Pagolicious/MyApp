@@ -1,62 +1,73 @@
-import { View, Text, StyleSheet, TextInput, Platform, TouchableOpacity, ScrollView, Alert, Pressable } from 'react-native'
-import React, { useState, useContext } from 'react'
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Platform,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import React, {useState} from 'react';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
 
-
 //Navigation
-import { NativeStackScreenProps } from "@react-navigation/native-stack"
-import { RootStackParamList } from '../App'
-import { useNavigation } from '@react-navigation/native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import {RootStackParamList} from '../App';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 //Components
-import MyButton from '../components/MyButton'
+import MyButton from '../components/MyButton';
 
 //Firebase
-import firestore from '@react-native-firebase/firestore'
+import firestore from '@react-native-firebase/firestore';
 
 // AuthContext
-import { useAuth } from '../context/AuthContext'
-
+import {useAuth} from '../context/AuthContext';
+import {useGroup} from '../context/GroupContext';
 
 const StartGroup = () => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+  const {currentUser} = useAuth();
 
-  const { currentUser } = useAuth();
-
-  const [activity, setActivity] = useState('')
-  const [location, setLocation] = useState('')
-  const [fromDate, setFromDate] = useState(new Date())
-  const [showFromDatepicker, setShowFromDatepicker] = useState(false)
+  const [activity, setActivity] = useState('');
+  const [location, setLocation] = useState('');
+  const [fromDate, setFromDate] = useState(new Date());
+  const [showFromDatepicker, setShowFromDatepicker] = useState(false);
   const [fromTime, setFromTime] = useState(() => {
-    const defaultTime = new Date()
-    defaultTime.setHours(0, 0, 0)
-    return defaultTime
+    const defaultTime = new Date();
+    defaultTime.setHours(0, 0, 0);
+    return defaultTime;
   });
-  const [showFromTimepicker, setShowFromTimepicker] = useState(false)
+  const [showFromTimepicker, setShowFromTimepicker] = useState(false);
 
-  const [toDate, setToDate] = useState(new Date())
-  const [showToDatepicker, setShowToDatepicker] = useState(false)
+  const [toDate, setToDate] = useState(new Date());
+  const [showToDatepicker, setShowToDatepicker] = useState(false);
   const [toTime, setToTime] = useState(() => {
-    const defaultTime = new Date()
-    defaultTime.setHours(0, 0, 0)
-    return defaultTime
+    const defaultTime = new Date();
+    defaultTime.setHours(0, 0, 0);
+    return defaultTime;
   });
-  const [showToTimepicker, setShowToTimepicker] = useState(false)
-  const [skillvalue, setSkillvalue] = useState(0)
-  const [details, setDetails] = useState('')
+  const [showToTimepicker, setShowToTimepicker] = useState(false);
+  const [skillvalue, setSkillvalue] = useState(0);
+  const [details, setDetails] = useState('');
+  const {setCurrentGroupId} = useGroup();
 
   const addGroup = () => {
     if (!currentUser) {
-      Alert.alert('Error', 'User is not authenticated.')
-      return
+      Alert.alert('Error', 'User is not authenticated.');
+      return;
     }
-    const groupId = firestore().collection("groups").doc().id
+    const groupId = firestore().collection('groups').doc().id;
+    setCurrentGroupId(groupId);
 
     firestore()
-      .collection("groups")
+      .collection('groups')
       .doc(groupId)
       .set({
         activity: activity,
@@ -68,54 +79,64 @@ const StartGroup = () => {
         skillvalue: skillvalue,
         details: details,
         createdBy: currentUser.uid,
-        groupId: groupId
+        groupId: groupId,
       })
       .then(() => {
         Alert.alert('Group Submitted');
-        navigation.navigate("MyGroupScreen", { groupId: groupId });
+        navigation.navigate('MyGroupScreen');
       })
-      .catch((error) => {
-        Alert.alert('Error submitting group', error.message)
+      .catch(error => {
+        Alert.alert('Error submitting group', error.message);
       });
-  }
-
-  let syncTimeCheck = 0
-
-  const onChangeFromDate = (event: DateTimePickerEvent, selectedDate?: Date | undefined) => {
-    const currentDate = selectedDate || fromDate
-    setShowFromDatepicker(Platform.OS === 'ios')
-    setFromDate(currentDate)
-    syncToDate(currentDate) // Synchronize "To" date when "From" date changes
-
   };
 
-  const onChangeFromTime = (event: DateTimePickerEvent, selectedTime?: Date | undefined) => {
-    const currentTime = selectedTime || fromTime
-    setShowFromTimepicker(Platform.OS === 'ios')
-    setFromTime(currentTime)
-    syncToTime(currentTime) // Synchronize "To" time when "From" time changes
+  let syncTimeCheck = 0;
 
+  const onChangeFromDate = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date | undefined,
+  ) => {
+    const currentDate = selectedDate || fromDate;
+    setShowFromDatepicker(Platform.OS === 'ios');
+    setFromDate(currentDate);
+    syncToDate(currentDate); // Synchronize "To" date when "From" date changes
   };
 
-  const onChangeToDate = (event: DateTimePickerEvent, selectedDate?: Date | undefined) => {
-    const currentDate = selectedDate || toDate
-    setShowToDatepicker(Platform.OS === 'ios')
+  const onChangeFromTime = (
+    event: DateTimePickerEvent,
+    selectedTime?: Date | undefined,
+  ) => {
+    const currentTime = selectedTime || fromTime;
+    setShowFromTimepicker(Platform.OS === 'ios');
+    setFromTime(currentTime);
+    syncToTime(currentTime); // Synchronize "To" time when "From" time changes
+  };
+
+  const onChangeToDate = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date | undefined,
+  ) => {
+    const currentDate = selectedDate || toDate;
+    setShowToDatepicker(Platform.OS === 'ios');
     setToDate(currentDate);
   };
 
-  const onChangeToTime = (event: DateTimePickerEvent, selectedTime?: Date | undefined) => {
-    const currentTime = selectedTime || toTime
-    setShowToTimepicker(Platform.OS === 'ios')
-    setToTime(currentTime)
-    syncTimeCheck = 1
+  const onChangeToTime = (
+    event: DateTimePickerEvent,
+    selectedTime?: Date | undefined,
+  ) => {
+    const currentTime = selectedTime || toTime;
+    setShowToTimepicker(Platform.OS === 'ios');
+    setToTime(currentTime);
+    syncTimeCheck = 1;
   };
 
   const syncToDate = (fromDate: Date) => {
     // Sync "To" date only if it hasn't been manually changed
     if (toDate <= fromDate) {
-      const newToDate = new Date(fromDate)
-      newToDate.setDate(newToDate.getDate())
-      setToDate(newToDate)
+      const newToDate = new Date(fromDate);
+      newToDate.setDate(newToDate.getDate());
+      setToDate(newToDate);
     }
   };
 
@@ -123,8 +144,8 @@ const StartGroup = () => {
     // Sync "To" time only if it hasn't been manually changed
     if (syncTimeCheck === 0) {
       const newToTime = new Date(fromTime);
-      newToTime.setHours(newToTime.getHours() + 1) // Example: Set "To" time as one hour after "From" time
-      setToTime(newToTime)
+      newToTime.setHours(newToTime.getHours() + 1); // Example: Set "To" time as one hour after "From" time
+      setToTime(newToTime);
     }
   };
 
@@ -134,9 +155,8 @@ const StartGroup = () => {
       month: 'short',
       day: 'numeric',
       // timeZone: 'Europe/Stockholm'
-
     };
-    return date.toLocaleDateString('sv-SE', options)
+    return date.toLocaleDateString('sv-SE', options);
   };
 
   const formatTime = (time: Date) => {
@@ -144,17 +164,13 @@ const StartGroup = () => {
       hour: 'numeric',
       minute: 'numeric',
       hour12: false,
-
     };
-    return time.toLocaleTimeString('sv-SE', options)
+    return time.toLocaleTimeString('sv-SE', options);
   };
-
-
 
   const skillInfo = () => {
-    Alert.alert('Button Pressed!')
+    Alert.alert('Button Pressed!');
   };
-
 
   return (
     <ScrollView>
@@ -185,7 +201,9 @@ const StartGroup = () => {
             {/* "From" Section */}
             <View style={styles.dateContainer}>
               <Text style={styles.bodyLabel}>From</Text>
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowFromDatepicker(true)}>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowFromDatepicker(true)}>
                 <Text style={styles.dateTimeText}>{formatDate(fromDate)}</Text>
               </TouchableOpacity>
               {showFromDatepicker && (
@@ -198,7 +216,9 @@ const StartGroup = () => {
               )}
             </View>
             <View style={styles.timeContainer}>
-              <TouchableOpacity style={styles.timeButton} onPress={() => setShowFromTimepicker(true)}>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowFromTimepicker(true)}>
                 <Text style={styles.dateTimeText}>{formatTime(fromTime)}</Text>
               </TouchableOpacity>
               {showFromTimepicker && (
@@ -218,7 +238,9 @@ const StartGroup = () => {
             {/* "To" Section */}
             <View style={styles.dateContainer}>
               <Text style={styles.bodyLabel}>To</Text>
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowToDatepicker(true)}>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowToDatepicker(true)}>
                 <Text style={styles.dateTimeText}>{formatDate(toDate)}</Text>
               </TouchableOpacity>
               {showToDatepicker && (
@@ -231,7 +253,9 @@ const StartGroup = () => {
               )}
             </View>
             <View style={styles.timeContainer}>
-              <TouchableOpacity style={styles.timeButton} onPress={() => setShowToTimepicker(true)}>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowToTimepicker(true)}>
                 <Text style={styles.dateTimeText}>{formatTime(toTime)}</Text>
               </TouchableOpacity>
               {showToTimepicker && (
@@ -255,7 +279,7 @@ const StartGroup = () => {
             </TouchableOpacity>
           </View>
           <Slider
-            style={{ width: 400, height: 50 }}
+            style={{width: 400, height: 50}}
             minimumValue={0}
             maximumValue={10}
             step={1}
@@ -277,11 +301,11 @@ const StartGroup = () => {
             onChangeText={setDetails}
           />
         </View>
-        <MyButton title={"Start a Group"} onPress={addGroup} />
+        <MyButton title={'Start a Group'} onPress={addGroup} />
       </View>
     </ScrollView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -289,53 +313,52 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 150,
-    backgroundColor: "lightblue",
+    backgroundColor: 'lightblue',
     padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 30,
-    fontWeight: "bold",
-    color: "black"
+    fontWeight: 'bold',
+    color: 'black',
   },
   bodyContainer: {
     borderBottomWidth: 1,
-    borderColor: "grey"
+    borderColor: 'grey',
   },
   bodyLabel: {
     marginTop: 15,
     paddingLeft: 20,
     fontSize: 17,
-    color: "grey",
+    color: 'grey',
   },
   input: {
     height: 50,
     paddingLeft: 20,
     fontSize: 25,
-
   },
   areaInput: {
     height: 100,
     paddingLeft: 20,
     fontSize: 20,
-    textAlignVertical: 'top'
+    textAlignVertical: 'top',
   },
   activityContainer: {
     borderBottomWidth: 1,
-    borderColor: "grey"
+    borderColor: 'grey',
   },
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   dateContainer: {
     flex: 2,
     borderRightWidth: 1,
-    borderColor: "grey"
+    borderColor: 'grey',
   },
   timeContainer: {
     flex: 1,
-    justifyContent: "flex-end"
+    justifyContent: 'flex-end',
   },
   dateButton: {
     fontSize: 25,
@@ -348,7 +371,7 @@ const styles = StyleSheet.create({
   dateTimeText: {
     paddingLeft: 20,
     fontSize: 25,
-    color: "black",
+    color: 'black',
   },
   valueContainer: {
     position: 'absolute',
@@ -359,7 +382,7 @@ const styles = StyleSheet.create({
   },
   bodySkillTitle: {
     justifyContent: 'space-between',
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingRight: 20,
   },
   infoButton: {
@@ -368,7 +391,7 @@ const styles = StyleSheet.create({
     width: 30,
     paddingVertical: 5,
     paddingHorizontal: 5,
-    alignItems: "center",
+    alignItems: 'center',
     borderRadius: 5,
   },
   infoButtonText: {
@@ -380,8 +403,8 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingRight: 55,
     fontSize: 17,
-    color: "black",
+    color: 'black',
   },
-})
+});
 
-export default StartGroup
+export default StartGroup;
