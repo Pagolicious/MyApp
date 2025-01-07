@@ -1,10 +1,10 @@
-import {View, Text, StyleSheet, TextInput, Alert} from 'react-native';
-import React, {useState} from 'react';
+import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
+import React, { useState } from 'react';
 
 //Navigation
-import {RootStackParamList} from '../App';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -22,7 +22,7 @@ const FindGroup = () => {
       navigation.navigate('GroupsScreen');
     } catch (error) {
       const errorMessage =
-        (error as {message?: string}).message || 'An unknown error occurred';
+        (error as { message?: string }).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
     }
   };
@@ -33,7 +33,7 @@ const FindGroup = () => {
         <Text style={styles.headerText}>Find a Group</Text>
       </View>
       <View style={styles.bodyContainer}>
-        <Text style={styles.bodyTitle}>Acticity</Text>
+        <Text style={styles.bodyTitle}>Activity</Text>
         <TextInput
           style={styles.input}
           value={activity}

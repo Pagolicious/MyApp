@@ -1,20 +1,20 @@
-import {StyleSheet, Text, View, Alert, TextInput, Button} from 'react-native';
-import React, {useState} from 'react';
+import { StyleSheet, Text, View, Alert, TextInput, Button } from 'react-native';
+import React, { useState } from 'react';
 
 //Navigation
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../App';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
 // AuthContext
-import {useAuth} from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 type NamePageProps = NativeStackScreenProps<RootStackParamList, 'NamePage'>;
 
-const NamePage = ({navigation}: NamePageProps) => {
-  const {currentUser} = useAuth();
+const NamePage = ({ navigation }: NamePageProps) => {
+  const { currentUser } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -39,30 +39,6 @@ const NamePage = ({navigation}: NamePageProps) => {
         Alert.alert('Error', 'Could not save user data');
       });
   };
-
-  // const getData = async () => {
-  //   try {
-  //     if (!currentUser) {
-  //       return;
-  //     } // Ensure currentUser is defined
-  //     const userDoc = await firestore()
-  //       .collection('users')
-  //       .doc(currentUser.uid)
-  //       .get();
-  //     if (userDoc.exists) {
-  //       const userData = userDoc.data();
-  //       setFirstName(userData?.firstName || ''); // Set first name if it exists
-  //       setLastName(userData?.lastName || ''); // Set last name if it exists
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching user data: ', error);
-  //     Alert.alert('Error', 'Could not fetch user data');
-  //   }
-  // };
-
-  // useEffect(() => {
-  //  getData();
-  // }, [currentUser]);
 
   const handleSubmit = () => {
     if (firstName === '' || lastName === '') {

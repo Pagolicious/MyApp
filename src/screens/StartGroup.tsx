@@ -8,16 +8,16 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
 
 //Navigation
-import {RootStackParamList} from '../App';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -25,15 +25,15 @@ import MyButton from '../components/MyButton';
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-// AuthContext
-import {useAuth} from '../context/AuthContext';
-import {useGroup} from '../context/GroupContext';
+// Context
+import { useAuth } from '../context/AuthContext';
+import { useGroup } from '../context/GroupContext';
 
 const StartGroup = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const {currentUser} = useAuth();
+  const { currentUser } = useAuth();
 
   const [activity, setActivity] = useState('');
   const [location, setLocation] = useState('');
@@ -56,7 +56,7 @@ const StartGroup = () => {
   const [showToTimepicker, setShowToTimepicker] = useState(false);
   const [skillvalue, setSkillvalue] = useState(0);
   const [details, setDetails] = useState('');
-  const {setCurrentGroupId} = useGroup();
+  const { setCurrentGroupId } = useGroup();
 
   const addGroup = () => {
     if (!currentUser) {
@@ -82,7 +82,6 @@ const StartGroup = () => {
         groupId: groupId,
       })
       .then(() => {
-        Alert.alert('Group Submitted');
         navigation.navigate('MyGroupScreen');
       })
       .catch(error => {
@@ -279,7 +278,7 @@ const StartGroup = () => {
             </TouchableOpacity>
           </View>
           <Slider
-            style={{width: 400, height: 50}}
+            style={{ width: 400, height: 50 }}
             minimumValue={0}
             maximumValue={10}
             step={1}

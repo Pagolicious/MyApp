@@ -8,8 +8,6 @@ import {
   FlatList,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import messaging from '@react-native-firebase/messaging';
-import functions from '@react-native-firebase/functions';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -18,13 +16,12 @@ import { RootStackParamList } from '../App';
 
 //Components
 import GroupNav from '../components/GroupNav';
-import FooterNav from '../components/FooterNav';
+import FooterGroupNav from '../components/FooterGroupNav';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
 
-// AuthContext
+// Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
@@ -61,76 +58,70 @@ interface Member {
   skillLevel: string;
 }
 
+interface Invitation {
+  id: string;
+  groupId: string;
+  sender: string;
+  receiver: string;
+  activity: string;
+  location: string;
+  fromDate: string;
+  fromTime: string;
+  toTime: string;
+  status: 'pending' | 'accepted' | 'declined';
+}
+
 const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const [applicants, setApplicants] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
   );
-  const [currentGroupData, setCurrentGroupData] = useState<Group | null>(null);
-  const { currentGroupId } = useGroup(); // Access the current group ID
+  const { currentGroupId, currentGroup } = useGroup();
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!currentUser || !currentGroup) {
       return;
-    } // Make sure the current user is defined
+    }
 
-    const unsubscribe = firestore()
-      .collection('groups')
-      .where('createdBy', '==', currentUser.uid)
-      .onSnapshot(
-        async groupsSnapshot => {
-          const applicantsPromises = groupsSnapshot.docs.flatMap(async doc => {
-            const groupData = {
-              id: doc.id,
-              ...doc.data(),
-            } as Group;
+    // Fetch applicant details if `applicants` exist
+    const fetchApplicants = async () => {
+      try {
+        if (currentGroup.applicants && currentGroup.applicants.length > 0) {
+          const applicantsList = await Promise.all(
+            currentGroup.applicants.map(async (applicant) => {
+              const userDoc = await firestore()
+                .collection('users')
+                .doc(applicant.uid)
+                .get();
 
-            setCurrentGroupData(groupData);
+              const userData = userDoc.data();
 
-            const groupActivity = groupData.activity.toLowerCase();
+              return {
+                uid: applicant.uid,
+                firstName: userData?.firstName || 'Unknown',
+                lastName: userData?.lastName || 'Unknown',
+                skillLevel:
+                  userData?.[`${currentGroup.activity?.toLowerCase()}_skillLevel`] || 'Unknown',
+                note: applicant.note || '',
+              };
+            })
+          );
 
-            const applicantsList = (groupData.applicants || []).map(
-              async (applicant: { uid: string; note?: string }) => {
-                // Fetch first name based on uid
-                const userDoc = await firestore()
-                  .collection('users')
-                  .doc(applicant.uid)
-                  .get();
-                const userData = userDoc.data();
-                const skillLevel =
-                  userData?.[`${groupActivity}_skillLevel`] || 'Unknown';
+          setApplicants(applicantsList);
+        } else {
+          setApplicants([]); // Clear the list if no applicants exist
+        }
+      } catch (error) {
+        console.error('Error fetching applicant details:', error);
+        Alert.alert('Error', 'Failed to fetch applicant details.');
+      }
+    };
 
-                return {
-                  uid: applicant.uid,
-                  firstName: userData?.firstName || 'Unknown',
-                  lastName: userData?.lastName || 'Unknown',
-                  note: applicant.note || '',
-                  skillLevel: skillLevel,
-                };
-              },
-            );
+    fetchApplicants();
+  }, [currentUser, currentGroup]);
 
-            return Promise.all(applicantsList);
-          });
-
-          const resolvedApplicants = await Promise.all(applicantsPromises);
-          setApplicants(resolvedApplicants.flat()); // Flatten the array
-        },
-        error => {
-          const errorMessage =
-            (error as { message?: string }).message ||
-            'An unknown error occurred';
-          Alert.alert(errorMessage);
-        },
-      );
-
-    // Clean up the listener when the component unmounts
-    return () => unsubscribe();
-
-    // Set up a real-time listener
-  }, [currentUser]);
 
   const handleCardPress = (item: Applicant) => {
     setModalVisible(true);
@@ -153,64 +144,39 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
     }
 
     try {
-      const groupRef = firestore().collection('groups').doc(currentGroupId);
-      const groupDoc = await groupRef.get();
-      const idToken = await auth().currentUser?.getIdToken(true); // Force refresh the token
 
-      if (!groupDoc.exists) {
+      if (!currentGroup) {
         Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
         return;
       }
-      const memberToAdd = {
-        uid: selectedApplicant.uid,
-        firstName: selectedApplicant.firstName,
-        lastName: selectedApplicant.lastName,
-        skillLevel: selectedApplicant.skillLevel,
-      };
 
-      // Fetch user's device token
-      const userRef = firestore()
-        .collection('users')
-        .doc(selectedApplicant.uid);
-      const userDoc = await userRef.get();
-      const userToken = userDoc.data()?.fcmToken;
+      try {
+        // Generate a new ID for the invitation document
+        const invitationId = firestore().collection('groupInvitations').doc().id;
 
-      if (!userToken) {
-        throw new Error('Device token not found');
-      }
-
-      // Send notification to the user
-      const sendInvitation = functions().httpsCallable('sendGroupInvitation');
-
-      await sendInvitation({
-        fcmToken: userToken,
-        title: 'Group Invitation',
-        body: `You have been invited to join the group ${currentGroupData?.activity}`,
-        data: {
-          type: 'groupInvitation', // Specify the type for the handler
-          groupId: currentGroupData?.id,
-          groupName: currentGroupData?.activity,
-          invitedBy: currentUser.uid, // or however you get the inviter's name
-        },
-
-      });
-
-      // Update group with the new member
-      await groupRef.update({
-        members: firestore.FieldValue.arrayUnion(memberToAdd),
-      });
-
-      if (currentGroupData && currentGroupData.applicants) {
-        const applicantToRemove = currentGroupData.applicants.find(
-          applicant => applicant.uid === selectedApplicant.uid,
-        );
-        if (applicantToRemove) {
-          // Remove the applicant from the applicants list
-          await groupRef.update({
-            applicants: firestore.FieldValue.arrayRemove(applicantToRemove),
+        // Create the invitation document with a specific ID
+        await firestore()
+          .collection('groupInvitations')
+          .doc(invitationId)
+          .set({
+            sender: currentUser.uid,
+            receiver: selectedApplicant.uid,
+            groupId: currentGroupId,
+            activity: currentGroup?.activity || 'Unknown',
+            location: currentGroup?.location || 'Unknown',
+            fromDate: currentGroup?.fromDate || 'Unknown',
+            fromTime: currentGroup?.fromTime || 'Unknown',
+            toTime: currentGroup?.toTime || 'Unknown',
+            status: 'pending', // Default status
+            createdAt: firestore.FieldValue.serverTimestamp(),
           });
-        }
+
+        console.log('Invitation sent successfully.');
+      } catch (error) {
+        console.error('Error sending invitation:', error);
+        Alert.alert('Error', 'Failed to send invitation.');
       }
+
     } catch (error) {
       console.error('Error saving user data: ', error);
       Alert.alert('Error', 'Could not apply for group');
@@ -242,6 +208,9 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
             </TouchableOpacity>
           </View>
         )}
+        ListEmptyComponent={
+          <Text style={styles.noApplicantsText}>No applicants available</Text>
+        }
       />
       <Modal
         animationType="fade"
@@ -277,8 +246,13 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
           </View>
         </View>
       </Modal>
-
-      <FooterNav />
+      <View>
+        <Text>
+          {currentGroup?.activity}
+          {userData?.firstName}
+        </Text>
+      </View>
+      <FooterGroupNav />
     </View>
   );
 };
@@ -388,4 +362,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  noApplicantsText: {
+    flex: 1,
+    textAlign: "center",
+    marginTop: 100,
+    fontSize: 24
+
+  }
 });

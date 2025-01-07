@@ -7,9 +7,15 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 
+//Firebase
+import firestore from '@react-native-firebase/firestore';
+
 // AuthContext
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
+
+// Services
+import { navigate } from '../services/NavigationService';
 
 type GroupNavProps = {
   route:
@@ -25,9 +31,7 @@ const GroupNav = ({ route }: GroupNavProps) => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { currentUser } = useAuth();
   const [buttonText, setButtonText] = useState('Browse');
-  const { currentGroupId } = useGroup();
-  const { delistGroup } = useGroup();
-
+  const { currentGroupId, currentGroup } = useGroup();
 
 
   if (!currentUser) {
@@ -50,9 +54,35 @@ const GroupNav = ({ route }: GroupNavProps) => {
     }
   };
 
-  const handleDelistMyGroup = async () => {
+  const handleLeaveGroup = async () => {
     try {
-      await delistGroup();
+      await firestore()
+        .collection('groups')
+        .doc(currentGroupId)
+        .update({
+          memberUids: firestore.FieldValue.arrayRemove(currentUser.uid),
+          members: currentGroup?.members.filter((member) => member.uid !== currentUser.uid),
+
+        });
+
+      // //Remove the member object from the `members` array
+      // const groupDoc = await firestore().collection('groups').doc(currentGroupId).get();
+      // const groupData = groupDoc.data();
+
+      // if (groupData && groupData.members) {
+      //   const updatedMembers = groupData.members.filter(
+      //     (member: { uid: string }) => member.uid !== currentUser.uid
+      //   );
+
+      //   await firestore()
+      //     .collection('groups')
+      //     .doc(currentGroupId)
+      //     .update({
+      //       members: updatedMembers,
+      //     });
+      // }
+      navigation.navigate('FindOrStart');
+
     } catch {
       Alert.alert('Error', 'Something went wrong.');
     }
@@ -69,10 +99,10 @@ const GroupNav = ({ route }: GroupNavProps) => {
           <TouchableOpacity
             onPress={() => navigation.navigate('FindOrStart')}
             style={styles.button}>
-            <Text style={styles.title}>Edit</Text>
+            <Text style={styles.title}>Request</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelistMyGroup} style={styles.button}>
-            <Text style={styles.title}>Delist</Text>
+          <TouchableOpacity onPress={handleLeaveGroup} style={styles.button}>
+            <Text style={styles.title}>Leave</Text>
           </TouchableOpacity>
         </View>
       </View>

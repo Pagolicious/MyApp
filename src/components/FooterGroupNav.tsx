@@ -6,24 +6,43 @@ import { RootStackParamList } from '../App';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const FooterNav = () => {
+//Context
+import { useAuth } from '../context/AuthContext';
+import { useGroup } from '../context/GroupContext';
+
+
+const FooterGroupNav = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { currentUser } = useAuth();
+  const { currentGroup } = useGroup()
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const handleNavigation = () => {
+    if (currentGroup?.createdBy === currentUser.uid) {
+      navigation.navigate('MyGroupScreen');
+    } else {
+      navigation.navigate('MembersHomeScreen');
+    }
+  };
+
 
   return (
     <View style={styles.container}>
       <View style={styles.footer}>
         <View style={styles.contentRow}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('FindOrStart')}
-            style={styles.button}>
-            <Text style={styles.title}>Home</Text>
+          <TouchableOpacity onPress={handleNavigation} style={styles.button}>
+            <Text style={styles.title}> My Group
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('FindOrStart')}
+            onPress={() => navigation.navigate('GroupChatScreen')}
             style={styles.button}>
-            <Text style={styles.title}>????</Text>
+            <Text style={styles.title}>Group Chat</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate('ProfileScreen')}
@@ -36,7 +55,7 @@ const FooterNav = () => {
   );
 };
 
-export default FooterNav;
+export default FooterGroupNav;
 
 const styles = StyleSheet.create({
   container: {

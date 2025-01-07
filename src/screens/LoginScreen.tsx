@@ -1,9 +1,9 @@
-import {StyleSheet, Text, View, Alert, Platform} from 'react-native';
-import React, {useState, useContext} from 'react';
+import { StyleSheet, Text, View, Alert, Platform } from 'react-native';
+import React, { useState, useContext } from 'react';
 
 //Navigation
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../App';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -14,34 +14,32 @@ import SocialMedia from '../components/SocialMedia';
 import firestore from '@react-native-firebase/firestore';
 
 //AuthContext
-import {AuthContext} from '../context/AuthContext';
-// import { useGroup } from '../context/GroupContext'
+import { AuthContext } from '../context/AuthContext';
+import { useGroup } from '../context/GroupContext'
 
 type NameProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
-const LoginScreen = ({navigation}: NameProps) => {
-  const {signIn, currentUser} = useContext(AuthContext)!;
+const LoginScreen = ({ navigation }: NameProps) => {
+  const { signIn, currentUser, userData } = useContext(AuthContext)!;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const { currentGroupId } = useGroup()
+  const { currentGroupId, currentGroup } = useGroup()
 
   const loginWithEmailAndPassword = async () => {
     try {
       await signIn(email, password);
       if (currentUser) {
-        const checkNewUser = await firestore()
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
 
-        const userOwnsGroupQuery = await firestore()
+        const userIsMemberQuery = await firestore()
           .collection('groups')
-          .where('createdBy', '==', currentUser.uid)
+          .where('memberUids', 'array-contains', currentUser.uid)
           .get();
 
-        if (!userOwnsGroupQuery.empty) {
+        if (currentGroup?.createdBy === currentUser.uid) {
           navigation.navigate('MyGroupScreen');
-        } else if (checkNewUser.exists && checkNewUser.data()?.firstName) {
+        } else if (!userIsMemberQuery.empty) {
+          navigation.navigate('MembersHomeScreen');
+        } else if (userData?.firstName && userData.lastName) {
           navigation.navigate('FindOrStart');
         } else {
           navigation.navigate('NamePage');
@@ -51,7 +49,7 @@ const LoginScreen = ({navigation}: NameProps) => {
       }
     } catch (error) {
       const errorMessage =
-        (error as {message?: string}).message || 'An unknown error occurred';
+        (error as { message?: string }).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
     }
   };

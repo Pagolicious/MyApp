@@ -20,14 +20,16 @@ import GroupsScreen from './screens/GroupsScreen';
 import MyGroupScreen from './screens/MyGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import MembersHomeScreen from './screens/MembersHomScreen';
 
-//AuthContext
+//Contexts
 import { AuthProvider } from './context/AuthContext';
 import { GroupProvider } from './context/GroupContext';
+import { InvitationProvider } from './context/InvitationContext';
 
 //Services
-// import { FirebaseMessagingService } from './services/FirebaseMessagingService';
-import FirebaseMessagingService from './services/FirebaseMessagingService'; // Make sure the path is correct
+import { navigationRef } from './services/NavigationService';
+
 
 export type RootStackParamList = {
   SignUpScreen: undefined;
@@ -40,6 +42,7 @@ export type RootStackParamList = {
   MyGroupScreen: undefined;
   GroupChatScreen: undefined;
   ProfileScreen: undefined;
+  MembersHomeScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -47,52 +50,33 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App(): React.JSX.Element {
 
-  // const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  // const requestUserPermission = async () => {
-  //   const authStatus = await messaging().requestPermission();
-  //   const enabled =
-  //     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-  //     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-  //   if (enabled) {
-  //     console.log('Authorization status:', authStatus);
-  //   }
-  // };
-
-  // useEffect(() => {
-
-  //   requestUserPermission();
-  //   inAppMessaging().setMessagesDisplaySuppressed(false);
-
-  //   FirebaseMessagingService.setupMessagingHandlers(navigation);
-
-  //   return () => {
-  //   };
-  // }, [navigation]);
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <GroupProvider>
-          <NavigationContainer>
-            <Stack.Navigator initialRouteName="SignUpScreen">
-              <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-              <Stack.Screen name="LoginScreen" component={LoginScreen} />
-              <Stack.Screen name="NamePage" component={NamePage} />
-              <Stack.Screen name="FindOrStart" component={FindOrStart} />
-              <Stack.Screen name="FindGroup" component={FindGroup} />
-              <Stack.Screen name="StartGroup" component={StartGroup} />
-              <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
-              <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
-              <Stack.Screen
-                name="GroupChatScreen"
-                component={GroupChatScreen}
-              />
-              <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </GroupProvider>
+        <InvitationProvider>
+
+          <GroupProvider>
+            <NavigationContainer ref={navigationRef}>
+              <Stack.Navigator initialRouteName="SignUpScreen">
+                <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+                <Stack.Screen name="LoginScreen" component={LoginScreen} />
+                <Stack.Screen name="NamePage" component={NamePage} />
+                <Stack.Screen name="FindOrStart" component={FindOrStart} />
+                <Stack.Screen name="FindGroup" component={FindGroup} />
+                <Stack.Screen name="StartGroup" component={StartGroup} />
+                <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
+                <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
+                <Stack.Screen
+                  name="GroupChatScreen"
+                  component={GroupChatScreen}
+                />
+                <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+                <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </GroupProvider>
+        </InvitationProvider>
+
       </AuthProvider>
     </GestureHandlerRootView>
   );

@@ -18,13 +18,16 @@ import StarRating from 'react-native-star-rating-widget';
 
 //Components
 import GroupNav from '../components/GroupNav';
+import GroupMemberNav from '../components/GroupMemberNav';
 import FooterNav from '../components/FooterNav';
+import FooterGroupNav from '../components/FooterGroupNav';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-// AuthContext
+// Context
 import { useAuth } from '../context/AuthContext';
+import { useGroup } from '../context/GroupContext';
 import { TextInput } from 'react-native-gesture-handler';
 
 type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
@@ -46,20 +49,18 @@ interface Applicant {
 }
 
 const GroupsScreen = ({ route }: GroupsProps) => {
-  const { currentUser } = useAuth();
-
+  const { currentUser, userData } = useAuth();
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userHasGroup, setUserHasGroup] = useState(false);
+  const [userInGroup, setUserInGroup] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [applyModalVisible, setApplyModalVisible] = useState(false);
   const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [note, setNote] = useState('');
-  // const [appliedGroup, setAppliedGroup] = useState([{}])
-  // const [selectedCardId, setSelectedCardId] = useState<string | null>(null); // New state for selected card ID
+  const { setCurrentGroupId } = useGroup();
+  const { currentGroup, currentGroupId } = useGroup();
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
 
@@ -68,6 +69,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   } // Ensure currentUser is defined
 
   const fetchGroups = async () => {
+
     try {
       const groupCollection = await firestore().collection('groups').get();
       const groupList = groupCollection.docs.map(doc => ({
@@ -77,12 +79,18 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
       setGroups(groupList);
 
-      const userGroup = await firestore()
+      if (currentGroup?.createdBy === currentUser.uid) {
+        setUserHasGroup(true);
+      }
+
+      const memberInGroup = await firestore()
         .collection('groups')
-        .where('createdBy', '==', currentUser.uid)
+        .where('memberUids', 'array-contains', currentUser.uid)
         .get();
 
-      setUserHasGroup(!userGroup.empty); // If the query returns results, set to true
+      setUserInGroup(!memberInGroup.empty); // If the query returns results, set to true
+
+
     } catch (error) {
       const errorMessage =
         (error as { message?: string }).message || 'An unknown error occurred';
@@ -93,11 +101,11 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   };
 
   const addSkillLevel = async () => {
-    if (!currentUser || !selectedActivity) {
+    if (!currentUser || !currentGroup) {
       return;
     }
 
-    const skillLevelKey = `${selectedActivity.toLowerCase()}_skillLevel`;
+    const skillLevelKey = `${currentGroup.activity.toLowerCase()}_skillLevel`;
     try {
       await firestore()
         .collection('users')
@@ -113,8 +121,8 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     }
   };
 
-  const applyForGroup = async (selectedGroup: Group | null) => {
-    if (!selectedGroup) {
+  const applyForGroup = async (currentGroup: Group | undefined) => {
+    if (!currentGroup) {
       Alert.alert('Error', 'No group selected');
       return;
     }
@@ -125,13 +133,13 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     try {
       await firestore()
         .collection('groups')
-        .doc(selectedGroup.id)
+        .doc(currentGroupId)
         .update({
           applicants: firestore.FieldValue.arrayUnion(applicantData),
         });
       setGroups(prevGroups =>
         prevGroups.map(group =>
-          group.id === selectedGroup.id
+          group.id === currentGroupId
             ? {
               ...group,
               applicants: [...(group.applicants || []), applicantData],
@@ -204,28 +212,30 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
   const handleCardPress = async (item: Group) => {
     await checkUserSkillLevel(item.activity);
-    setSelectedGroup(item); // Store the selected group
+    setCurrentGroupId(item?.id)
     if (!hasSkillLevel) {
       setModalVisible(true);
-      setSelectedActivity(item.activity);
     } else {
       setApplyModalVisible(true);
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading groups...</Text>
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text>Loading groups...</Text>
+  //     </View>
+  //   );
+  // }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Groups</Text>
       </View>
+      {userHasGroup && <GroupNav route={route} />}
+      {userInGroup && <GroupMemberNav route={route} />}
+
       {/* Modal Component */}
       {currentUser.uid && !hasSkillLevel && (
         <Modal
@@ -289,7 +299,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               <Text style={styles.modalText}>Group Details:</Text>
               <View style={styles.modalDetailContainer}>
                 <Text style={styles.modalDetailText}>
-                  {selectedGroup?.details}
+                  {currentGroup?.details}
                 </Text>
               </View>
               <View>
@@ -307,7 +317,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={async () => {
-                  applyForGroup(selectedGroup);
+                  applyForGroup(currentGroup);
                 }}>
                 <Text style={styles.submitBtnText}>Submit</Text>
               </TouchableOpacity>
@@ -315,7 +325,6 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           </View>
         </Modal>
       )}
-      {userHasGroup && <GroupNav route={route} />}
       <FlatList
         data={groups}
         keyExtractor={item => item.id}
@@ -370,9 +379,11 @@ const GroupsScreen = ({ route }: GroupsProps) => {
             </TouchableOpacity>
           </View>
         )}
-      />
 
-      <FooterNav />
+      />
+      {(userHasGroup || userInGroup) && <FooterGroupNav />}
+      {(!userHasGroup && !userInGroup) && <FooterNav />}
+
     </View>
   );
 };
