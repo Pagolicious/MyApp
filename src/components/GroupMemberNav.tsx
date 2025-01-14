@@ -10,7 +10,7 @@ import { RouteProp } from '@react-navigation/native';
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-// AuthContext
+//Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
@@ -39,12 +39,14 @@ const GroupNav = ({ route }: GroupNavProps) => {
   }
 
   useEffect(() => {
-    if (route.name === 'GroupsScreen') {
-      setButtonText('Go Back');
-    } else {
-      setButtonText('Browse');
+    if (currentUser) {
+      if (route.name === 'GroupsScreen') {
+        setButtonText('Go Back');
+      } else {
+        setButtonText('Browse');
+      }
     }
-  }, [route]);
+  }, [route, currentUser]);
 
   const handleBrowsePress = () => {
     if (route.name === 'GroupsScreen') {
@@ -91,21 +93,27 @@ const GroupNav = ({ route }: GroupNavProps) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.footer}>
-        <View style={styles.contentRow}>
-          <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
-            <Text style={styles.title}>{buttonText}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('FindOrStart')}
-            style={styles.button}>
-            <Text style={styles.title}>Request</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLeaveGroup} style={styles.button}>
-            <Text style={styles.title}>Leave</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {currentUser ? (
+        <>
+          <View style={styles.footer}>
+            <View style={styles.contentRow}>
+              <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
+                <Text style={styles.title}>{buttonText}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('FindOrStart')}
+                style={styles.button}>
+                <Text style={styles.title}>Request</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLeaveGroup} style={styles.button}>
+                <Text style={styles.title}>Leave</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      ) : (
+        <Text>Please log in.</Text>
+      )}
     </View>
   );
 };
@@ -122,7 +130,7 @@ const styles = StyleSheet.create({
   footer: {
     height: 75,
     width: '100%',
-    backgroundColor: 'grey',
+    backgroundColor: '#5f4c4c',
     justifyContent: 'center',
   },
   contentRow: {

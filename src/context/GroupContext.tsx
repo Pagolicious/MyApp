@@ -9,6 +9,9 @@ import { useAuth } from './AuthContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
+
 interface Group {
   id: string;
   activity: string;
@@ -71,10 +74,14 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         const savedGroupId = await AsyncStorage.getItem('currentGroupId');
         const savedGroup = await AsyncStorage.getItem('currentGroup');
 
+        console.log('Saved currentGroupId from AsyncStorage:', savedGroupId); // Debugging log
+        console.log('Saved currentGroup from AsyncStorage:', savedGroup); // Debugging log
+
         if (savedGroupId) setCurrentGroupId(savedGroupId);
         if (savedGroup) setCurrentGroup(JSON.parse(savedGroup));
       } catch (error) {
         console.error('Error loading group data from AsyncStorage:', error);
+        handleFirestoreError(error)
       }
     };
 
@@ -82,7 +89,37 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (!currentGroupId) return;
+    const reloadGroupData = async () => {
+      if (!currentUser) {
+        console.log('No current user after login, skipping group reload.');
+        setCurrentGroupId(undefined);
+        setCurrentGroup(undefined);
+        return;
+      }
+
+      try {
+        const savedGroupId = await AsyncStorage.getItem('currentGroupId');
+        const savedGroup = await AsyncStorage.getItem('currentGroup');
+
+        console.log('Reloaded currentGroupId from AsyncStorage:', savedGroupId); // Debugging log
+        console.log('Reloaded currentGroup from AsyncStorage:', savedGroup); // Debugging log
+
+        setCurrentGroupId(savedGroupId || undefined);
+        setCurrentGroup(savedGroup ? JSON.parse(savedGroup) : undefined);
+      } catch (error) {
+        console.error('Error reloading group data from AsyncStorage:', error);
+      }
+    };
+
+    reloadGroupData();
+  }, [currentUser]);
+
+
+  useEffect(() => {
+    if (!currentGroupId || !currentUser) {
+      setCurrentGroup(undefined);
+      return;
+    }
 
     // Real-time Firestore listener for the current group
     const unsubscribe = firestore()
@@ -96,17 +133,21 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
             // Save updated group to AsyncStorage
             AsyncStorage.setItem('currentGroup', JSON.stringify(updatedGroup));
+          } else {
+            setCurrentGroup(undefined);
           }
         },
         (error) => {
           console.error('Error listening to group updates:', error);
+          handleFirestoreError(error)
         }
       );
 
     // Cleanup the listener when the component unmounts or currentGroupId changes
     return () => unsubscribe();
-  }, [currentGroupId]);
+  }, [currentGroupId, currentUser]);
   // Update the stored group whenever it changes
+
   const updateGroupId = async (groupId: string | undefined) => {
     setCurrentGroupId(groupId);
     if (groupId) {
@@ -128,6 +169,12 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error updating currentGroup in AsyncStorage:', error);
     }
   };
+
+
+  // useEffect(() => {
+  //   console.log('Loaded currentGroupId from AsyncStorage:', currentGroupId);
+  // }, [currentGroupId]);
+
 
 
   const delistGroup = async () => {
@@ -174,29 +221,43 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (error) {
       Alert.alert('Error', 'Something went wrong.');
+      handleFirestoreError(error)
     }
   };
 
   // Function to trigger the notification modal
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !currentGroupId) return;
 
-    const listenForNotifications = async () => {
-      const unsubscribe = firestore()
-        .collection('users')
-        .doc(currentUser.uid)
-        .onSnapshot((doc) => {
+    const unsubscribe = firestore()
+      .collection('users')
+      .doc(currentUser.uid)
+      .onSnapshot(
+        (doc) => {
+          if (!doc.exists) {
+            console.warn('Document does not exist.');
+            setNotificationMessage(null);
+            setNotificationModal(false);
+            return;
+          }
+
           const data = doc.data();
           if (data?.notification) {
             setNotificationMessage(data.notification.message);
             setNotificationModal(true);
+          } else {
+            setNotificationMessage(null);
+            setNotificationModal(false);
           }
-        });
-      return () => unsubscribe();
-    };
+        },
+        (error) => {
+          handleFirestoreError(error);
+        }
+      );
 
-    listenForNotifications();
-  }, [currentGroupId]);
+    return () => unsubscribe();
+  }, [currentUser, currentGroupId]);
+
 
   // Function to close the modal
   const closeNotificationModal = async () => {

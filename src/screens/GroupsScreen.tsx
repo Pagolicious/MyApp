@@ -10,6 +10,7 @@ import {
   Easing,
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
+import { TextInput } from 'react-native-gesture-handler';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -25,10 +26,15 @@ import FooterGroupNav from '../components/FooterGroupNav';
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-// Context
+//Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
-import { TextInput } from 'react-native-gesture-handler';
+
+//Hooks
+import { useGroupData } from '../hooks/useGroupData';
+
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
 
@@ -41,6 +47,7 @@ interface Group {
   toTime: string;
   createdBy: string;
   details: string;
+  applicants: Applicant[];
 }
 
 interface Applicant {
@@ -50,10 +57,10 @@ interface Applicant {
 
 const GroupsScreen = ({ route }: GroupsProps) => {
   const { currentUser, userData } = useAuth();
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [userHasGroup, setUserHasGroup] = useState(false);
-  const [userInGroup, setUserInGroup] = useState(false);
+  // const [userInGroup, setUserInGroup] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [applyModalVisible, setApplyModalVisible] = useState(false);
   const [skillLevel, setSkillLevel] = useState(0);
@@ -61,44 +68,62 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   const [note, setNote] = useState('');
   const { setCurrentGroupId } = useGroup();
   const { currentGroup, currentGroupId } = useGroup();
+  const { userInGroup } = useGroupData()
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
 
-  if (!currentUser) {
-    return;
-  } // Ensure currentUser is defined
-
-  const fetchGroups = async () => {
-
-    try {
-      const groupCollection = await firestore().collection('groups').get();
-      const groupList = groupCollection.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setGroups(groupList);
-
-      if (currentGroup?.createdBy === currentUser.uid) {
-        setUserHasGroup(true);
-      }
-
-      const memberInGroup = await firestore()
-        .collection('groups')
-        .where('memberUids', 'array-contains', currentUser.uid)
-        .get();
-
-      setUserInGroup(!memberInGroup.empty); // If the query returns results, set to true
-
-
-    } catch (error) {
-      const errorMessage =
-        (error as { message?: string }).message || 'An unknown error occurred';
-      Alert.alert(errorMessage);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!currentUser) {
+      // console.warn('User not authenticated.');
+      return;
     }
-  };
+    const fetchGroups = async () => {
+
+      try {
+        const groupCollection = await firestore().collection('groups').get();
+        const groupList: Group[] = groupCollection.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            activity: data.activity || '',
+            location: data.location || '',
+            fromDate: data.fromDate || '',
+            fromTime: data.fromTime || '',
+            toTime: data.toTime || '',
+            createdBy: data.createdBy || '',
+            details: data.details || '',
+            applicants: data.applicants || [],
+          };
+        });
+
+        if (currentUser && currentGroup) {
+          setGroups(groupList);
+          setUserHasGroup(currentGroup.createdBy === currentUser.uid);
+        }
+
+      } catch (error) {
+        const errorMessage =
+          (error as { message?: string }).message || 'An unknown error occurred';
+        Alert.alert(errorMessage);
+        handleFirestoreError(error)
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGroups();
+  }, [currentUser]);
+
+
+
+  // const memberInGroup = await firestore()
+  //   .collection('groups')
+  //   .where('memberUids', 'array-contains', currentUser.uid)
+  //   .get();
+
+  // setUserInGroup(!memberInGroup.empty); // If the query returns results, set to true
+
+
+
 
   const addSkillLevel = async () => {
     if (!currentUser || !currentGroup) {
@@ -118,12 +143,12 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     } catch (error) {
       console.error('Error saving user data: ', error);
       Alert.alert('Error', 'Could not save user data');
+      handleFirestoreError(error)
     }
   };
 
   const applyForGroup = async (currentGroup: Group | undefined) => {
-    if (!currentGroup) {
-      Alert.alert('Error', 'No group selected');
+    if (!currentGroup || !currentUser) {
       return;
     }
     const applicantData = {
@@ -151,6 +176,8 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     } catch (error) {
       console.error('Error saving user data: ', error);
       Alert.alert('Error', 'Could not apply for group');
+      handleFirestoreError(error)
+
     }
   };
 
@@ -178,11 +205,13 @@ const GroupsScreen = ({ route }: GroupsProps) => {
     } catch (error) {
       console.error('Error fetching user skill level: ', error);
       Alert.alert('Error', 'Could not fetch user skill level');
+      handleFirestoreError(error)
+
     }
   };
 
   useEffect(() => {
-    fetchGroups();
+    if (!currentUser) return;
 
     if (skillLevel > 0) {
       Animated.timing(animationValue, {
@@ -199,7 +228,8 @@ const GroupsScreen = ({ route }: GroupsProps) => {
         useNativeDriver: false,
       }).start();
     }
-  }, [skillLevel]);
+  }, [skillLevel, currentUser]); // React to skillLevel changes
+
 
   // Interpolate animated value for opacity and height
   const animatedStyle = {
@@ -230,108 +260,113 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Groups</Text>
-      </View>
-      {userHasGroup && <GroupNav route={route} />}
-      {userInGroup && <GroupMemberNav route={route} />}
-
-      {/* Modal Component */}
-      {currentUser.uid && !hasSkillLevel && (
-        <Modal
-          animationType="fade"
-          transparent
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalView}>
-              {/* Close Button in top-right corner */}
-              <TouchableOpacity
-                style={styles.closeIcon}
-                onPress={() => setModalVisible(false)}>
-                <Text style={styles.closeText}>✖</Text>
-              </TouchableOpacity>
-
-              {/* Modal Content */}
-              <Text style={styles.modalTitleText}>Skill level</Text>
-              <Text style={styles.modalText}>
-                We need to know your skill level for this activity
-              </Text>
-              <StarRating
-                rating={skillLevel}
-                onChange={setSkillLevel}
-                enableHalfStar={false}
-              />
-              <Animated.View
-                style={[styles.modalExtendedContent, animatedStyle]}>
-                <Text style={styles.modalObervationText}>
-                  You can NOT change your skill level later
-                </Text>
-                <TouchableOpacity
-                  style={styles.submitBtn}
-                  onPress={async () => {
-                    addSkillLevel();
-                  }}>
-                  <Text style={styles.submitBtnText}>Submit</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
+      {!currentUser ? (
+        <Text>Please log in to view groups.</Text>
+      ) : (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Groups</Text>
           </View>
-        </Modal>
-      )}
-      {currentUser.uid && hasSkillLevel && (
-        <Modal
-          animationType="fade"
-          transparent
-          visible={applyModalVisible}
-          onRequestClose={() => setApplyModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalView}>
-              {/* Close Button in top-right corner */}
-              <TouchableOpacity
-                style={styles.closeIcon}
-                onPress={() => setApplyModalVisible(false)}>
-                <Text style={styles.closeText}>✖</Text>
-              </TouchableOpacity>
+          {userHasGroup ? <GroupNav route={route} /> : null}
+          {userInGroup ? <GroupMemberNav route={route} /> : null}
 
-              {/* Modal Content */}
-              <Text style={styles.modalTitleText}>Apply For Group</Text>
-              <Text style={styles.modalText}>Group Details:</Text>
-              <View style={styles.modalDetailContainer}>
-                <Text style={styles.modalDetailText}>
-                  {currentGroup?.details}
-                </Text>
+
+          {/* Modal Component */}
+          {currentUser && currentUser.uid && !hasSkillLevel && (
+            <Modal
+              animationType="fade"
+              transparent
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalView}>
+                  {/* Close Button in top-right corner */}
+                  <TouchableOpacity
+                    style={styles.closeIcon}
+                    onPress={() => setModalVisible(false)}>
+                    <Text style={styles.closeText}>✖</Text>
+                  </TouchableOpacity>
+
+                  {/* Modal Content */}
+                  <Text style={styles.modalTitleText}>Skill level</Text>
+                  <Text style={styles.modalText}>
+                    We need to know your skill level for this activity
+                  </Text>
+                  <StarRating
+                    rating={skillLevel}
+                    onChange={setSkillLevel}
+                    enableHalfStar={false}
+                  />
+                  <Animated.View
+                    style={[styles.modalExtendedContent, animatedStyle]}>
+                    <Text style={styles.modalObervationText}>
+                      You can NOT change your skill level later
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.submitBtn}
+                      onPress={async () => {
+                        addSkillLevel();
+                      }}>
+                      <Text style={styles.submitBtnText}>Submit</Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                </View>
               </View>
+            </Modal>
+          )}
+          {currentUser && currentUser.uid && hasSkillLevel && (
+            <Modal
+              animationType="fade"
+              transparent
+              visible={applyModalVisible}
+              onRequestClose={() => setApplyModalVisible(false)}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalView}>
+                  {/* Close Button in top-right corner */}
+                  <TouchableOpacity
+                    style={styles.closeIcon}
+                    onPress={() => setApplyModalVisible(false)}>
+                    <Text style={styles.closeText}>✖</Text>
+                  </TouchableOpacity>
+
+                  {/* Modal Content */}
+                  <Text style={styles.modalTitleText}>Apply For Group</Text>
+                  <Text style={styles.modalText}>Group Details:</Text>
+                  <View style={styles.modalDetailContainer}>
+                    <Text style={styles.modalDetailText}>
+                      {currentGroup?.details}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={styles.modalText}>Your message to the group:</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="This is optional"
+                      value={note}
+                      onChangeText={setNote}
+                      multiline={true} // Allow multiple lines
+                      numberOfLines={4} // Set number of lines to display by default
+                      textAlignVertical="top" // Align text to the top of the input
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.submitBtn}
+                    onPress={async () => {
+                      applyForGroup(currentGroup);
+                    }}>
+                    <Text style={styles.submitBtnText}>Submit</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+          <FlatList
+            data={groups || []}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
               <View>
-                <Text style={styles.modalText}>Your message to the group:</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="This is optional"
-                  value={note}
-                  onChangeText={setNote}
-                  multiline={true} // Allow multiple lines
-                  numberOfLines={4} // Set number of lines to display by default
-                  textAlignVertical="top" // Align text to the top of the input
-                />
-              </View>
-              <TouchableOpacity
-                style={styles.submitBtn}
-                onPress={async () => {
-                  applyForGroup(currentGroup);
-                }}>
-                <Text style={styles.submitBtnText}>Submit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
-      <FlatList
-        data={groups}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <View>
-            {/* Card */}
-            {/* <TouchableOpacity onPress={async () => {
+                {/* Card */}
+                {/* <TouchableOpacity onPress={async () => {
               await checkUserSkillLevel(item.activity);
               if (!hasSkillLevel) {
                 setModalVisible(true);
@@ -339,51 +374,52 @@ const GroupsScreen = ({ route }: GroupsProps) => {
               }
 
             }}> */}
-            <TouchableOpacity onPress={() => handleCardPress(item)}>
-              <View
-                style={[
-                  styles.card,
-                  item.createdBy === currentUser.uid && {
-                    backgroundColor: 'lightblue',
-                  },
-                  item.applicants &&
-                    Array.isArray(item.applicants) &&
-                    item.applicants.some(
-                      (applicant: Applicant) => applicant.uid === currentUser.uid,
-                    )
-                    ? { backgroundColor: '#AFE1AF' }
-                    : {},
-                ]}>
-                <View style={styles.column}>
-                  {/* Card Content: Activity & Location */}
-                  <View style={styles.cardContentActivity}>
-                    <Text style={styles.cardText}>{item.activity}</Text>
-                    <Text style={styles.cardText}>{item.location}</Text>
-                  </View>
+                <TouchableOpacity onPress={() => handleCardPress(item)}>
+                  <View
+                    style={[
+                      styles.card,
+                      item.createdBy === currentUser.uid && {
+                        backgroundColor: 'lightblue',
+                      },
+                      item.applicants &&
+                        Array.isArray(item.applicants) &&
+                        item.applicants.some(
+                          (applicant: Applicant) => applicant.uid === currentUser.uid,
+                        )
+                        ? { backgroundColor: '#AFE1AF' }
+                        : {},
+                    ]}>
+                    <View style={styles.column}>
+                      {/* Card Content: Activity & Location */}
+                      <View style={styles.cardContentActivity}>
+                        <Text style={styles.cardText}>{item.activity}</Text>
+                        <Text style={styles.cardText}>{item.location}</Text>
+                      </View>
 
-                  {/* Card Content: Date & Time */}
-                  <View style={styles.cardContentDate}>
-                    <Text style={styles.cardText}>{item.fromDate}</Text>
-                    <Text style={styles.cardText}>
-                      {item.fromTime} - {item.toTime}
-                    </Text>
-                  </View>
+                      {/* Card Content: Date & Time */}
+                      <View style={styles.cardContentDate}>
+                        <Text style={styles.cardText}>{item.fromDate}</Text>
+                        <Text style={styles.cardText}>
+                          {item.fromTime} - {item.toTime}
+                        </Text>
+                      </View>
 
-                  {/* Card Content: People */}
-                  <View style={styles.cardContentPeople}>
-                    <Text style={styles.cardTextPeople}>+2</Text>
+                      {/* Card Content: People */}
+                      <View style={styles.cardContentPeople}>
+                        <Text style={styles.cardTextPeople}>+2</Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
+                  <View style={styles.line} />
+                </TouchableOpacity>
               </View>
-              <View style={styles.line} />
-            </TouchableOpacity>
-          </View>
-        )}
+            )}
 
-      />
-      {(userHasGroup || userInGroup) && <FooterGroupNav />}
-      {(!userHasGroup && !userInGroup) && <FooterNav />}
-
+          />
+          {(userHasGroup || userInGroup) && <FooterGroupNav />}
+          {(!userHasGroup && !userInGroup) && <FooterNav />}
+        </>
+      )}
     </View>
   );
 };

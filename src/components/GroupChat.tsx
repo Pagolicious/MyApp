@@ -3,9 +3,15 @@ import { View, Text, StyleSheet } from 'react-native';
 import { GiftedChat, IMessage, Bubble } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 
+//Components
+import CustomAvatar from './CustomAvatar';
+
 //Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
+
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 const GroupChat = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
@@ -13,35 +19,43 @@ const GroupChat = () => {
   const { currentGroupId } = useGroup();
 
   if (!currentUser) {
-    console.log("User is not authenticated.");
-    return;
+    return (
+      <View style={styles.container}>
+        <Text>User is not authenticated. Please log in.</Text>
+      </View>
+    );
   }
 
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection('chats')
-      .doc(currentGroupId)
-      .collection('messages')
-      .orderBy('createdAt', 'desc')
-      .onSnapshot((snapshot) => {
-        const firebaseMessages: IMessage[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            _id: doc.id,
-            text: data.text || '', // Fallback for missing text
-            createdAt: data.createdAt ? data.createdAt.toDate() : new Date(), // Fallback to current date if createdAt is null
-            user: {
-              _id: data.user?._id || 'unknown', // Fallback for missing user ID
-              name: data.user?.name || 'Unknown', // Fallback for missing user name
-              avatar: data.user?.avatar || undefined, // Optional avatar field
-            },
-          };
+    if (currentGroupId && currentUser) {
+      const unsubscribe = firestore()
+        .collection('chats')
+        .doc(currentGroupId)
+        .collection('messages')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+          const firebaseMessages: IMessage[] = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              _id: doc.id,
+              text: data.text || '',
+              createdAt: data.createdAt
+                ? data.createdAt.toDate()
+                : new Date(),
+              user: {
+                _id: data.user?._id || 'unknown',
+                name: data.user?.name || 'Unknown',
+                avatar: data.user?.avatar || undefined,
+              },
+            };
+          });
+          setMessages(firebaseMessages);
         });
-        setMessages(firebaseMessages);
-      });
 
-    return () => unsubscribe();
-  }, [currentGroupId]);
+      return () => unsubscribe();
+    }
+  }, [currentGroupId, currentUser]);
+
 
   const onSend = useCallback(
     async (newMessages: IMessage[] = []) => {
@@ -57,6 +71,14 @@ const GroupChat = () => {
     },
     [currentGroupId]
   );
+
+  const renderAvatar = (props: any) => {
+    const { _id, name } = props.currentMessage.user;
+
+    return <CustomAvatar uid={_id} firstName={name} size={30} />;
+  };
+
+
 
   // Custom renderBubble to show username above the message bubble
   const renderBubble = (props: any) => {
@@ -92,7 +114,7 @@ const GroupChat = () => {
         }}
         renderBubble={renderBubble}
         bottomOffset={70} // Add space for a bottom tab bar or other UI element
-      // isTyping={true}
+        renderAvatar={renderAvatar}
       />
     </View>
 

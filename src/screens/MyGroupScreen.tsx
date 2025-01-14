@@ -21,9 +21,12 @@ import FooterGroupNav from '../components/FooterGroupNav';
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-// Context
+//Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
+
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 type MyGroupScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -81,11 +84,11 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
   const { currentGroupId, currentGroup } = useGroup();
 
   useEffect(() => {
-    if (!currentUser || !currentGroup) {
+    if (!currentGroup?.applicants?.length) {
+      setApplicants([]); // Clear applicants if no data
       return;
     }
 
-    // Fetch applicant details if `applicants` exist
     const fetchApplicants = async () => {
       try {
         if (currentGroup.applicants && currentGroup.applicants.length > 0) {
@@ -116,6 +119,8 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
       } catch (error) {
         console.error('Error fetching applicant details:', error);
         Alert.alert('Error', 'Failed to fetch applicant details.');
+        handleFirestoreError(error)
+
       }
     };
 
@@ -180,6 +185,8 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
     } catch (error) {
       console.error('Error saving user data: ', error);
       Alert.alert('Error', 'Could not apply for group');
+      handleFirestoreError(error)
+
     }
   };
 
@@ -188,7 +195,7 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
       <View style={styles.header}>
         <Text style={styles.headerText}>My Group</Text>
       </View>
-      <GroupNav route={route} />
+      {currentUser && <GroupNav route={route} />}
       <FlatList
         data={applicants}
         keyExtractor={item => item.uid} // Unique key for each item
@@ -246,12 +253,6 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
           </View>
         </View>
       </Modal>
-      <View>
-        <Text>
-          {currentGroup?.activity}
-          {userData?.firstName}
-        </Text>
-      </View>
       <FooterGroupNav />
     </View>
   );

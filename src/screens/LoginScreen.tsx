@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Alert, Platform } from 'react-native';
 import React, { useState, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -12,40 +13,52 @@ import SocialMedia from '../components/SocialMedia';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
-//AuthContext
+//Context
 import { AuthContext } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext'
+
+//Hooks
+import { useGroupData } from '../hooks/useGroupData';
 
 type NameProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 const LoginScreen = ({ navigation }: NameProps) => {
-  const { signIn, currentUser, userData } = useContext(AuthContext)!;
+  const { signIn, setCurrentUser, currentUser, userData } = useContext(AuthContext)!;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { currentGroupId, currentGroup } = useGroup()
+  // const { currentGroupId, currentGroup } = useGroup()
 
   const loginWithEmailAndPassword = async () => {
     try {
-      await signIn(email, password);
-      if (currentUser) {
+      await signIn(email, password); // This updates the Firebase auth state
 
-        const userIsMemberQuery = await firestore()
-          .collection('groups')
-          .where('memberUids', 'array-contains', currentUser.uid)
-          .get();
+      // Wait briefly to ensure `auth().currentUser` is updated
+      const user = auth().currentUser;
+      setCurrentUser(user);
 
-        if (currentGroup?.createdBy === currentUser.uid) {
-          navigation.navigate('MyGroupScreen');
-        } else if (!userIsMemberQuery.empty) {
-          navigation.navigate('MembersHomeScreen');
-        } else if (userData?.firstName && userData.lastName) {
-          navigation.navigate('FindOrStart');
-        } else {
-          navigation.navigate('NamePage');
-        }
-      } else {
+      if (!user) {
         Alert.alert('User not found. Please try again.');
+        return;
+      }
+
+      const userInGroup = await AsyncStorage.getItem('userInGroup');
+      const currentGroupString = await AsyncStorage.getItem('currentGroup');
+      const currentGroup = currentGroupString ? JSON.parse(currentGroupString) : null;
+
+      if (currentGroup?.createdBy === user.uid) {
+        console.log(currentGroup?.createdBy)
+        console.log(user.uid)
+        console.log(currentUser?.uid)
+
+        navigation.navigate('MyGroupScreen');
+      } else if (userInGroup) {
+        navigation.navigate('MembersHomeScreen');
+      } else if (userData?.firstName && userData.lastName) {
+        navigation.navigate('FindOrStart');
+      } else {
+        navigation.navigate('NamePage');
       }
     } catch (error) {
       const errorMessage =
@@ -53,6 +66,7 @@ const LoginScreen = ({ navigation }: NameProps) => {
       Alert.alert(errorMessage);
     }
   };
+
 
   return (
     <View style={styles.container}>

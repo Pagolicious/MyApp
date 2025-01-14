@@ -25,6 +25,9 @@ import messaging from '@react-native-firebase/messaging';
 import inAppMessaging from '@react-native-firebase/in-app-messaging';
 import FirebaseMessagingService from '../services/FirebaseMessagingService';
 
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
+
 type NameProps = NativeStackScreenProps<RootStackParamList, 'SignUpScreen'>;
 
 const SignUpScreen = ({ navigation }: NameProps) => {
@@ -72,6 +75,7 @@ const SignUpScreen = ({ navigation }: NameProps) => {
       const errorMessage =
         (err as Error).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
+      handleFirestoreError(err)
     }
   }
   useEffect(() => {

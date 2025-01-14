@@ -1,9 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert, Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+
+//Navigation
+import { navigate } from '../services/NavigationService';
+
+//Context
 import { useAuth } from './AuthContext';
 
-import { navigate } from '../services/NavigationService';
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 interface Member {
   uid: string;
@@ -58,91 +64,116 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setInvitation(null);
+      return;
+    }
 
     const unsubscribe = firestore()
       .collection('groupInvitations')
       .where('receiver', '==', currentUser.uid)
       .where('status', '==', 'pending')
-      .onSnapshot((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          const data = doc.data() as Omit<Invitation, 'id'>;
-          setInvitation({ id: doc.id, ...data });
-          setModalVisible(true);
-        });
-      });
+      .onSnapshot(
+        (querySnapshot) => {
+          if (!querySnapshot.empty) {
+            querySnapshot.forEach((doc) => {
+              const data = doc.data() as Omit<Invitation, 'id'>;
+              setInvitation({ id: doc.id, ...data });
+              setModalVisible(true);
+            });
+          } else {
+            setInvitation(null);
+          }
+        },
+        (error) => {
+          handleFirestoreError(error);
+        }
+      );
 
     return () => unsubscribe();
   }, [currentUser]);
 
+
   const respondToInvitation = async (invitationId: string, response: 'accepted' | 'declined'): Promise<void> => {
-    await firestore().collection('groupInvitations').doc(invitationId).update({
-      status: response,
-    });
+    try {
+      await firestore().collection('groupInvitations').doc(invitationId).update({
+        status: response,
+      });
+    } catch (error) {
+      handleFirestoreError(error);
+    }
+
 
     if (!currentUser) return;
 
     // Get group reference
-    const groupRef = firestore().collection('groups').doc(invitation?.groupId);
-    const groupDoc = await groupRef.get();
-    const groupData = groupDoc.data();
-
-    if (response === 'accepted') {
-
-      // Fetch current user data
-      const userDoc = await firestore()
-        .collection('users')
-        .doc(currentUser.uid)
-        .get();
-      const currentUserData = userDoc.data()
-
-      if (!currentUserData) {
-        Alert.alert('Error', 'Unable to retrieve user data.');
-        return;
-      }
-
-      const memberToAdd = {
-        uid: currentUser.uid,
-        firstName: currentUserData.firstName || 'Unknown',
-        lastName: currentUserData.lastName || 'Unknown',
-        skillLevel: currentUserData.skillLevel || 0,
-      };
+    try {
+      const groupRef = firestore().collection('groups').doc(invitation?.groupId);
+      const groupDoc = await groupRef.get();
+      const groupData = groupDoc.data();
 
 
 
-      if (!groupDoc.exists) {
-        Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
-        return;
-      }
+      if (response === 'accepted') {
 
-      // Add the member to the group
-      await groupRef.update({
-        members: firestore.FieldValue.arrayUnion(memberToAdd),
-        memberUids: firestore.FieldValue.arrayUnion(currentUser.uid),
+        // Fetch current user data
+        const userDoc = await firestore()
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
+        const currentUserData = userDoc.data()
 
-      });
-      navigate("MembersHomeScreen")
+        if (!currentUserData) {
+          Alert.alert('Error', 'Unable to retrieve user data.');
+          return;
+        }
 
-    } else {
-      Alert.alert('Declined', 'You declined the invitation.');
-    }
+        const memberToAdd = {
+          uid: currentUser.uid,
+          firstName: currentUserData.firstName || 'Unknown',
+          lastName: currentUserData.lastName || 'Unknown',
+          skillLevel: currentUserData.skillLevel || 0,
+        };
 
-    if (groupData && groupData.applicants) {
-      const applicantToRemove = groupData.applicants.find(
-        (applicant: Applicant) => applicant.uid === currentUser.uid,
-      );
-      if (applicantToRemove) {
-        // Remove the applicant from the applicants list
+
+
+        if (!groupDoc.exists) {
+          Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
+          return;
+        }
+
+        // Add the member to the group
         await groupRef.update({
-          applicants: firestore.FieldValue.arrayRemove(applicantToRemove),
+          members: firestore.FieldValue.arrayUnion(memberToAdd),
+          memberUids: firestore.FieldValue.arrayUnion(currentUser.uid),
+
         });
+        navigate("MembersHomeScreen")
+
+      } else {
+        Alert.alert('Declined', 'You declined the invitation.');
       }
+
+      if (groupData && groupData.applicants) {
+        const applicantToRemove = groupData.applicants.find(
+          (applicant: Applicant) => applicant.uid === currentUser.uid,
+        );
+        if (applicantToRemove) {
+          // Remove the applicant from the applicants list
+          await groupRef.update({
+            applicants: firestore.FieldValue.arrayRemove(applicantToRemove),
+          });
+        }
+      }
+
+      await firestore().collection('groupInvitations').doc(invitationId).delete();
+
+      setInvitation(null);
+      setModalVisible(false);
+    } catch (error) {
+      handleFirestoreError(error);
     }
 
-    await firestore().collection('groupInvitations').doc(invitationId).delete();
-
-    setInvitation(null);
-    setModalVisible(false);
   };
 
   const closeModal = () => {

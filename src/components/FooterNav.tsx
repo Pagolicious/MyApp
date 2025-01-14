@@ -3,12 +3,21 @@ import React, { useState, useEffect } from 'react';
 
 //Navigation
 import { RootStackParamList } from '../App';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+//Icons
+import Icon1 from 'react-native-vector-icons/FontAwesome5';
+import Icon2 from 'react-native-vector-icons/FontAwesome6';
+import Icon3 from 'react-native-vector-icons/AntDesign';
 
 const FooterNav = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
+
+  const isActive = (screenName: string) => route.name === screenName;
+
 
   return (
     <View style={styles.container}>
@@ -17,18 +26,51 @@ const FooterNav = () => {
           <TouchableOpacity
             onPress={() => navigation.navigate('FindOrStart')}
             style={styles.button}>
-            <Text style={styles.title}>Home</Text>
+            <Icon1
+              name="home"
+              size={30}
+              color={isActive('FindOrStart') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('FindOrStart') ? { color: '#00BFFF' } : {},
+              ]}>
+              Home
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('FindOrStart')}
+            onPress={() => navigation.navigate('FindGroup')}
             style={styles.button}>
-            <Text style={styles.title}>????</Text>
+            <Icon2
+              name="users-viewfinder"
+              size={30}
+              color={isActive('FindGroup') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('FindGroup') ? { color: '#00BFFF' } : {},
+              ]}>
+              Find a group
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate('ProfileScreen')}
             style={styles.button}>
-            <Text style={styles.title}>Profile</Text>
+            <Icon3
+              name="profile"
+              size={30}
+              color={isActive('ProfileScreen') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('ProfileScreen') ? { color: '#00BFFF' } : {},
+              ]}>
+              Profile
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -46,7 +88,7 @@ const styles = StyleSheet.create({
   footer: {
     height: 75,
     width: '100%',
-    backgroundColor: 'grey',
+    backgroundColor: '#5f4c4c',
     justifyContent: 'center',
   },
   contentRow: {
@@ -54,10 +96,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
   },
   button: {
-    height: 50,
-    width: 100,
+    height: 75,
+    width: 120,
     borderRadius: 5,
-    backgroundColor: '#C41E3A',
+    // borderWidth: 2,
     marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -65,7 +107,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    color: 'white',
+    color: 'lightgrey',
     fontWeight: 'bold',
   },
 });

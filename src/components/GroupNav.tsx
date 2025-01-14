@@ -30,17 +30,20 @@ const GroupNav = ({ route }: GroupNavProps) => {
 
 
 
-  if (!currentUser) {
-    return null;
-  }
+  // if (!currentUser) {
+  //   return null;
+  // }
 
   useEffect(() => {
-    if (route.name === 'GroupsScreen') {
-      setButtonText('Go Back');
-    } else {
-      setButtonText('Browse');
+    if (currentUser) {
+      if (route.name === 'GroupsScreen') {
+        setButtonText('Go Back');
+      } else {
+        setButtonText('Browse');
+      }
     }
-  }, [route]);
+  }, [route, currentUser]);
+
 
   const handleBrowsePress = () => {
     if (route.name === 'GroupsScreen') {
@@ -61,21 +64,27 @@ const GroupNav = ({ route }: GroupNavProps) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.footer}>
-        <View style={styles.contentRow}>
-          <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
-            <Text style={styles.title}>{buttonText}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('FindOrStart')}
-            style={styles.button}>
-            <Text style={styles.title}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelistMyGroup} style={styles.button}>
-            <Text style={styles.title}>Delist</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {currentUser ? (
+        <>
+          <View style={styles.footer}>
+            <View style={styles.contentRow}>
+              <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
+                <Text style={styles.title}>{buttonText}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('FindOrStart')}
+                style={styles.button}>
+                <Text style={styles.title}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelistMyGroup} style={styles.button}>
+                <Text style={styles.title}>Delist</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      ) : (
+        <Text>Please log in.</Text>
+      )}
     </View>
   );
 };
@@ -92,7 +101,7 @@ const styles = StyleSheet.create({
   footer: {
     height: 75,
     width: '100%',
-    backgroundColor: 'grey',
+    backgroundColor: '#5f4c4c',
     justifyContent: 'center',
   },
   contentRow: {

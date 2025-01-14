@@ -8,8 +8,11 @@ import { RootStackParamList } from '../App';
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-// AuthContext
+//Context
 import { useAuth } from '../context/AuthContext';
+
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 type NamePageProps = NativeStackScreenProps<RootStackParamList, 'NamePage'>;
 
@@ -37,6 +40,7 @@ const NamePage = ({ navigation }: NamePageProps) => {
       .catch(error => {
         console.error('Error saving user data: ', error);
         Alert.alert('Error', 'Could not save user data');
+        handleFirestoreError(error)
       });
   };
 

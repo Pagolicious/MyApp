@@ -3,17 +3,24 @@ import React, { useState, useEffect } from 'react';
 
 //Navigation
 import { RootStackParamList } from '../App';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 //Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
+//Icons
+import Icon1 from 'react-native-vector-icons/Entypo';
+import Icon2 from 'react-native-vector-icons/FontAwesome';
+import Icon3 from 'react-native-vector-icons/AntDesign';
+
+
 
 const FooterGroupNav = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
   const { currentUser } = useAuth();
   const { currentGroup } = useGroup()
 
@@ -29,25 +36,62 @@ const FooterGroupNav = () => {
     }
   };
 
+  const isActive = (screenName: string) => route.name === screenName;
+
 
   return (
     <View style={styles.container}>
       <View style={styles.footer}>
         <View style={styles.contentRow}>
           <TouchableOpacity onPress={handleNavigation} style={styles.button}>
-            <Text style={styles.title}> My Group
+            <Icon2
+              name="group"
+              size={30}
+              color={isActive('MyGroupScreen') || isActive('MembersHomeScreen') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('MyGroupScreen') || isActive('MembersHomeScreen')
+                  ? { color: '#00BFFF' }
+                  : {},
+              ]}>
+              My Group
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigation.navigate('GroupChatScreen')}
             style={styles.button}>
-            <Text style={styles.title}>Group Chat</Text>
+            <Icon1
+              name="chat"
+              size={30}
+              color={isActive('GroupChatScreen') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('GroupChatScreen') ? { color: '#00BFFF' } : {},
+              ]}>
+              Group Chat
+            </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => navigation.navigate('ProfileScreen')}
             style={styles.button}>
-            <Text style={styles.title}>Profile</Text>
+            <Icon3
+              name="profile"
+              size={30}
+              color={isActive('ProfileScreen') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('ProfileScreen') ? { color: '#00BFFF' } : {},
+              ]}>
+              Profile
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -65,7 +109,7 @@ const styles = StyleSheet.create({
   footer: {
     height: 75,
     width: '100%',
-    backgroundColor: 'grey',
+    backgroundColor: '#5f4c4c',
     justifyContent: 'center',
   },
   contentRow: {
@@ -73,10 +117,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
   },
   button: {
-    height: 50,
-    width: 100,
+    height: 75,
+    width: 120,
     borderRadius: 5,
-    backgroundColor: '#C41E3A',
+    // borderWidth: 2,
     marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -84,7 +128,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    color: 'white',
+    color: 'lightgray',
     fontWeight: 'bold',
   },
 });

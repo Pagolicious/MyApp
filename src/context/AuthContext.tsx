@@ -8,6 +8,7 @@ import React, {
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
+
 interface User {
   firstName: string;
   lastName: string;
@@ -18,6 +19,7 @@ interface User {
 
 interface AuthContextType {
   currentUser: FirebaseAuthTypes.User | null;
+  setCurrentUser: (user: FirebaseAuthTypes.User | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   userData: User | null;
@@ -45,6 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (!currentUser?.uid) return;
 
+
     // Attach a real-time Firestore listener to the user's document
     const unsubscribe = firestore()
       .collection('users')
@@ -71,11 +74,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signOut = async () => {
+    setCurrentUser(null); // Clear currentUser state immediately
+    // setUserData(null); // Clear userData state
     await auth().signOut();
+
+
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, signIn, signOut, userData, setUserData }}>
+    <AuthContext.Provider value={{ currentUser, setCurrentUser, signIn, signOut, userData, setUserData }}>
       {children}
     </AuthContext.Provider>
   );
