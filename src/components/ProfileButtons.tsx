@@ -21,18 +21,18 @@ import { useGroup } from '../context/GroupContext';
 import { useGroupData } from '../hooks/useGroupData';
 
 const ProfileButtons = () => {
-  const { signOut, currentUser } = useAuth()
-  const { setCurrentGroup, currentGroup } = useGroup()
-  const { userInGroup } = useGroupData()
+  const { signOut } = useAuth()
+  // const { setCurrentGroup, currentGroup, userInGroup } = useGroup()
+  // const { userInGroup } = useGroupData()
 
   const logout = async () => {
     try {
-      if (currentGroup) {
-        await AsyncStorage.setItem('currentGroup', JSON.stringify(currentGroup));
-      }
-      if (userInGroup) {
-        await AsyncStorage.setItem('userInGroup', JSON.stringify(userInGroup));
-      }
+      // console.log("////////////", currentGroup)
+      // console.log("///////////", userInGroup)
+
+      // if (currentGroup) {
+      //   await AsyncStorage.setItem('currentGroup', JSON.stringify(currentGroup));
+      // }
 
       // setCurrentGroup(undefined);
       await signOut()
@@ -47,25 +47,25 @@ const ProfileButtons = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigate("MembersHomeScreen")}>
+      <TouchableOpacity onPress={() => navigate("FriendScreen")}>
         <View style={[styles.btnBorder, styles.row]}>
           <Icon3 name="user-friends" size={30} color="black" />
           <Text style={styles.profileBtnText}>Friends</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigate("MembersHomeScreen")}>
+      <TouchableOpacity onPress={() => navigate("MessageScreen")}>
         <View style={[styles.btnBorder, styles.row]}>
           <Icon3 name="envelope" size={30} color="black" />
           <Text style={styles.profileBtnText}>Messages</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigate("MembersHomeScreen")}>
+      <TouchableOpacity onPress={() => navigate("SettingScreen")}>
         <View style={[styles.btnBorder, styles.row]}>
           <Icon1 name="settings" size={30} color="black" />
           <Text style={styles.profileBtnText}>Settings</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigate("MembersHomeScreen")}>
+      <TouchableOpacity onPress={() => navigate("AboutAppScreen")}>
         <View style={[styles.btnBorder, styles.row]}>
           <Icon1 name="perm-device-information" size={30} color="black" />
           <Text style={styles.profileBtnText}>About App</Text>

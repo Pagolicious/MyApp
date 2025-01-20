@@ -7,6 +7,7 @@ import { navigate } from '../services/NavigationService';
 
 //Context
 import { useAuth } from './AuthContext';
+import { useGroup } from './GroupContext';
 
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
@@ -62,6 +63,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { currentUser } = useAuth();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const { checkUserInGroup } = useGroup();
 
   useEffect(() => {
     if (!currentUser) {
@@ -148,6 +150,9 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           memberUids: firestore.FieldValue.arrayUnion(currentUser.uid),
 
         });
+
+        await checkUserInGroup();
+
         navigate("MembersHomeScreen")
 
       } else {

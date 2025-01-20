@@ -28,7 +28,8 @@ const LoginScreen = ({ navigation }: NameProps) => {
   const { signIn, setCurrentUser, currentUser, userData } = useContext(AuthContext)!;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const { currentGroupId, currentGroup } = useGroup()
+  // const { checkUserInGroup } = useGroup();
+  const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
 
   const loginWithEmailAndPassword = async () => {
     try {
@@ -42,15 +43,25 @@ const LoginScreen = ({ navigation }: NameProps) => {
         Alert.alert('User not found. Please try again.');
         return;
       }
+      // console.log("////////////", currentGroup)
+      // console.log("///////////", userInGroup)
+      // Call checkUserInGroup to update userInGroup
+      // await checkUserInGroup();
 
-      const userInGroup = await AsyncStorage.getItem('userInGroup');
-      const currentGroupString = await AsyncStorage.getItem('currentGroup');
+      const groupKey = getStorageKey('currentGroup', user.uid);
+      const userInGroupKey = getStorageKey('userInGroup', user.uid);
+
+      // Fetch user-specific data from AsyncStorage
+      const currentGroupString = await AsyncStorage.getItem(groupKey);
+      const savedUserInGroupString = await AsyncStorage.getItem(userInGroupKey);
+
       const currentGroup = currentGroupString ? JSON.parse(currentGroupString) : null;
+      const userInGroup = savedUserInGroupString ? JSON.parse(savedUserInGroupString) : null;
 
       if (currentGroup?.createdBy === user.uid) {
-        console.log(currentGroup?.createdBy)
-        console.log(user.uid)
-        console.log(currentUser?.uid)
+        // console.log(currentGroup?.createdBy)
+        // console.log(user.uid)
+        // console.log(currentUser?.uid)
 
         navigation.navigate('MyGroupScreen');
       } else if (userInGroup) {

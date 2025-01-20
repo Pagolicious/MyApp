@@ -18,7 +18,8 @@ import { useGroupData } from '../hooks/useGroupData';
 
 const ProfileScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { owner, userInGroup } = useGroupData()
+  const { owner } = useGroupData()
+  const { userInGroup } = useGroup()
 
   return (
     <View style={styles.container}>

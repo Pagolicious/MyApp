@@ -74,7 +74,7 @@ interface Invitation {
   status: 'pending' | 'accepted' | 'declined';
 }
 
-const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
+const MyGroupScreen = () => {
   const { currentUser, userData } = useAuth();
   const [applicants, setApplicants] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -195,7 +195,7 @@ const MyGroupScreen = ({ route }: MyGroupScreenProps) => {
       <View style={styles.header}>
         <Text style={styles.headerText}>My Group</Text>
       </View>
-      {currentUser && <GroupNav route={route} />}
+      {currentUser && <GroupNav />}
       <FlatList
         data={applicants}
         keyExtractor={item => item.uid} // Unique key for each item

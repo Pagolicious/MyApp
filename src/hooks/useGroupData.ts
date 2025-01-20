@@ -25,7 +25,7 @@ interface Owner {
 export const useGroupData = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [owner, setOwner] = useState<Owner | null>(null);
-  const [userInGroup, setUserInGroup] = useState(false);
+  // const [userInGroup, setUserInGroup] = useState(false);
   const { currentGroupId, currentGroup } = useGroup();
   const { currentUser } = useAuth()
 
@@ -46,12 +46,12 @@ export const useGroupData = () => {
 
         const ownerData = ownerDoc.data();
 
-        const memberInGroup = await firestore()
-          .collection('groups')
-          .where('memberUids', 'array-contains', currentUser?.uid)
-          .get();
+        // const memberInGroup = await firestore()
+        //   .collection('groups')
+        //   .where('memberUids', 'array-contains', currentUser?.uid)
+        //   .get();
 
-        setUserInGroup(!memberInGroup.empty);
+        // setUserInGroup(!memberInGroup.empty);
 
         if (currentGroup) {
           setOwner(ownerData ? { uid: currentGroup.createdBy, firstName: ownerData.firstName } : null);
@@ -66,5 +66,5 @@ export const useGroupData = () => {
     fetchGroupData();
   }, [currentGroupId]);
 
-  return { members, owner, userInGroup };
+  return { members, owner };
 };

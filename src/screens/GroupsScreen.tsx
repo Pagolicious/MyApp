@@ -16,6 +16,7 @@ import { TextInput } from 'react-native-gesture-handler';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import StarRating from 'react-native-star-rating-widget';
+import { RouteProp } from '@react-navigation/native';
 
 //Components
 import GroupNav from '../components/GroupNav';
@@ -36,7 +37,12 @@ import { useGroupData } from '../hooks/useGroupData';
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
-type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
+// type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
+type GroupsScreenRouteProp = RouteProp<RootStackParamList, 'GroupsScreen'>;
+
+type Props = {
+  route: GroupsScreenRouteProp;
+};
 
 interface Group {
   id: string;
@@ -46,8 +52,10 @@ interface Group {
   fromTime: string;
   toTime: string;
   createdBy: string;
+  memberLimit: number;
   details: string;
   applicants: Applicant[];
+  memberUids: string[];
 }
 
 interface Applicant {
@@ -55,7 +63,8 @@ interface Applicant {
   note?: string;
 }
 
-const GroupsScreen = ({ route }: GroupsProps) => {
+
+const GroupsScreen: React.FC<Props> = ({ route }) => {
   const { currentUser, userData } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,8 +76,10 @@ const GroupsScreen = ({ route }: GroupsProps) => {
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
   const { setCurrentGroupId } = useGroup();
-  const { currentGroup, currentGroupId } = useGroup();
-  const { userInGroup } = useGroupData()
+  const { currentGroup, currentGroupId, userInGroup } = useGroup();
+  const { activity } = route.params;
+
+  // const { userInGroup } = useGroupData()
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
 
@@ -78,6 +89,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
       return;
     }
     const fetchGroups = async () => {
+      setLoading(true);
 
       try {
         const groupCollection = await firestore().collection('groups').get();
@@ -89,17 +101,28 @@ const GroupsScreen = ({ route }: GroupsProps) => {
             location: data.location || '',
             fromDate: data.fromDate || '',
             fromTime: data.fromTime || '',
+            memberLimit: data.memberLimit || 1,
             toTime: data.toTime || '',
             createdBy: data.createdBy || '',
             details: data.details || '',
             applicants: data.applicants || [],
+            memberUids: data.memberUids || [],
+
           };
         });
 
-        if (currentUser && currentGroup) {
-          setGroups(groupList);
-          setUserHasGroup(currentGroup.createdBy === currentUser.uid);
+        if (currentUser) {
+          setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
         }
+
+        // Filter groups based on `activity` parameter
+        const filteredGroups =
+          activity === 'Any'
+            ? groupList // Fetch all groups if activity is 'any'
+            : groupList.filter(group => group.activity.toLowerCase() === activity.toLowerCase());
+
+        // Update state with filtered groups
+        setGroups(filteredGroups);
 
       } catch (error) {
         const errorMessage =
@@ -111,7 +134,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
       }
     };
     fetchGroups();
-  }, [currentUser]);
+  }, [activity]);
 
 
 
@@ -267,8 +290,8 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           <View style={styles.header}>
             <Text style={styles.headerText}>Groups</Text>
           </View>
-          {userHasGroup ? <GroupNav route={route} /> : null}
-          {userInGroup ? <GroupMemberNav route={route} /> : null}
+          {userHasGroup ? <GroupNav /> : null}
+          {userInGroup ? <GroupMemberNav /> : null}
 
 
           {/* Modal Component */}
@@ -362,7 +385,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
           )}
           <FlatList
             data={groups || []}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             renderItem={({ item }) => (
               <View>
                 {/* Card */}
@@ -378,7 +401,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
                   <View
                     style={[
                       styles.card,
-                      item.createdBy === currentUser.uid && {
+                      (item.createdBy === currentUser.uid || item.memberUids?.includes(currentUser.uid)) && {
                         backgroundColor: 'lightblue',
                       },
                       item.applicants &&
@@ -406,7 +429,7 @@ const GroupsScreen = ({ route }: GroupsProps) => {
 
                       {/* Card Content: People */}
                       <View style={styles.cardContentPeople}>
-                        <Text style={styles.cardTextPeople}>+2</Text>
+                        <Text style={styles.cardTextPeople}>+{item.memberLimit}</Text>
                       </View>
                     </View>
                   </View>
@@ -414,7 +437,9 @@ const GroupsScreen = ({ route }: GroupsProps) => {
                 </TouchableOpacity>
               </View>
             )}
-
+            ListEmptyComponent={
+              <Text style={styles.noGroupsText}>No groups available</Text>
+            }
           />
           {(userHasGroup || userInGroup) && <FooterGroupNav />}
           {(!userHasGroup && !userInGroup) && <FooterNav />}
@@ -556,6 +581,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  noGroupsText: {
+    flex: 1,
+    textAlign: "center",
+    marginTop: 100,
+    fontSize: 24
+  }
 });
 
 export default GroupsScreen;

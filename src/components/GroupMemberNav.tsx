@@ -17,47 +17,48 @@ import { useGroup } from '../context/GroupContext';
 // Services
 import { navigate } from '../services/NavigationService';
 
-type GroupNavProps = {
-  route:
-  | RouteProp<RootStackParamList, 'MyGroupScreen'>
-  | RouteProp<RootStackParamList, 'GroupsScreen'>
-  | RouteProp<RootStackParamList, 'FindOrStart'>
-  | RouteProp<RootStackParamList, 'MembersHomeScreen'>
+// type GroupNavProps = {
+//   route:
+//   | RouteProp<RootStackParamList, 'MyGroupScreen'>
+//   | RouteProp<RootStackParamList, 'GroupsScreen'>
+//   | RouteProp<RootStackParamList, 'FindOrStart'>
+//   | RouteProp<RootStackParamList, 'MembersHomeScreen'>
 
-};
+// };
 
-const GroupNav = ({ route }: GroupNavProps) => {
+const GroupNav = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { currentUser } = useAuth();
-  const [buttonText, setButtonText] = useState('Browse');
-  const { currentGroupId, currentGroup } = useGroup();
+  // const [buttonText, setButtonText] = useState('Browse');
+  const { currentGroupId, currentGroup, checkUserInGroup } = useGroup();
 
 
   if (!currentUser) {
     return null;
   }
 
-  useEffect(() => {
-    if (currentUser) {
-      if (route.name === 'GroupsScreen') {
-        setButtonText('Go Back');
-      } else {
-        setButtonText('Browse');
-      }
-    }
-  }, [route, currentUser]);
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     if (route.name === 'GroupsScreen') {
+  //       setButtonText('Go Back');
+  //     } else {
+  //       setButtonText('Browse');
+  //     }
+  //   }
+  // }, [route, currentUser]);
 
-  const handleBrowsePress = () => {
-    if (route.name === 'GroupsScreen') {
-      navigation.goBack();
-    } else {
-      navigation.navigate('GroupsScreen');
-    }
-  };
+  // const handleBrowsePress = () => {
+  //   if (route.name === 'GroupsScreen') {
+  //     navigation.goBack();
+  //   } else {
+  //     navigation.navigate('GroupsScreen');
+  //   }
+  // };
 
   const handleLeaveGroup = async () => {
     try {
+
       await firestore()
         .collection('groups')
         .doc(currentGroupId)
@@ -67,22 +68,12 @@ const GroupNav = ({ route }: GroupNavProps) => {
 
         });
 
-      // //Remove the member object from the `members` array
-      // const groupDoc = await firestore().collection('groups').doc(currentGroupId).get();
-      // const groupData = groupDoc.data();
+      await checkUserInGroup();
 
-      // if (groupData && groupData.members) {
-      //   const updatedMembers = groupData.members.filter(
-      //     (member: { uid: string }) => member.uid !== currentUser.uid
-      //   );
+      // Clear group context explicitly
+      // await updateGroup(undefined);
+      // await updateGroupId(undefined);
 
-      //   await firestore()
-      //     .collection('groups')
-      //     .doc(currentGroupId)
-      //     .update({
-      //       members: updatedMembers,
-      //     });
-      // }
       navigation.navigate('FindOrStart');
 
     } catch {
@@ -97,8 +88,9 @@ const GroupNav = ({ route }: GroupNavProps) => {
         <>
           <View style={styles.footer}>
             <View style={styles.contentRow}>
-              <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
-                <Text style={styles.title}>{buttonText}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('FindGroup')} style={styles.button}>
+                {/* <Text style={styles.title}>{buttonText}</Text> */}
+                <Text style={styles.title}>Browse</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => navigation.navigate('FindOrStart')}

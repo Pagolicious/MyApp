@@ -21,6 +21,10 @@ import MyGroupScreen from './screens/MyGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import MembersHomeScreen from './screens/MembersHomScreen';
+import FriendScreen from './screens/Profile/FriendScreen';
+import MessageScreen from './screens/Profile/MessageScreen';
+import SettingScreen from './screens/Profile/SettingScreen';
+import AboutAppScreen from './screens/Profile/AboutAppScreen';
 
 //Contexts
 import { AuthProvider } from './context/AuthContext';
@@ -38,11 +42,16 @@ export type RootStackParamList = {
   FindOrStart: undefined;
   FindGroup: undefined;
   StartGroup: undefined;
-  GroupsScreen: undefined;
+  GroupsScreen: { activity: string };
   MyGroupScreen: undefined;
   GroupChatScreen: undefined;
   ProfileScreen: undefined;
   MembersHomeScreen: undefined;
+  FriendScreen: undefined;
+  MessageScreen: undefined;
+  SettingScreen: undefined;
+  AboutAppScreen: undefined;
+
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -53,9 +62,8 @@ function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <InvitationProvider>
-
-          <GroupProvider>
+        <GroupProvider>
+          <InvitationProvider>
             <NavigationContainer ref={navigationRef}>
               <Stack.Navigator initialRouteName="SignUpScreen">
                 <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
@@ -64,7 +72,11 @@ function App(): React.JSX.Element {
                 <Stack.Screen name="FindOrStart" component={FindOrStart} />
                 <Stack.Screen name="FindGroup" component={FindGroup} />
                 <Stack.Screen name="StartGroup" component={StartGroup} />
-                <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
+                <Stack.Screen
+                  name="GroupsScreen"
+                  component={GroupsScreen}
+                  initialParams={{ activity: 'Any' }}
+                />
                 <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
                 <Stack.Screen
                   name="GroupChatScreen"
@@ -72,11 +84,14 @@ function App(): React.JSX.Element {
                 />
                 <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
                 <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
+                <Stack.Screen name="FriendScreen" component={FriendScreen} />
+                <Stack.Screen name="MessageScreen" component={MessageScreen} />
+                <Stack.Screen name="SettingScreen" component={SettingScreen} />
+                <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
               </Stack.Navigator>
             </NavigationContainer>
-          </GroupProvider>
-        </InvitationProvider>
-
+          </InvitationProvider>
+        </GroupProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

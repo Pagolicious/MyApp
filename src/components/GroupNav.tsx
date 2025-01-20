@@ -11,20 +11,23 @@ import { RouteProp } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
-type GroupNavProps = {
-  route:
-  | RouteProp<RootStackParamList, 'MyGroupScreen'>
-  | RouteProp<RootStackParamList, 'GroupsScreen'>
-  | RouteProp<RootStackParamList, 'FindOrStart'>
-  | RouteProp<RootStackParamList, 'MembersHomeScreen'>
+//Services
+import { navigate } from '../services/NavigationService';
 
-};
+// type GroupNavProps = {
+//   route:
+//   | RouteProp<RootStackParamList, 'MyGroupScreen'>
+//   | RouteProp<RootStackParamList, 'GroupsScreen'>
+//   | RouteProp<RootStackParamList, 'FindOrStart'>
+//   | RouteProp<RootStackParamList, 'MembersHomeScreen'>
 
-const GroupNav = ({ route }: GroupNavProps) => {
+// };
+
+const GroupNav = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { currentUser } = useAuth();
-  const [buttonText, setButtonText] = useState('Browse');
+  // const [buttonText, setButtonText] = useState('Browse');
   const { currentGroupId } = useGroup();
   const { delistGroup } = useGroup();
 
@@ -34,24 +37,25 @@ const GroupNav = ({ route }: GroupNavProps) => {
   //   return null;
   // }
 
-  useEffect(() => {
-    if (currentUser) {
-      if (route.name === 'GroupsScreen') {
-        setButtonText('Go Back');
-      } else {
-        setButtonText('Browse');
-      }
-    }
-  }, [route, currentUser]);
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     if (route.name === 'GroupsScreen') {
+  //       setButtonText('Go Back');
+  //     } else {
+  //       setButtonText('Browse');
+  //     }
+  //   }
+  // }, [route, currentUser]);
 
 
-  const handleBrowsePress = () => {
-    if (route.name === 'GroupsScreen') {
-      navigation.goBack();
-    } else {
-      navigation.navigate('GroupsScreen');
-    }
-  };
+  // const handleBrowsePress = () => {
+  // if (route.name === 'GroupsScreen') {
+  //   navigation.goBack();
+  // } else {
+  //   navigation.navigate('GroupsScreen');
+  // }
+
+  // };
 
   const handleDelistMyGroup = async () => {
     try {
@@ -68,8 +72,9 @@ const GroupNav = ({ route }: GroupNavProps) => {
         <>
           <View style={styles.footer}>
             <View style={styles.contentRow}>
-              <TouchableOpacity onPress={handleBrowsePress} style={styles.button}>
-                <Text style={styles.title}>{buttonText}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('FindGroup')} style={styles.button}>
+                {/* <Text style={styles.title}>{buttonText}</Text> */}
+                <Text style={styles.title}>Browse</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => navigation.navigate('FindOrStart')}

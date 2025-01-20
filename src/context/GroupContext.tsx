@@ -20,8 +20,10 @@ interface Group {
   fromTime: string;
   toTime: string;
   createdBy: string;
+  memberLimit: number;
   details: string;
   members: Member[];
+  memberUids: string[];
   applicants: Applicant[];
 
 }
@@ -51,6 +53,9 @@ interface GroupContextType {
   notificationModal: boolean;
   notificationMessage: string | null;
   closeNotificationModal: () => void;
+  userInGroup: boolean | undefined;
+  setUserInGroup: (inGroup: boolean | undefined) => void;
+  checkUserInGroup: () => Promise<void>;
 }
 
 // Create the context with an initial value of undefined
@@ -63,28 +68,52 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   const [currentGroup, setCurrentGroup] = useState<Group | undefined>(undefined);
   const [notificationModal, setNotificationModal] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
+  const [userInGroup, setUserInGroup] = useState<boolean | undefined>(undefined);
   const { currentUser } = useAuth();
 
+  const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
 
   // Load the group from storage when the provider mounts
+
+  // const loadGroupData = async () => {
+  //   try {
+  //     // Load currentGroupId and currentGroup from AsyncStorage
+  //     const savedGroupId = await AsyncStorage.getItem('currentGroupId');
+  //     const savedGroup = await AsyncStorage.getItem('currentGroup');
+  //     const savedUserInGroupString = await AsyncStorage.getItem('userInGroup');
+
+  //     console.log('Saved currentGroupId from AsyncStorage:', savedGroupId); // Debugging log
+  //     console.log('Saved currentGroup from AsyncStorage:', savedGroup); // Debugging log
+
+  //     if (savedGroupId) setCurrentGroupId(savedGroupId);
+  //     if (savedGroup) setCurrentGroup(JSON.parse(savedGroup));
+  //     if (savedUserInGroupString) setUserInGroup(JSON.parse(savedUserInGroupString));
+
+  //   } catch (error) {
+  //     console.error('Error loading group data from AsyncStorage:', error);
+  //     handleFirestoreError(error)
+  //   }
+  // };
+
+  const loadGroupData = async () => {
+    if (!currentUser) {
+      return
+    }
+    const groupIdKey = getStorageKey('currentGroupId', currentUser.uid);
+    const groupKey = getStorageKey('currentGroup', currentUser.uid);
+    const userInGroupKey = getStorageKey('userInGroup', currentUser.uid)
+
+    const savedGroupId = await AsyncStorage.getItem(groupIdKey);
+    const savedGroup = await AsyncStorage.getItem(groupKey);
+    const savedUserInGroup = await AsyncStorage.getItem(userInGroupKey);
+
+    setCurrentGroupId(savedGroupId ? savedGroupId : undefined);
+    setCurrentGroup(savedGroup ? JSON.parse(savedGroup) : undefined);
+    setUserInGroup(savedUserInGroup ? JSON.parse(savedUserInGroup) : undefined);
+  };
+
+
   useEffect(() => {
-    const loadGroupData = async () => {
-      try {
-        // Load currentGroupId and currentGroup from AsyncStorage
-        const savedGroupId = await AsyncStorage.getItem('currentGroupId');
-        const savedGroup = await AsyncStorage.getItem('currentGroup');
-
-        console.log('Saved currentGroupId from AsyncStorage:', savedGroupId); // Debugging log
-        console.log('Saved currentGroup from AsyncStorage:', savedGroup); // Debugging log
-
-        if (savedGroupId) setCurrentGroupId(savedGroupId);
-        if (savedGroup) setCurrentGroup(JSON.parse(savedGroup));
-      } catch (error) {
-        console.error('Error loading group data from AsyncStorage:', error);
-        handleFirestoreError(error)
-      }
-    };
-
     loadGroupData();
   }, []);
 
@@ -94,32 +123,50 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         console.log('No current user after login, skipping group reload.');
         setCurrentGroupId(undefined);
         setCurrentGroup(undefined);
+        setUserInGroup(undefined);
         return;
       }
+      await loadGroupData()
 
-      try {
-        const savedGroupId = await AsyncStorage.getItem('currentGroupId');
-        const savedGroup = await AsyncStorage.getItem('currentGroup');
+      // try {
+      //   const savedGroupId = await AsyncStorage.getItem('currentGroupId');
+      //   const savedGroup = await AsyncStorage.getItem('currentGroup');
 
-        console.log('Reloaded currentGroupId from AsyncStorage:', savedGroupId); // Debugging log
-        console.log('Reloaded currentGroup from AsyncStorage:', savedGroup); // Debugging log
+      //   console.log('Reloaded currentGroupId from AsyncStorage:', savedGroupId); // Debugging log
+      //   console.log('Reloaded currentGroup from AsyncStorage:', savedGroup); // Debugging log
 
-        setCurrentGroupId(savedGroupId || undefined);
-        setCurrentGroup(savedGroup ? JSON.parse(savedGroup) : undefined);
-      } catch (error) {
-        console.error('Error reloading group data from AsyncStorage:', error);
-      }
+      //   setCurrentGroupId(savedGroupId || undefined);
+      //   setCurrentGroup(savedGroup ? JSON.parse(savedGroup) : undefined);
+      // } catch (error) {
+      //   console.error('Error reloading group data from AsyncStorage:', error);
+      // }
     };
 
     reloadGroupData();
   }, [currentUser]);
 
+  // useEffect(() => {
+  //   const loadUserInGroup = async () => {
+  //     try {
+  //       const savedUserInGroup = await AsyncStorage.getItem('userInGroup');
+  //       if (savedUserInGroup !== null) {
+  //         setUserInGroup(JSON.parse(savedUserInGroup));
+  //       }
+  //     } catch (error) {
+  //       console.error('Error loading userInGroup from AsyncStorage:', error);
+  //     }
+  //   };
+
+  //   loadUserInGroup();
+  // }, []);
 
   useEffect(() => {
     if (!currentGroupId || !currentUser) {
       setCurrentGroup(undefined);
       return;
     }
+
+    const groupKey = getStorageKey('currentGroup', currentUser.uid);
 
     // Real-time Firestore listener for the current group
     const unsubscribe = firestore()
@@ -132,7 +179,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
             setCurrentGroup(updatedGroup);
 
             // Save updated group to AsyncStorage
-            AsyncStorage.setItem('currentGroup', JSON.stringify(updatedGroup));
+            AsyncStorage.setItem(groupKey, JSON.stringify(updatedGroup));
           } else {
             setCurrentGroup(undefined);
           }
@@ -149,24 +196,62 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   // Update the stored group whenever it changes
 
   const updateGroupId = async (groupId: string | undefined) => {
+    if (!currentUser) return;
+    const key = getStorageKey('currentGroupId', currentUser.uid);
+
     setCurrentGroupId(groupId);
     if (groupId) {
-      await AsyncStorage.setItem('currentGroupId', groupId);
+      await AsyncStorage.setItem(key, groupId);
     } else {
-      await AsyncStorage.removeItem('currentGroupId');
+      await AsyncStorage.removeItem(key);
     }
   };
 
   const updateGroup = async (group: Group | undefined) => {
+    if (!currentUser) return;
+    const key = getStorageKey('currentGroup', currentUser.uid);
     setCurrentGroup(group);
     try {
       if (group) {
-        await AsyncStorage.setItem('currentGroup', JSON.stringify(group));
+        await AsyncStorage.setItem(key, JSON.stringify(group));
       } else {
-        await AsyncStorage.removeItem('currentGroup');
+        await AsyncStorage.removeItem(key);
       }
     } catch (error) {
       console.error('Error updating currentGroup in AsyncStorage:', error);
+    }
+  };
+
+  const updateUserInGroup = async (inGroup: boolean | undefined) => {
+    if (!currentUser) return;
+    const key = getStorageKey('userInGroup', currentUser.uid);
+    setUserInGroup(inGroup);
+    try {
+      if (inGroup !== undefined) {
+        await AsyncStorage.setItem(key, JSON.stringify(inGroup));
+      } else {
+        await AsyncStorage.removeItem(key);
+      }
+    } catch (error) {
+      console.error('Error updating userInGroup in AsyncStorage:', error);
+    }
+  };
+
+  const checkUserInGroup = async () => {
+    if (!currentUser || !currentUser.uid) {
+      console.log('Skipping user group check due to missing currentUser or not userInGroup.');
+      return;
+    }
+    try {
+      const memberInGroup = await firestore()
+        .collection('groups')
+        .where('memberUids', 'array-contains', currentUser.uid)
+        .get();
+
+      const isInGroup = !memberInGroup.empty;
+      await updateUserInGroup(isInGroup); // Update state and save to AsyncStorage
+    } catch (error) {
+      console.error('Error checking user in group:', error);
     }
   };
 
@@ -175,7 +260,27 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   //   console.log('Loaded currentGroupId from AsyncStorage:', currentGroupId);
   // }, [currentGroupId]);
 
+  const clearGroupData = async () => {
+    if (!currentUser) {
+      console.warn('No current user; cannot clear group data.');
+      return;
+    }
+    try {
+      // Generate user-specific keys
+      const groupIdKey = getStorageKey('currentGroupId', currentUser.uid);
+      const groupKey = getStorageKey('currentGroup', currentUser.uid);
+      const userInGroupKey = getStorageKey('userInGroup', currentUser.uid);
 
+      // Remove all user-specific group data from AsyncStorage
+      await AsyncStorage.multiRemove([groupIdKey, groupKey, userInGroupKey]);
+
+      setCurrentGroupId(undefined);
+      setCurrentGroup(undefined);
+      setUserInGroup(undefined);
+    } catch (error) {
+      console.error('Error clearing group data:', error);
+    }
+  };
 
   const delistGroup = async () => {
 
@@ -185,8 +290,8 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       // Fetch the group document
-      const groupDoc = await firestore().collection('groups').doc(currentGroupId).get();
-      const groupData = groupDoc.data();
+      const groupData = currentGroup || (await firestore().collection('groups').doc(currentGroupId).get()).data();
+
 
       // Notify all members using `memberUids`
       if (groupData && groupData.memberUids) {
@@ -214,9 +319,12 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       );
       await Promise.all(deleteMessagesPromises);
 
-      // Clear the current group ID and navigate to the home screen
-      updateGroup(undefined)
-      updateGroupId(undefined);
+      // Clear state
+      await clearGroupData();
+
+      // await updateGroup(undefined);
+      // await updateGroupId(undefined);
+      // await updateUserInGroup(false); // User is no longer in a group
       navigate('FindOrStart');
 
     } catch (error) {
@@ -296,6 +404,9 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         notificationModal,
         notificationMessage,
         closeNotificationModal,
+        userInGroup,
+        setUserInGroup: updateUserInGroup,
+        checkUserInGroup, // Add this to allow other components to trigger updates
       }}
     >
       {children}

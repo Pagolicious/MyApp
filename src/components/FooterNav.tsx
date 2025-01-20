@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Keyboard } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 //Navigation
@@ -15,9 +15,29 @@ const FooterNav = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    // Listen for keyboard events
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const isActive = (screenName: string) => route.name === screenName;
 
+  if (isKeyboardVisible) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -84,12 +104,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'flex-end',
+
   },
   footer: {
     height: 75,
     width: '100%',
     backgroundColor: '#5f4c4c',
     justifyContent: 'center',
+
   },
   contentRow: {
     flexDirection: 'row',

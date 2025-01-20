@@ -7,8 +7,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -28,6 +31,9 @@ import firestore from '@react-native-firebase/firestore';
 // Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
+
+//Icons
+import Icon1 from 'react-native-vector-icons/Entypo';
 
 const StartGroup = () => {
   const navigation =
@@ -56,7 +62,26 @@ const StartGroup = () => {
   const [showToTimepicker, setShowToTimepicker] = useState(false);
   const [skillvalue, setSkillvalue] = useState(0);
   const [details, setDetails] = useState('');
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const { setCurrentGroupId } = useGroup();
+  const [memberLimit, setMemberLimit] = useState(1);
+
+  const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
+  const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 1)); // Min limit 1
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () =>
+      setKeyboardVisible(true)
+    );
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardVisible(false)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const addGroup = () => {
     if (!currentUser) {
@@ -77,6 +102,7 @@ const StartGroup = () => {
         toDate: formatDate(toDate),
         toTime: formatTime(toTime),
         skillvalue: skillvalue,
+        memberLimit: memberLimit,
         details: details,
         createdBy: currentUser.uid,
         groupId: groupId,
@@ -171,9 +197,14 @@ const StartGroup = () => {
     Alert.alert('Button Pressed!');
   };
 
+  // const dismissKeyboard = () => {
+  //   Keyboard.dismiss();
+  // };
+
   return (
-    <ScrollView>
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <ScrollView>
+
         <View style={styles.header}>
           <Text style={styles.headerText}>Start a Group</Text>
         </View>
@@ -270,6 +301,8 @@ const StartGroup = () => {
           </View>
         </View>
         <View style={styles.bodyContainer}>
+          {/* <View style={styles.row}> */}
+          {/* <View style={styles.skillLevelContainer}> */}
           <View style={styles.bodySkillTitle}>
             <Text style={styles.bodyLabel}>Skill Level</Text>
             <Text style={styles.bodyValueTitle}>{skillvalue}</Text>
@@ -278,9 +311,9 @@ const StartGroup = () => {
             </TouchableOpacity>
           </View>
           <Slider
-            style={{ width: 400, height: 50 }}
+            style={{ width: "100%", height: 50 }}
             minimumValue={0}
-            maximumValue={10}
+            maximumValue={5}
             step={1}
             value={skillvalue}
             onValueChange={setSkillvalue}
@@ -288,7 +321,28 @@ const StartGroup = () => {
             maximumTrackTintColor="#000000"
             thumbTintColor="red"
           />
+          {/* </View> */}
+
+          {/* </View> */}
         </View>
+        <View style={styles.bodyContainer}>
+          {/* <View style={styles.memberNeededContainer}> */}
+          <View style={styles.row}>
+            <Text style={styles.bodyLabel}>Set Member Limit</Text>
+            <View style={styles.stepperContainer}>
+              <TouchableOpacity style={styles.stepperButton} onPress={decrement}>
+                <Text style={styles.stepperButtonText}>-</Text>
+              </TouchableOpacity>
+              <Text style={styles.memberLimitValue}>{memberLimit}</Text>
+              <TouchableOpacity style={styles.stepperButton} onPress={increment}>
+                <Text style={styles.stepperButtonText}>+</Text>
+              </TouchableOpacity>
+              {/* </View> */}
+            </View>
+
+          </View>
+        </View>
+
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Details</Text>
           <TextInput
@@ -300,9 +354,19 @@ const StartGroup = () => {
             onChangeText={setDetails}
           />
         </View>
-        <MyButton title={'Start a Group'} onPress={addGroup} />
-      </View>
-    </ScrollView>
+      </ScrollView>
+      {!isKeyboardVisible && (
+
+        <View style={styles.footerContainer}>
+          <TouchableOpacity style={styles.moreOptionBtn} onPress={addGroup}>
+            <Text style={styles.moreOptionText}>More</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.startGroupBtn} onPress={addGroup}>
+            <Text style={styles.startGroupText}>Create</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 };
 
@@ -400,10 +464,92 @@ const styles = StyleSheet.create({
   },
   bodyValueTitle: {
     marginTop: 15,
-    paddingRight: 55,
+    paddingRight: 20,
     fontSize: 17,
     color: 'black',
   },
+  // skillLevelContainer: {
+  // flex: 1,
+  // borderRightWidth: 1,
+  // borderColor: 'grey',
+  // },
+  // memberNeededContainer: {
+  //   flex: 1,
+  //   justifyContent: 'flex-end',
+  // },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    // borderWidth: 1,
+    margin: 20,
+    marginLeft: 100
+  },
+  stepperButton: {
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ccc',
+    borderRadius: 5
+  },
+  stepperButtonText: {
+    fontSize: 20
+  },
+  memberLimitValue: {
+    fontSize: 24, marginHorizontal: 20
+  },
+  footerContainer: {
+    // flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    // margin: 10,
+    padding: 15,
+    // backgroundColor: '#5f4c4c',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'transparent', // Transparent background
+
+  },
+  // exitBtn: {
+  //   width: 80,
+  //   height: 60,
+  //   backgroundColor: '#5f4c4c',
+  // },
+  moreOptionBtn: {
+    flex: 1,
+    // width: 100,
+    height: 60,
+    backgroundColor: 'grey',
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    marginHorizontal: 5,
+
+  },
+  moreOptionText: {
+    fontSize: 16,
+    color: "white",
+    fontWeight: "bold",
+  },
+  startGroupBtn: {
+    flex: 3,
+    // width: 280,
+    height: 60,
+    backgroundColor: '#4CBB17',
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    marginHorizontal: 5,
+
+  },
+  startGroupText: {
+    fontSize: 16,
+    color: "black",
+    fontWeight: "bold",
+  }
 });
 
 export default StartGroup;
