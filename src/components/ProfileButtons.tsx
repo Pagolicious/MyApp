@@ -86,14 +86,15 @@ export default ProfileButtons
 const styles = StyleSheet.create({
 
   container: {
-    flex: 1,
-    justifyContent: "flex-start",
+    // flex: 1,
+    // justifyContent: "flex-start",
+    marginBottom: 15
   },
   btnBorder: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    paddingVertical: 10,
+    // flexDirection: "row",
+    // alignItems: "center",
+    // marginBottom: 10,
+    paddingVertical: 15,
     paddingHorizontal: 15,
   },
   profileBtnText: {

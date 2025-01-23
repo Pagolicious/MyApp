@@ -103,8 +103,8 @@ export default FooterGroupNav;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    // flex: 1,
+    // justifyContent: 'flex-end',
   },
   footer: {
     height: 75,

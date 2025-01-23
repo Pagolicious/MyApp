@@ -38,6 +38,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerContainer: {
-    height: 76,
+    // height: 76,
   },
 });

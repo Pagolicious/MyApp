@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
 import React, { useState, useEffect, useReducer } from 'react';
 
 //Navigation
@@ -84,44 +84,52 @@ const FindGroup = () => {
       </View>
       {userHasGroup ? <GroupNav /> : null}
       {userInGroup ? <GroupMemberNav /> : null}
-      <View style={styles.bodyContainer}>
-        <Text style={styles.bodyTitle}>Activity</Text>
-        <TextInput
-          style={styles.input}
-          // placeholder={activity === 'Any' ? 'Search for a sport' : activity} // Show selected activity as placeholder
-          value={activity}
-          onChangeText={handleSearch}
-          onFocus={() => setShowDropdown(true)} // Show dropdown when focused
-        />
-        {showDropdown && (
-
-          <FlatList
-            style={styles.dropdown}
-            data={filteredSports}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => handleSelect(item)}
-              >
-                <Text style={styles.dropdownText}>{item}</Text>
-              </TouchableOpacity>
-            )}
+      <ImageBackground
+        source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
+        style={styles.backgroundImage} // Style for the background image
+      >
+        <View style={styles.bodyContainer}>
+          <Text style={styles.bodyTitle}>Activity</Text>
+          <TextInput
+            style={styles.input}
+            // placeholder={activity === 'Any' ? 'Search for a sport' : activity} // Show selected activity as placeholder
+            value={activity}
+            onChangeText={handleSearch}
+            onFocus={() => setShowDropdown(true)} // Show dropdown when focused
           />
+          {showDropdown && (
 
-        )}
-        {/* <Text style={styles.selectedText}>Selected Sport: {activity}</Text> */}
-      </View>
-      <View style={styles.bodyContainer}>
-        <Text style={styles.bodyTitle}>Location</Text>
+            <FlatList
+              style={styles.dropdown}
+              data={filteredSports}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => handleSelect(item)}
+                >
+                  <Text style={styles.dropdownText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
 
-        <TextInput
-          style={styles.input}
-          value={Location}
-          onChangeText={setLocation}
-        />
-      </View>
-      <MyButton title={'Find a Group'} onPress={SearchGroup} />
+          )}
+          {/* <Text style={styles.selectedText}>Selected Sport: {activity}</Text> */}
+        </View>
+        <View style={styles.bodyContainer}>
+          <Text style={styles.bodyTitle}>Location</Text>
+
+          <TextInput
+            style={styles.input}
+            value={Location}
+            onChangeText={setLocation}
+          />
+        </View>
+        <View style={styles.buttonContainer}>
+          <MyButton title={'Find a Group'} onPress={SearchGroup} />
+        </View>
+      </ImageBackground>
+
       {(userHasGroup || userInGroup) && <FooterGroupNav />}
       {(!userHasGroup && !userInGroup) && <FooterNav />}
 
@@ -148,6 +156,7 @@ const styles = StyleSheet.create({
   bodyContainer: {
     borderBottomWidth: 1,
     borderColor: 'grey',
+
   },
   bodyTitle: {
     marginTop: 15,
@@ -184,6 +193,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
   },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover"
+  },
+  buttonContainer: {
+    paddingHorizontal: 10,
+    marginVertical: 10
+  }
 });
 
 export default FindGroup;

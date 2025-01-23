@@ -6,6 +6,7 @@ import {
   Modal,
   TouchableOpacity,
   FlatList,
+  ImageBackground
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
@@ -133,7 +134,7 @@ const MyGroupScreen = () => {
     setSelectedApplicant(item);
   };
 
-  const inviteToGroup = async (selectedApplicant: Applicant | null) => {
+  const inviteApplicant = async (selectedApplicant: Applicant | null) => {
 
     if (!currentUser) {
       console.log("User is not authenticated.");
@@ -190,69 +191,98 @@ const MyGroupScreen = () => {
     }
   };
 
+  const declineApplicant = async (selectedApplicant: Applicant | null) => {
+    setModalVisible(false);
+    try {
+      await firestore()
+        .collection('groups')
+        .doc(currentGroupId)
+        .update({
+          applicants: currentGroup?.applicants.filter((applicant) => applicant.uid !== selectedApplicant?.uid),
+        });
+    } catch {
+      Alert.alert('Error', 'Something went wrong.');
+    }
+
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>My Group</Text>
       </View>
       {currentUser && <GroupNav />}
-      <FlatList
-        data={applicants}
-        keyExtractor={item => item.uid} // Unique key for each item
-        renderItem={({ item }) => (
-          <View>
-            <TouchableOpacity onPress={() => handleCardPress(item)}>
-              <View style={styles.card}>
-                <View style={styles.column}>
-                  <Text style={styles.cardText}>{item.firstName}</Text>
-                  <Text style={styles.cardText}>
-                    Skill Level: {item.skillLevel}
-                  </Text>
-                  {/* <Text style={styles.cardText}>{item.note}</Text> */}
+      <ImageBackground
+        source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
+        style={styles.backgroundImage} // Style for the background image
+      >
+        <FlatList
+          data={applicants}
+          keyExtractor={item => item.uid} // Unique key for each item
+          renderItem={({ item }) => (
+            <View>
+              <TouchableOpacity onPress={() => handleCardPress(item)}>
+                <View style={styles.card}>
+                  <View style={styles.column}>
+                    <Text style={styles.cardText}>{item.firstName}</Text>
+                    <Text style={styles.cardText}>
+                      Skill Level: {item.skillLevel}
+                    </Text>
+                    {/* <Text style={styles.cardText}>{item.note}</Text> */}
+                  </View>
                 </View>
-              </View>
-              <View style={styles.line} />
-            </TouchableOpacity>
-          </View>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.noApplicantsText}>No applicants available</Text>
-        }
-      />
-      <Modal
-        animationType="fade"
-        transparent
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalView}>
-            {/* Close Button in top-right corner */}
-            <TouchableOpacity
-              style={styles.closeIcon}
-              onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeText}>✖</Text>
-            </TouchableOpacity>
-
-            {/* Modal Content */}
-            <Text style={styles.modalTitleText}>Invite</Text>
-            <Text style={styles.modalText}>
-              Do you want to invite this person to your group?
-            </Text>
-            <View style={styles.modalNoteContainer}>
-              <Text style={styles.modalNoteText}>
-                {selectedApplicant?.note}
-              </Text>
+                {/* <View style={styles.line} /> */}
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.submitBtn}
-              onPress={async () => {
-                inviteToGroup(selectedApplicant);
-              }}>
-              <Text style={styles.submitBtnText}>Submit</Text>
-            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.noApplicantsText}>No applicants available</Text>
+          }
+        />
+        <Modal
+          animationType="fade"
+          transparent
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+              {/* Close Button in top-right corner */}
+              <TouchableOpacity
+                style={styles.closeIcon}
+                onPress={() => setModalVisible(false)}>
+                <Text style={styles.closeText}>✖</Text>
+              </TouchableOpacity>
+
+              {/* Modal Content */}
+              <Text style={styles.modalTitleText}>Invite</Text>
+              <Text style={styles.modalText}>
+                Do you want to invite this person to your group?
+              </Text>
+              <View style={styles.modalNoteContainer}>
+                <Text style={styles.modalNoteText}>
+                  {selectedApplicant?.note}
+                </Text>
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.declineBtn}
+                  onPress={async () => {
+                    declineApplicant(selectedApplicant);
+                  }}>
+                  <Text style={styles.declineBtnText}>Decline</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.inviteBtn}
+                  onPress={async () => {
+                    inviteApplicant(selectedApplicant);
+                  }}>
+                  <Text style={styles.inviteBtnText}>Invite</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      </ImageBackground>
       <FooterGroupNav />
     </View>
   );
@@ -276,9 +306,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'black',
   },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover"
+  },
   card: {
     backgroundColor: '#6A9AB0',
-    padding: 15,
+    padding: 20,
+    margin: 10,
+    borderRadius: 15,
+
+    // Shadow for iOS
+    shadowColor: '#000', // Shadow color
+    shadowOffset: { width: 0, height: 2 }, // Shadow position
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 3.84, // Shadow blur radius
+
+    // Shadow for Android
+    elevation: 5, // Elevation for Android shadow
   },
   column: {
     flexDirection: 'row',
@@ -289,11 +334,11 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     fontSize: 20,
   },
-  line: {
-    height: 1,
-    width: '100%',
-    backgroundColor: 'black',
-  },
+  // line: {
+  //   height: 1,
+  //   width: '100%',
+  //   backgroundColor: 'black',
+  // },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -337,21 +382,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'grey',
   },
-  input: {
-    height: 120,
-    width: 300,
-    borderColor: 'gray',
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: 'white',
-    fontSize: 16,
-  },
+  // input: {
+  //   height: 120,
+  //   width: 300,
+  //   borderColor: 'gray',
+  //   borderWidth: 1,
+  //   padding: 10,
+  //   borderRadius: 5,
+  //   backgroundColor: 'white',
+  //   fontSize: 16,
+  // },
   modalNoteText: {
     padding: 10,
     color: 'black',
   },
-  submitBtn: {
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    // paddingHorizontal: 30,
+    width: '100%',
+    marginTop: 5,
+  },
+  inviteBtn: {
     backgroundColor: 'green',
     padding: 10,
     width: 100,
@@ -359,7 +411,19 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 15,
   },
-  submitBtnText: {
+  inviteBtnText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  declineBtn: {
+    backgroundColor: 'red',
+    padding: 10,
+    width: 100,
+    alignItems: 'center',
+    borderRadius: 5,
+    marginTop: 15,
+  },
+  declineBtnText: {
     color: 'white',
     fontWeight: 'bold',
   },
@@ -368,6 +432,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 100,
     fontSize: 24
-
   }
 });
