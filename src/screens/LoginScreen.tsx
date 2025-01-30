@@ -58,6 +58,10 @@ const LoginScreen = ({ navigation }: NameProps) => {
       const currentGroup = currentGroupString ? JSON.parse(currentGroupString) : null;
       const userInGroup = savedUserInGroupString ? JSON.parse(savedUserInGroupString) : null;
 
+      // if (user) {
+      //   await firestore().collection('users').doc(user.uid).update({ isOnline: true });
+      // }
+
       if (currentGroup?.createdBy === user.uid) {
         // console.log(currentGroup?.createdBy)
         // console.log(user.uid)

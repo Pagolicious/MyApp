@@ -67,6 +67,7 @@ const SignUpScreen = ({ navigation }: NameProps) => {
         email: email,
         fcmToken: fcmToken,
         createdAt: firestore.FieldValue.serverTimestamp(), // Track when the user was created
+        isOnline: false,
       });
 
       Alert.alert('User Created! Please Login');

@@ -15,6 +15,12 @@ interface User {
   email: string;
   createdAt: string;
   fcmToken: string;
+  skills: Skills[];
+}
+
+interface Skills {
+  sport: string;
+  skillLevel: number;
 }
 
 interface AuthContextType {
@@ -76,6 +82,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     setCurrentUser(null); // Clear currentUser state immediately
     // setUserData(null); // Clear userData state
+    if (currentUser) {
+      await firestore().collection('users').doc(currentUser.uid).update({ isOnline: false });
+    }
+
     await auth().signOut();
 
 

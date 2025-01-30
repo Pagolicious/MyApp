@@ -22,7 +22,7 @@ import { useGroupData } from '../hooks/useGroupData';
 
 const ProfileButtons = () => {
   const { signOut } = useAuth()
-  // const { setCurrentGroup, currentGroup, userInGroup } = useGroup()
+  // const { clearGroupData } = useGroup()
   // const { userInGroup } = useGroupData()
 
   const logout = async () => {
@@ -33,6 +33,8 @@ const ProfileButtons = () => {
       // if (currentGroup) {
       //   await AsyncStorage.setItem('currentGroup', JSON.stringify(currentGroup));
       // }
+      // await checkUserInGroup();
+      // await clearGroupData();
 
       // setCurrentGroup(undefined);
       await signOut()

@@ -375,16 +375,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 150,
-    backgroundColor: 'lightblue',
+    height: 65,
+    backgroundColor: '#5f4c4c',
     padding: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerText: {
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: 'black',
+    color: 'white',
   },
   bodyContainer: {
     borderBottomWidth: 1,

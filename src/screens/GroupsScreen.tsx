@@ -19,6 +19,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import StarRating from 'react-native-star-rating-widget';
 import { RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 //Components
 import GroupNav from '../components/GroupNav';
@@ -38,6 +39,9 @@ import { useGroupData } from '../hooks/useGroupData';
 
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
+
+//Icons
+import Icon1 from 'react-native-vector-icons/AntDesign';
 
 
 // type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
@@ -78,9 +82,9 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
   const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
-  const { setCurrentGroupId } = useGroup();
-  const { currentGroup, currentGroupId, userInGroup } = useGroup();
+  const { currentGroup, currentGroupId, userInGroup, setCurrentGroupId } = useGroup();
   const { activity } = route.params;
+  const navigation = useNavigation();
 
   // const { userInGroup } = useGroupData()
 
@@ -229,16 +233,22 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
       return;
     }
 
-    const skillLevelKey = `${currentGroup.activity.toLowerCase()}_skillLevel`;
+    const newSkill = {
+      sport: currentGroup.activity.toLowerCase(), // Add the sport name
+      skillLevel, // Add the skill level value
+    };
+
     try {
       await firestore()
         .collection('users')
         .doc(currentUser.uid)
         .update({
-          [skillLevelKey]: skillLevel,
+          skills: firestore.FieldValue.arrayUnion(newSkill), // Use Firestore's arrayUnion
         });
+
+
       setModalVisible(false);
-      setHasSkillLevel(true); // Set hasSkillLevel to true after saving
+      setHasSkillLevel(true);
     } catch (error) {
       console.error('Error saving user data: ', error);
       Alert.alert('Error', 'Could not save user data');
@@ -284,22 +294,24 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
     if (!currentUser) {
       return;
     }
-
-    const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
-
+    // const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
     try {
-      const userDoc = await firestore()
-        .collection('users')
-        .doc(currentUser.uid)
-        .get();
-      const userData = userDoc.data();
+      if (userData && Array.isArray(userData.skills)) {
 
-      if (userData && userData[skillLevelKey] !== undefined) {
-        setSkillLevel(userData[skillLevelKey]);
-        setHasSkillLevel(true); // User already has a skill level for this activity
+        const skill = userData.skills.find(
+          (item: { sport: string; skillLevel: number }) => item.sport === activity.toLowerCase()
+        );
+
+        if (skill) {
+          setSkillLevel(skill.skillLevel); // Set the existing skill level
+          setHasSkillLevel(true); // User already has a skill level for this activity
+        } else {
+          setSkillLevel(0); // No skill found for this activity
+          setHasSkillLevel(false);
+        }
       } else {
-        setSkillLevel(0);
-        setHasSkillLevel(false); // User does not have a skill level yet
+        setSkillLevel(0); // No skills array found
+        setHasSkillLevel(false);
       }
     } catch (error) {
       console.error('Error fetching user skill level: ', error);
@@ -340,12 +352,16 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
   };
 
   const handleCardPress = async (item: Group) => {
-    await checkUserSkillLevel(item.activity);
-    setCurrentGroupId(item?.id)
-    if (!hasSkillLevel) {
-      setModalVisible(true);
+    if (userHasGroup || userInGroup) {
+      return
     } else {
-      setApplyModalVisible(true);
+      await checkUserSkillLevel(item.activity);
+      setCurrentGroupId(item?.id)
+      if (!hasSkillLevel) {
+        setModalVisible(true);
+      } else {
+        setApplyModalVisible(true);
+      }
     }
   };
 
@@ -372,7 +388,13 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
           {/* <View style={styles.contentContainer}> */}
 
           <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Icon1 name="arrowleft" size={25} color="black" />
+            </TouchableOpacity>
+            <View style={styles.spacer} />
             <Text style={styles.headerText}>Groups</Text>
+            <View style={styles.spacer} />
+
           </View>
           {userHasGroup ? <GroupNav /> : null}
           {userInGroup ? <GroupMemberNav /> : null}
@@ -381,164 +403,164 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
             style={styles.backgroundImage} // Style for the background image
           >
 
+            <View style={styles.flatListContainer}>
+              {/* Modal Component */}
+              {currentUser && currentUser.uid && !hasSkillLevel && (
+                <Modal
+                  animationType="fade"
+                  transparent
+                  visible={modalVisible}
+                  onRequestClose={() => setModalVisible(false)}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalView}>
+                      {/* Close Button in top-right corner */}
+                      <TouchableOpacity
+                        style={styles.closeIcon}
+                        onPress={() => setModalVisible(false)}>
+                        <Text style={styles.closeText}>✖</Text>
+                      </TouchableOpacity>
 
-            {/* Modal Component */}
-            {currentUser && currentUser.uid && !hasSkillLevel && (
-              <Modal
-                animationType="fade"
-                transparent
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}>
-                <View style={styles.modalOverlay}>
-                  <View style={styles.modalView}>
-                    {/* Close Button in top-right corner */}
-                    <TouchableOpacity
-                      style={styles.closeIcon}
-                      onPress={() => setModalVisible(false)}>
-                      <Text style={styles.closeText}>✖</Text>
-                    </TouchableOpacity>
-
-                    {/* Modal Content */}
-                    <Text style={styles.modalTitleText}>Skill level</Text>
-                    <Text style={styles.modalText}>
-                      We need to know your skill level for this activity
-                    </Text>
-                    <StarRating
-                      rating={skillLevel}
-                      onChange={setSkillLevel}
-                      enableHalfStar={false}
-                    />
-                    <Animated.View
-                      style={[styles.modalExtendedContent, animatedStyle]}>
-                      <Text style={styles.modalObervationText}>
-                        You can NOT change your skill level later
+                      {/* Modal Content */}
+                      <Text style={styles.modalTitleText}>Skill level</Text>
+                      <Text style={styles.modalText}>
+                        We need to know your skill level for this activity
                       </Text>
+                      <StarRating
+                        rating={skillLevel}
+                        onChange={setSkillLevel}
+                        enableHalfStar={false}
+                      />
+                      <Animated.View
+                        style={[styles.modalExtendedContent, animatedStyle]}>
+                        <Text style={styles.modalObervationText}>
+                          You can NOT change your skill level later
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.submitBtn}
+                          onPress={async () => {
+                            addSkillLevel();
+                          }}>
+                          <Text style={styles.submitBtnText}>Submit</Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    </View>
+                  </View>
+                </Modal>
+              )}
+              {currentUser && currentUser.uid && hasSkillLevel && (
+                <Modal
+                  animationType="fade"
+                  transparent
+                  visible={applyModalVisible}
+                  onRequestClose={() => setApplyModalVisible(false)}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalView}>
+                      {/* Close Button in top-right corner */}
+                      <TouchableOpacity
+                        style={styles.closeIcon}
+                        onPress={() => setApplyModalVisible(false)}>
+                        <Text style={styles.closeText}>✖</Text>
+                      </TouchableOpacity>
+
+                      {/* Modal Content */}
+                      <Text style={styles.modalTitleText}>Apply For Group</Text>
+                      <Text style={styles.modalText}>Group Details:</Text>
+                      <View style={styles.modalDetailContainer}>
+                        <Text style={styles.modalDetailText}>
+                          {currentGroup?.details}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text style={styles.modalText}>Your message to the group:</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="This is optional"
+                          value={note}
+                          onChangeText={setNote}
+                          multiline={true} // Allow multiple lines
+                          numberOfLines={4} // Set number of lines to display by default
+                          textAlignVertical="top" // Align text to the top of the input
+                        />
+                      </View>
                       <TouchableOpacity
                         style={styles.submitBtn}
                         onPress={async () => {
-                          addSkillLevel();
+                          applyForGroup(currentGroup);
                         }}>
                         <Text style={styles.submitBtnText}>Submit</Text>
                       </TouchableOpacity>
-                    </Animated.View>
-                  </View>
-                </View>
-              </Modal>
-            )}
-            {currentUser && currentUser.uid && hasSkillLevel && (
-              <Modal
-                animationType="fade"
-                transparent
-                visible={applyModalVisible}
-                onRequestClose={() => setApplyModalVisible(false)}>
-                <View style={styles.modalOverlay}>
-                  <View style={styles.modalView}>
-                    {/* Close Button in top-right corner */}
-                    <TouchableOpacity
-                      style={styles.closeIcon}
-                      onPress={() => setApplyModalVisible(false)}>
-                      <Text style={styles.closeText}>✖</Text>
-                    </TouchableOpacity>
-
-                    {/* Modal Content */}
-                    <Text style={styles.modalTitleText}>Apply For Group</Text>
-                    <Text style={styles.modalText}>Group Details:</Text>
-                    <View style={styles.modalDetailContainer}>
-                      <Text style={styles.modalDetailText}>
-                        {currentGroup?.details}
-                      </Text>
                     </View>
-                    <View>
-                      <Text style={styles.modalText}>Your message to the group:</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="This is optional"
-                        value={note}
-                        onChangeText={setNote}
-                        multiline={true} // Allow multiple lines
-                        numberOfLines={4} // Set number of lines to display by default
-                        textAlignVertical="top" // Align text to the top of the input
-                      />
-                    </View>
-                    <TouchableOpacity
-                      style={styles.submitBtn}
-                      onPress={async () => {
-                        applyForGroup(currentGroup);
-                      }}>
-                      <Text style={styles.submitBtnText}>Submit</Text>
-                    </TouchableOpacity>
                   </View>
-                </View>
-              </Modal>
-            )}
-            <FlatList
-              data={groups || []}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({ item }) => {
-                // const activityImage = activityImages[item.activity.toLowerCase()] || require('../assets/SportImages/tennis.jpg');
+                </Modal>
+              )}
+              <FlatList
+                data={groups || []}
+                keyExtractor={item => item.id.toString()}
+                renderItem={({ item }) => {
+                  // const activityImage = activityImages[item.activity.toLowerCase()] || require('../assets/SportImages/tennis.jpg');
 
-                const isApplicant = item.applicants.some(
-                  applicant => applicant.uid === currentUser?.uid
-                );
-                const isMember = item.memberUids.includes(currentUser?.uid);
-                const isOwner = item.createdBy === currentUser.uid
+                  const isApplicant = item.applicants.some(
+                    applicant => applicant.uid === currentUser?.uid
+                  );
+                  const isMember = item.memberUids.includes(currentUser?.uid);
+                  const isOwner = item.createdBy === currentUser.uid
 
-                // <View>
-                return (
+                  // <View>
+                  return (
 
-                  <TouchableOpacity onPress={() => handleCardPress(item)}>
-                    {/* Use ImageBackground for the background image */}
-                    {/* <ImageBackground
+                    <TouchableOpacity onPress={() => handleCardPress(item)}>
+                      {/* Use ImageBackground for the background image */}
+                      {/* <ImageBackground
                     source={activityImage}
                     style={styles.backgroundImage}
                   imageStyle={{ borderRadius: 10 }}
                   > */}
-                    {/* <BlurView
+                      {/* <BlurView
                       style={styles.blurView}
                       blurType="dark" // 'light', 'dark', or 'extraDark'
                       blurAmount={2} // Adjust the blur intensity
                       reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.6)" // Fallback color
                     /> */}
 
-                    <View style={[
-                      styles.card,
-                      { backgroundColor: isApplicant || isMember || isOwner ? '#50C878' : '#6A9AB0' }, // Dynamic color
-                    ]}>
-                      <View style={styles.column}>
+                      <View style={[
+                        styles.card,
+                        { backgroundColor: isApplicant || isMember || isOwner ? '#50C878' : '#6A9AB0' }, // Dynamic color
+                      ]}>
+                        <View style={styles.column}>
 
-                        {/* Card Content: Activity & Location */}
-                        <View style={styles.cardContentActivity}>
-                          <Text style={styles.cardText}>{item.activity}</Text>
-                          <Text style={styles.cardText}>{item.location}</Text>
-                        </View>
+                          {/* Card Content: Activity & Location */}
+                          <View style={styles.cardContentActivity}>
+                            <Text style={styles.cardText}>{item.activity}</Text>
+                            <Text style={styles.cardText}>{item.location}</Text>
+                          </View>
 
-                        {/* Card Content: Date & Time */}
-                        <View style={styles.cardContentDate}>
-                          <Text style={styles.cardText}>{item.fromDate}</Text>
-                          <Text style={styles.cardText}>
-                            {item.fromTime} - {item.toTime}
-                          </Text>
-                        </View>
+                          {/* Card Content: Date & Time */}
+                          <View style={styles.cardContentDate}>
+                            <Text style={styles.cardText}>{item.fromDate}</Text>
+                            <Text style={styles.cardText}>
+                              {item.fromTime} - {item.toTime}
+                            </Text>
+                          </View>
 
-                        {/* Card Content: People */}
-                        <View style={styles.cardContentPeople}>
-                          <Text style={styles.cardTextPeople}>+{item.memberLimit}</Text>
+                          {/* Card Content: People */}
+                          <View style={styles.cardContentPeople}>
+                            <Text style={styles.cardTextPeople}>+{item.memberLimit}</Text>
+                          </View>
                         </View>
+                        {/* </View> */}
                       </View>
-                      {/* </View> */}
-                    </View>
-                    {/* </ImageBackground> */}
-                    {/* <View style={styles.line} /> */}
-                  </TouchableOpacity>
-                  // </View>
-                )
-              }}
-              ListEmptyComponent={
-                <Text style={styles.noGroupsText}>No groups available</Text>
-              }
-            />
-            {/* </View> */}
-
+                      {/* </ImageBackground> */}
+                      {/* <View style={styles.line} /> */}
+                    </TouchableOpacity>
+                    // </View>
+                  )
+                }}
+                ListEmptyComponent={
+                  <Text style={styles.noGroupsText}>No groups available</Text>
+                }
+              />
+              {/* </View> */}
+            </View>
           </ImageBackground>
 
 
@@ -556,24 +578,36 @@ const styles = StyleSheet.create({
     flex: 1,
     // borderWidth: 5
   },
-  contentContainer: {
-    flex: 1, // Ensures the content takes up all available space
-    paddingBottom: 10, // Optional: Adds spacing at the bottom if needed
-    borderWidth: 5,
-    // height: 400
-  },
+  // contentContainer: {
+  //   flex: 1, // Ensures the content takes up all available space
+  //   paddingBottom: 10, // Optional: Adds spacing at the bottom if needed
+  //   borderWidth: 5,
+  //   // height: 400
+  // },
   header: {
-    height: 80,
-    backgroundColor: '#EAD8B1',
+    height: 65,
+    backgroundColor: '#5f4c4c',
     padding: 15,
-    justifyContent: 'center',
+    // justifyContent: "space-between",
     alignItems: 'center',
-    // marginBottom: 5
+    flexDirection: "row",
   },
   headerText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'black',
+    color: 'white',
+    // marginLeft: 'auto',
+    marginRight: 20,
+  },
+  spacer: {
+    flex: 1,
+  },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
+  flatListContainer: {
+    marginTop: 10
   },
   card: {
     backgroundColor: '#6A9AB0',
@@ -709,13 +743,10 @@ const styles = StyleSheet.create({
   noGroupsText: {
     flex: 1,
     textAlign: "center",
-    marginTop: 100,
+    marginTop: 200,
     fontSize: 24
   },
-  backgroundImage: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
+
   // contentOverlay: {
   //   flex: 1,
   //   backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent overlay for readability

@@ -118,6 +118,8 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       if (response === 'accepted') {
 
+        setModalVisible(false);
+
         // Fetch current user data
         const userDoc = await firestore()
           .collection('users')
@@ -156,7 +158,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         navigate("MembersHomeScreen")
 
       } else {
-        Alert.alert('Declined', 'You declined the invitation.');
+        setModalVisible(false);
       }
 
       if (groupData && groupData.applicants) {
@@ -174,7 +176,6 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       await firestore().collection('groupInvitations').doc(invitationId).delete();
 
       setInvitation(null);
-      setModalVisible(false);
     } catch (error) {
       handleFirestoreError(error);
     }

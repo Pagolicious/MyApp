@@ -56,6 +56,7 @@ interface GroupContextType {
   userInGroup: boolean | undefined;
   setUserInGroup: (inGroup: boolean | undefined) => void;
   checkUserInGroup: () => Promise<void>;
+  clearGroupData: () => Promise<void>;
 }
 
 // Create the context with an initial value of undefined
@@ -407,6 +408,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         userInGroup,
         setUserInGroup: updateUserInGroup,
         checkUserInGroup, // Add this to allow other components to trigger updates
+        clearGroupData
       }}
     >
       {children}

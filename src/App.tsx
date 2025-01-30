@@ -21,18 +21,25 @@ import MyGroupScreen from './screens/MyGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import MembersHomeScreen from './screens/MembersHomScreen';
+import RequestScreen from './screens/RequestScreen';
+
 import FriendScreen from './screens/Profile/FriendScreen';
 import MessageScreen from './screens/Profile/MessageScreen';
 import SettingScreen from './screens/Profile/SettingScreen';
 import AboutAppScreen from './screens/Profile/AboutAppScreen';
+import FriendRequestScreen from './screens/Profile/FriendRequestScreen';
 
 //Contexts
 import { AuthProvider } from './context/AuthContext';
 import { GroupProvider } from './context/GroupContext';
 import { InvitationProvider } from './context/InvitationContext';
+import { ModalProvider } from './context/ModalContext';
 
 //Services
 import { navigationRef } from './services/NavigationService';
+
+//Hooks
+import useOnlineStatus from './hooks/useOnlineStatus';
 
 
 export type RootStackParamList = {
@@ -51,7 +58,8 @@ export type RootStackParamList = {
   MessageScreen: undefined;
   SettingScreen: undefined;
   AboutAppScreen: undefined;
-
+  RequestScreen: undefined;
+  FriendRequestScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -62,39 +70,54 @@ function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
+        <OnlineStatusWrapper />
         <GroupProvider>
           <InvitationProvider>
-            <NavigationContainer ref={navigationRef}>
-              <Stack.Navigator initialRouteName="SignUpScreen">
-                <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-                <Stack.Screen name="LoginScreen" component={LoginScreen} />
-                <Stack.Screen name="NamePage" component={NamePage} />
-                <Stack.Screen name="FindOrStart" component={FindOrStart} />
-                <Stack.Screen name="FindGroup" component={FindGroup} />
-                <Stack.Screen name="StartGroup" component={StartGroup} />
-                <Stack.Screen
-                  name="GroupsScreen"
-                  component={GroupsScreen}
-                  initialParams={{ activity: 'Any' }}
-                />
-                <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
-                <Stack.Screen
-                  name="GroupChatScreen"
-                  component={GroupChatScreen}
-                />
-                <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-                <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
-                <Stack.Screen name="FriendScreen" component={FriendScreen} />
-                <Stack.Screen name="MessageScreen" component={MessageScreen} />
-                <Stack.Screen name="SettingScreen" component={SettingScreen} />
-                <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
-              </Stack.Navigator>
-            </NavigationContainer>
+            <ModalProvider>
+              <NavigationContainer ref={navigationRef}>
+                <Stack.Navigator
+                  initialRouteName="SignUpScreen"
+                  screenOptions={{
+                    headerShown: false
+                  }}>
+                  <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+                  <Stack.Screen name="LoginScreen" component={LoginScreen} />
+                  <Stack.Screen name="NamePage" component={NamePage} />
+                  <Stack.Screen name="FindOrStart" component={FindOrStart} />
+                  <Stack.Screen name="FindGroup" component={FindGroup} />
+                  <Stack.Screen name="StartGroup" component={StartGroup} />
+                  <Stack.Screen
+                    name="GroupsScreen"
+                    component={GroupsScreen}
+                    initialParams={{ activity: 'Any' }}
+                  />
+                  <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
+                  <Stack.Screen
+                    name="GroupChatScreen"
+                    component={GroupChatScreen}
+                  />
+                  <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+                  <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
+                  <Stack.Screen name="FriendScreen" component={FriendScreen} />
+                  <Stack.Screen name="MessageScreen" component={MessageScreen} />
+                  <Stack.Screen name="SettingScreen" component={SettingScreen} />
+                  <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
+                  <Stack.Screen name="RequestScreen" component={RequestScreen} />
+                  <Stack.Screen name="FriendRequestScreen" component={FriendRequestScreen} />
+
+                </Stack.Navigator>
+              </NavigationContainer>
+            </ModalProvider>
           </InvitationProvider>
         </GroupProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );
 }
+
+const OnlineStatusWrapper = () => {
+  useOnlineStatus();
+  return null; // No UI needed, just runs the hook
+};
 
 export default App;

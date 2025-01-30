@@ -20,6 +20,7 @@ interface Member {
 interface Owner {
   uid: string;
   firstName: string;
+  lastName: string;
 }
 
 export const useGroupData = () => {
@@ -54,7 +55,7 @@ export const useGroupData = () => {
         // setUserInGroup(!memberInGroup.empty);
 
         if (currentGroup) {
-          setOwner(ownerData ? { uid: currentGroup.createdBy, firstName: ownerData.firstName } : null);
+          setOwner(ownerData ? { uid: currentGroup.createdBy, firstName: ownerData.firstName, lastName: ownerData.lastName } : null);
           setMembers(currentGroup.members);
         }
       } catch (error) {
