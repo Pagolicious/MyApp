@@ -8,7 +8,9 @@ import {
   FlatList,
   Animated,
   Easing,
-  ImageBackground
+  ImageBackground,
+  Pressable,
+  TouchableWithoutFeedback
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { TextInput } from 'react-native-gesture-handler';
@@ -82,10 +84,10 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
   const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
-  const { currentGroup, currentGroupId, userInGroup, setCurrentGroupId } = useGroup();
+  const { currentGroup, currentGroupId, userInGroup, setCurrentGroup, setCurrentGroupId } = useGroup();
   const { activity } = route.params;
   const navigation = useNavigation();
-
+  // const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   // const { userInGroup } = useGroupData()
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
@@ -226,10 +228,9 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
   // }, [groups]);
 
 
-
-
   const addSkillLevel = async () => {
     if (!currentUser || !currentGroup) {
+      console.log("not logged in or already in a group")
       return;
     }
 
@@ -256,8 +257,9 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
     }
   };
 
-  const applyForGroup = async (currentGroup: Group | undefined) => {
+  const applyForGroup = async () => {
     if (!currentGroup || !currentUser) {
+      console.log("not online or in a group already")
       return;
     }
     const applicantData = {
@@ -353,17 +355,29 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
 
   const handleCardPress = async (item: Group) => {
     if (userHasGroup || userInGroup) {
-      return
-    } else {
-      await checkUserSkillLevel(item.activity);
-      setCurrentGroupId(item?.id)
-      if (!hasSkillLevel) {
+      console.log("User is already in a group");
+      return;
+    }
+
+    await checkUserSkillLevel(item.activity); // Ensure this runs first
+    // setSelectedGroup(item)
+    // Use functional update to get the latest state
+    setCurrentGroupId(item?.id)
+
+    setHasSkillLevel((prevHasSkillLevel) => {
+      // console.log("Skill level check completed:", prevHasSkillLevel);
+
+      if (!prevHasSkillLevel) {
         setModalVisible(true);
       } else {
         setApplyModalVisible(true);
       }
-    }
+
+      return prevHasSkillLevel; // Ensure state remains correctly set
+    });
   };
+
+
 
   // if (loading) {
   //   return (
@@ -396,21 +410,81 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
             <View style={styles.spacer} />
 
           </View>
-          {userHasGroup ? <GroupNav /> : null}
-          {userInGroup ? <GroupMemberNav /> : null}
+          {/* {userHasGroup ? <GroupNav /> : null}
+          {userInGroup ? <GroupMemberNav /> : null} */}
           <ImageBackground
             source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
             style={styles.backgroundImage} // Style for the background image
           >
 
             <View style={styles.flatListContainer}>
-              {/* Modal Component */}
-              {currentUser && currentUser.uid && !hasSkillLevel && (
-                <Modal
-                  animationType="fade"
-                  transparent
-                  visible={modalVisible}
-                  onRequestClose={() => setModalVisible(false)}>
+              <FlatList
+                data={groups || []}
+                keyExtractor={item => item.id.toString()}
+                renderItem={({ item }) => {
+                  // const activityImage = activityImages[item.activity.toLowerCase()] || require('../assets/SportImages/tennis.jpg');
+
+                  const isApplicant = item.applicants.some(
+                    applicant => applicant.uid === currentUser?.uid
+                  );
+                  const isMember = item.memberUids.includes(currentUser?.uid);
+                  const isOwner = item.createdBy === currentUser.uid
+
+                  // <View>
+                  return (
+
+                    <Pressable onPress={() => handleCardPress(item)}
+                      android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                      style={[
+                        styles.card,
+                        { backgroundColor: isApplicant || isMember || isOwner ? '#50C878' : '#6A9AB0' }, // Dynamic color
+                      ]}>
+
+                      {/* <View > */}
+                      <View style={styles.column}>
+
+                        {/* Card Content: Activity & Location */}
+                        <View style={styles.cardContentActivity}>
+                          <Text style={styles.cardText}>{item.activity}</Text>
+                          <Text style={styles.cardText}>{item.location}</Text>
+                        </View>
+
+                        {/* Card Content: Date & Time */}
+                        <View style={styles.cardContentDate}>
+                          <Text style={styles.cardText}>{item.fromDate}</Text>
+                          <Text style={styles.cardText}>
+                            {item.fromTime} - {item.toTime}
+                          </Text>
+                        </View>
+
+                        {/* Card Content: People */}
+                        <View style={styles.cardContentPeople}>
+                          <Text style={styles.cardTextPeople}>+{item.memberLimit}</Text>
+                        </View>
+                      </View>
+                      {/* </View> */}
+                      {/* </View> */}
+                      {/* </ImageBackground> */}
+                      {/* <View style={styles.line} /> */}
+                    </Pressable>
+                    // </View>
+                  )
+                }}
+                ListEmptyComponent={
+                  <Text style={styles.noGroupsText}>No groups available</Text>
+                }
+              />
+            </View>
+
+            {/* Modal Component */}
+            {currentUser && !hasSkillLevel && (
+              <Modal
+                animationType="fade"
+                transparent
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}>
+                <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+
                   <View style={styles.modalOverlay}>
                     <View style={styles.modalView}>
                       {/* Close Button in top-right corner */}
@@ -445,14 +519,17 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
                       </Animated.View>
                     </View>
                   </View>
-                </Modal>
-              )}
-              {currentUser && currentUser.uid && hasSkillLevel && (
-                <Modal
-                  animationType="fade"
-                  transparent
-                  visible={applyModalVisible}
-                  onRequestClose={() => setApplyModalVisible(false)}>
+                </TouchableWithoutFeedback>
+              </Modal>
+            )}
+            {currentUser && currentUser.uid && hasSkillLevel && (
+              <Modal
+                animationType="fade"
+                transparent
+                visible={applyModalVisible}
+                onRequestClose={() => setApplyModalVisible(false)}>
+                <TouchableWithoutFeedback onPress={() => setApplyModalVisible(false)}>
+
                   <View style={styles.modalOverlay}>
                     <View style={styles.modalView}>
                       {/* Close Button in top-right corner */}
@@ -485,82 +562,17 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
                       <TouchableOpacity
                         style={styles.submitBtn}
                         onPress={async () => {
-                          applyForGroup(currentGroup);
+                          applyForGroup();
                         }}>
                         <Text style={styles.submitBtnText}>Submit</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
-                </Modal>
-              )}
-              <FlatList
-                data={groups || []}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => {
-                  // const activityImage = activityImages[item.activity.toLowerCase()] || require('../assets/SportImages/tennis.jpg');
+                </TouchableWithoutFeedback>
+              </Modal>
+            )}
 
-                  const isApplicant = item.applicants.some(
-                    applicant => applicant.uid === currentUser?.uid
-                  );
-                  const isMember = item.memberUids.includes(currentUser?.uid);
-                  const isOwner = item.createdBy === currentUser.uid
-
-                  // <View>
-                  return (
-
-                    <TouchableOpacity onPress={() => handleCardPress(item)}>
-                      {/* Use ImageBackground for the background image */}
-                      {/* <ImageBackground
-                    source={activityImage}
-                    style={styles.backgroundImage}
-                  imageStyle={{ borderRadius: 10 }}
-                  > */}
-                      {/* <BlurView
-                      style={styles.blurView}
-                      blurType="dark" // 'light', 'dark', or 'extraDark'
-                      blurAmount={2} // Adjust the blur intensity
-                      reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.6)" // Fallback color
-                    /> */}
-
-                      <View style={[
-                        styles.card,
-                        { backgroundColor: isApplicant || isMember || isOwner ? '#50C878' : '#6A9AB0' }, // Dynamic color
-                      ]}>
-                        <View style={styles.column}>
-
-                          {/* Card Content: Activity & Location */}
-                          <View style={styles.cardContentActivity}>
-                            <Text style={styles.cardText}>{item.activity}</Text>
-                            <Text style={styles.cardText}>{item.location}</Text>
-                          </View>
-
-                          {/* Card Content: Date & Time */}
-                          <View style={styles.cardContentDate}>
-                            <Text style={styles.cardText}>{item.fromDate}</Text>
-                            <Text style={styles.cardText}>
-                              {item.fromTime} - {item.toTime}
-                            </Text>
-                          </View>
-
-                          {/* Card Content: People */}
-                          <View style={styles.cardContentPeople}>
-                            <Text style={styles.cardTextPeople}>+{item.memberLimit}</Text>
-                          </View>
-                        </View>
-                        {/* </View> */}
-                      </View>
-                      {/* </ImageBackground> */}
-                      {/* <View style={styles.line} /> */}
-                    </TouchableOpacity>
-                    // </View>
-                  )
-                }}
-                ListEmptyComponent={
-                  <Text style={styles.noGroupsText}>No groups available</Text>
-                }
-              />
-              {/* </View> */}
-            </View>
+            {/* </View> */}
           </ImageBackground>
 
 
@@ -612,10 +624,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#6A9AB0',
     padding: 15,
-    width: "95%",
-    alignSelf: "center",
+    // width: "95%",
+    // alignSelf: "center",
     marginTop: 10,
+    marginHorizontal: 10,
     borderRadius: 15,
+    overflow: 'hidden',
+
 
     // Shadow for iOS
     shadowColor: '#000', // Shadow color

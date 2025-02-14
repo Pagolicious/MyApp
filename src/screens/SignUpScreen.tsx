@@ -68,6 +68,8 @@ const SignUpScreen = ({ navigation }: NameProps) => {
         fcmToken: fcmToken,
         createdAt: firestore.FieldValue.serverTimestamp(), // Track when the user was created
         isOnline: false,
+        isPartyLeader: false,
+        isPartyMember: false,
       });
 
       Alert.alert('User Created! Please Login');

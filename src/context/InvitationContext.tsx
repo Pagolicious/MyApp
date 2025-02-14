@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert, Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import Toast from 'react-native-toast-message';
 
 //Navigation
 import { navigate } from '../services/NavigationService';
+
+//Components
+import TimedPopup from '../components/PartyInvitationPopup';
 
 //Context
 import { useAuth } from './AuthContext';
@@ -11,7 +15,24 @@ import { useGroup } from './GroupContext';
 
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
+import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
 
+// interface Group {
+//   id: string;
+//   activity: string;
+//   location: string;
+//   fromDate: string;
+//   fromTime: string;
+//   toTime: string;
+//   groupId: string;
+//   createdBy: string;
+//   memberLimit: number;
+//   details: string;
+//   members: Member[];
+//   memberUids: string[];
+//   applicants: Applicant[];
+
+// }
 interface Member {
   uid: string;
   firstName: string;
@@ -19,7 +40,7 @@ interface Member {
   skillLevel: string;
 }
 
-interface Invitation {
+interface GroupInvitation {
   id: string;
   groupId: string;
   sender: string;
@@ -32,10 +53,30 @@ interface Invitation {
   status: 'pending' | 'accepted' | 'declined';
 }
 
+interface FriendRequest {
+  sender: string,
+  receiver: string,
+  firstName: string,
+  lastName: string,
+  status: 'pending' | 'accepted' | 'declined';
+}
+
+interface PartyInvitation {
+  id: string;
+  sender: string,
+  receiver: string,
+  firstName: string,
+  lastName: string,
+  status: 'pending' | 'accepted' | 'declined';
+}
+
 interface InvitationContextType {
-  invitation: Invitation | null;
+  groupInvitation: GroupInvitation | null;
+  friendRequests: FriendRequest[];
+  partyInvitation: PartyInvitation | null;
+  respondToPartyInvitation: (invitationId: string, response: "accepted" | "declined") => Promise<void>;
   modalVisible: boolean;
-  respondToInvitation: (invitationId: string, response: 'accepted' | 'declined') => Promise<void>;
+  respondToGroupInvitation: (invitationId: string, response: 'accepted' | 'declined') => Promise<void>;
   closeModal: () => void;
 }
 
@@ -60,14 +101,17 @@ export const useInvitation = () => {
 
 
 export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser } = useAuth();
-  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const { currentUser, userData } = useAuth();
+  const [groupInvitation, setGroupInvitation] = useState<GroupInvitation | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const { checkUserInGroup } = useGroup();
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [partyInvitation, setPartyInvitation] = useState<PartyInvitation | null>(null);
+
+  const { checkUserInGroup, setCurrentGroupId, setCurrentGroup } = useGroup();
 
   useEffect(() => {
     if (!currentUser) {
-      setInvitation(null);
+      setGroupInvitation(null);
       return;
     }
 
@@ -79,12 +123,12 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         (querySnapshot) => {
           if (!querySnapshot.empty) {
             querySnapshot.forEach((doc) => {
-              const data = doc.data() as Omit<Invitation, 'id'>;
-              setInvitation({ id: doc.id, ...data });
+              const data = doc.data() as Omit<GroupInvitation, 'id'>;
+              setGroupInvitation({ id: doc.id, ...data });
               setModalVisible(true);
             });
           } else {
-            setInvitation(null);
+            setGroupInvitation(null);
           }
         },
         (error) => {
@@ -95,8 +139,60 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => unsubscribe();
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!currentUser) return;
 
-  const respondToInvitation = async (invitationId: string, response: 'accepted' | 'declined'): Promise<void> => {
+    // Firestore Listener for Friend Requests
+    const unsubscribe = firestore()
+      .collection('friendRequests')
+      .where('receiver', '==', currentUser.uid)
+      .where('status', '==', 'pending')
+      .onSnapshot(snapshot => {
+        const requests: FriendRequest[] = [];
+
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added') {
+            const request = change.doc.data() as FriendRequest;
+            requests.push(request);
+
+            // Show a toast notification for the received request
+            Toast.show({
+              type: 'info',
+              text1: 'New Friend Request! 🎉',
+              text2: `You got a request from ${request.firstName}`,
+              onPress: () => navigate("FriendRequestScreen")
+            });
+          }
+        });
+
+        setFriendRequests(requests);
+      });
+
+    return () => unsubscribe(); // Cleanup when unmounting
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribe = firestore()
+      .collection("searchPartyInvitation")
+      .where("receiver", "==", currentUser.uid)
+      .where("status", "==", "pending")
+      .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            const newInvitation = { id: change.doc.id, ...change.doc.data() } as PartyInvitation;
+            console.log("New invitation received:", newInvitation); // Debugging log
+            setPartyInvitation(newInvitation);
+          }
+        });
+      });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, [currentUser]);
+
+
+  const respondToGroupInvitation = async (invitationId: string, response: 'accepted' | 'declined'): Promise<void> => {
     try {
       await firestore().collection('groupInvitations').doc(invitationId).update({
         status: response,
@@ -110,7 +206,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     // Get group reference
     try {
-      const groupRef = firestore().collection('groups').doc(invitation?.groupId);
+      const groupRef = firestore().collection('groups').doc(groupInvitation?.groupId);
       const groupDoc = await groupRef.get();
       const groupData = groupDoc.data();
 
@@ -152,7 +248,10 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           memberUids: firestore.FieldValue.arrayUnion(currentUser.uid),
 
         });
+        // setCurrentGroupId(groupData?.groupId)
+        // setCurrentGroup({ id: groupData?.groupId, ...groupData });
 
+        // console.log("YOOOOOOOOOOOOOOOOOOOO", groupData?.groupId)
         await checkUserInGroup();
 
         navigate("MembersHomeScreen")
@@ -175,11 +274,76 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       await firestore().collection('groupInvitations').doc(invitationId).delete();
 
-      setInvitation(null);
+      setGroupInvitation(null);
     } catch (error) {
       handleFirestoreError(error);
     }
 
+  };
+
+  const respondToPartyInvitation = async (invitationId: string, response: "accepted" | "declined") => {
+    if (!partyInvitation || !currentUser) return;
+
+    try {
+      await firestore()
+        .collection("searchPartyInvitation")
+        .doc(invitationId)
+        .update({ status: response });
+
+      if (response === "accepted") {
+        const searchPartiesRef = firestore().collection("searchParties");
+        // const partyId = firestore().collection('searchParties').doc().id;
+        const partyId = partyInvitation.sender; // Use sender ID as party ID
+
+        const partyDoc = await searchPartiesRef.doc(partyId).get();
+
+        if (!userData) {
+          console.error("User data not found!");
+          return;
+        }
+
+        const newMember = {
+          uid: currentUser.uid,
+          firstName: userData.firstName || "Unknown",
+          lastName: userData.lastName || "Unknown",
+        };
+
+        if (!partyDoc.exists) {
+          // If no party group exists, create one with the sender as the party leader
+          await searchPartiesRef.doc(partyId).set({
+            leaderUid: partyInvitation.sender,
+            leaderFirstName: partyInvitation.firstName,
+            leaderLastName: partyInvitation.lastName,
+            members: [newMember], // Add first member
+          });
+        } else {
+          // If party exists, add the new member to the list
+          await searchPartiesRef.doc(partyId).update({
+            members: firestore.FieldValue.arrayUnion(newMember),
+          });
+        }
+
+        try {
+          await firestore()
+            .collection('users')
+            .doc(currentUser.uid)
+            .update({ isPartyMember: true })
+
+          await firestore()
+            .collection('users')
+            .doc(partyInvitation.sender)
+            .update({ isPartyLeader: true })
+        } catch (error) {
+          console.log("Can't update user isPartyMember or isPartyLeader", error)
+        }
+
+        navigate("SearchPartyScreen");
+      }
+
+      setPartyInvitation(null);
+    } catch (error) {
+      handleFirestoreError(error);
+    }
   };
 
   const closeModal = () => {
@@ -187,8 +351,19 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   return (
-    <InvitationContext.Provider value={{ invitation, modalVisible, respondToInvitation, closeModal }}>
+    <InvitationContext.Provider value={{ groupInvitation, friendRequests, partyInvitation, respondToPartyInvitation, modalVisible, respondToGroupInvitation, closeModal }}>
       {children}
+      <Toast />
+      {partyInvitation && (
+        <>
+          {console.log("Displaying TimedPopup for:", partyInvitation)}
+          <TimedPopup
+            firstName={partyInvitation.firstName}
+            onAccept={() => respondToPartyInvitation(partyInvitation.id, "accepted")}
+            onDecline={() => respondToPartyInvitation(partyInvitation.id, "declined")}
+          />
+        </>
+      )}
       {modalVisible && (
         <Modal
           transparent
@@ -205,15 +380,15 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               <View style={styles.column}>
                 {/* Card Content: Activity & Location */}
                 <View style={styles.cardContentActivity}>
-                  <Text style={styles.cardText}>{invitation?.activity}</Text>
-                  <Text style={styles.cardText}>{invitation?.location}</Text>
+                  <Text style={styles.cardText}>{groupInvitation?.activity}</Text>
+                  <Text style={styles.cardText}>{groupInvitation?.location}</Text>
                 </View>
 
                 {/* Card Content: Date & Time */}
                 <View style={styles.cardContentDate}>
-                  <Text style={styles.cardText}>{invitation?.fromDate}</Text>
+                  <Text style={styles.cardText}>{groupInvitation?.fromDate}</Text>
                   <Text style={styles.cardText}>
-                    {invitation?.fromTime} - {invitation?.toTime}
+                    {groupInvitation?.fromTime} - {groupInvitation?.toTime}
                   </Text>
                 </View>
               </View>
@@ -221,13 +396,13 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.actionButton}
-                  onPress={() => respondToInvitation(invitation?.id || '', 'accepted')}
+                  onPress={() => respondToGroupInvitation(groupInvitation?.id || '', 'accepted')}
                 >
                   <Text style={styles.buttonText}>Accept</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.declineButton]}
-                  onPress={() => respondToInvitation(invitation?.id || '', 'declined')}
+                  onPress={() => respondToGroupInvitation(groupInvitation?.id || '', 'declined')}
                 >
                   <Text style={styles.buttonText}>Decline</Text>
                 </TouchableOpacity>

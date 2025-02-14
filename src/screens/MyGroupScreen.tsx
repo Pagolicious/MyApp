@@ -6,7 +6,8 @@ import {
   Modal,
   TouchableOpacity,
   FlatList,
-  ImageBackground
+  ImageBackground,
+  Pressable
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
@@ -88,11 +89,15 @@ const MyGroupScreen = () => {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
   );
-  const { currentGroupId, currentGroup } = useGroup();
-  const { delistModalVisible, setDelistModalVisible } = useModal();
-  const { delistGroup } = useGroup();
+  const { currentGroupId, currentGroup, userInGroup } = useGroup();
+  // const { delistModalVisible, setDelistModalVisible } = useModal();
 
   useEffect(() => {
+    if (!currentUser) {
+      console.log("No currentUser, skipping fetchApplicants.");
+      setApplicants([]);
+      return;
+    }
     if (!currentGroup?.applicants?.length) {
       setApplicants([]); // Clear applicants if no data
       return;
@@ -100,28 +105,38 @@ const MyGroupScreen = () => {
 
     const fetchApplicants = async () => {
       try {
+        if (!currentGroup) return;
         if (currentGroup.applicants && currentGroup.applicants.length > 0) {
           const applicantsList = await Promise.all(
             currentGroup.applicants.map(async (applicant) => {
-              const userDoc = await firestore()
-                .collection('users')
-                .doc(applicant.uid)
-                .get();
+              try {
+                const userDoc = await firestore()
+                  .collection('users')
+                  .doc(applicant.uid)
+                  .get();
 
-              const userData = userDoc.data();
+                if (!userDoc.exists) {
+                  console.log(`Applicant ${applicant.uid} does not exist.`);
+                  return null; // 🔹 Skip missing applicants
+                }
+                const userData = userDoc.data();
 
-              const skill =
-                userData?.skills?.find(
-                  (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
-                ) || {};
+                const skill =
+                  userData?.skills?.find(
+                    (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
+                  ) || {};
 
-              return {
-                uid: applicant.uid,
-                firstName: userData?.firstName || 'Unknown',
-                lastName: userData?.lastName || 'Unknown',
-                skillLevel: skill.skillLevel || 'Unknown',
-                note: applicant.note || '',
-              };
+                return {
+                  uid: applicant.uid,
+                  firstName: userData?.firstName || 'Unknown',
+                  lastName: userData?.lastName || 'Unknown',
+                  skillLevel: skill.skillLevel || 'Unknown',
+                  note: applicant.note || '',
+                };
+              } catch (error) {
+                console.error(`Error fetching applicant ${applicant.uid}:`, error);
+                return null; // 🔹 If there's an error fetching one applicant, don't crash everything
+              }
             })
           );
 
@@ -142,6 +157,9 @@ const MyGroupScreen = () => {
 
 
   const handleCardPress = (item: Applicant) => {
+    if (userInGroup) {
+      return;
+    }
     setModalVisible(true);
     setSelectedApplicant(item);
   };
@@ -217,20 +235,11 @@ const MyGroupScreen = () => {
     }
   }
 
-  const handleDelistMyGroup = async () => {
-    try {
-      setDelistModalVisible(false);
-      await delistGroup();
-    } catch {
-      Alert.alert('Error', 'Something went wrong.');
-    }
-  };
+
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>My Group</Text>
-      </View>
+
       {currentUser && <GroupNav />}
       <ImageBackground
         source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
@@ -239,98 +248,76 @@ const MyGroupScreen = () => {
         <View style={styles.flatListContainer}>
 
           <FlatList
-            data={applicants}
+            data={applicants.filter((applicant) => applicant !== null)} // Prevents null errors
             keyExtractor={item => item.uid} // Unique key for each item
             renderItem={({ item }) => {
+              if (!item || !item.uid) return null; // Skip invalid applicants
 
               return (
-                <View>
-                  <TouchableOpacity onPress={() => handleCardPress(item)}>
-                    <View style={styles.card}>
-                      <View style={styles.column}>
-                        <Text style={styles.cardText}>{item.firstName}</Text>
-                        <Text style={styles.cardText}>
-                          Skill Level: {item.skillLevel ?? "N/A"}
-                        </Text>
-                        {/* <Text style={styles.cardText}>{item.note}</Text> */}
-                      </View>
-                    </View>
-                    {/* <View style={styles.line} /> */}
-                  </TouchableOpacity>
-                </View>
+                // <View>
+                <Pressable onPress={() => handleCardPress(item)}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                  style={styles.card}>
+                  {/* <View > */}
+                  <View style={styles.column}>
+                    <Text style={styles.cardText}>{item.firstName}</Text>
+                    <Text style={styles.cardText}>
+                      Skill Level: {item.skillLevel ?? "N/A"}
+                    </Text>
+                    {/* <Text style={styles.cardText}>{item.note}</Text> */}
+                  </View>
+                  {/* </View> */}
+                  {/* <View style={styles.line} /> */}
+                </Pressable>
+                // </View>
               )
             }}
             ListEmptyComponent={
               <Text style={styles.noApplicantsText}>No applicants available</Text>
             }
           />
-          <Modal
-            animationType="fade"
-            transparent
-            visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalView}>
-                {/* Close Button in top-right corner */}
-                <TouchableOpacity
-                  style={styles.closeIcon}
-                  onPress={() => setModalVisible(false)}>
-                  <Text style={styles.closeText}>✖</Text>
-                </TouchableOpacity>
-
-                {/* Modal Content */}
-                <Text style={styles.modalTitleText}>Invite</Text>
-                <Text style={styles.modalText}>
-                  Do you want to invite this person to your group?
-                </Text>
-                <View style={styles.modalNoteContainer}>
-                  <Text style={styles.modalNoteText}>
-                    {selectedApplicant?.note}
-                  </Text>
-                </View>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={styles.declineBtn}
-                    onPress={async () => {
-                      declineApplicant(selectedApplicant);
-                    }}>
-                    <Text style={styles.declineBtnText}>Decline</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.inviteBtn}
-                    onPress={async () => {
-                      inviteApplicant(selectedApplicant);
-                    }}>
-                    <Text style={styles.inviteBtnText}>Invite</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-
         </View>
+
         <Modal
           animationType="fade"
           transparent
-          visible={delistModalVisible}
-          onRequestClose={() => setDelistModalVisible(false)}>
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalView}>
+              {/* Close Button in top-right corner */}
               <TouchableOpacity
                 style={styles.closeIcon}
-                onPress={() => setDelistModalVisible(false)}>
+                onPress={() => setModalVisible(false)}>
                 <Text style={styles.closeText}>✖</Text>
               </TouchableOpacity>
 
-              <Text style={styles.modalTitleText}>Delist group</Text>
-              <Text style={styles.modalText}>Would you like to delist the group?</Text>
-
-
-              <TouchableOpacity
-                style={styles.inviteBtn}
-                onPress={handleDelistMyGroup}>
-                <Text style={styles.inviteBtnText}>Delist</Text>
-              </TouchableOpacity>
+              {/* Modal Content */}
+              <Text style={styles.modalTitleText}>Invite</Text>
+              <Text style={styles.modalText}>
+                Do you want to invite this person to your group?
+              </Text>
+              <View style={styles.modalNoteContainer}>
+                <Text style={styles.modalNoteText}>
+                  {selectedApplicant?.note}
+                </Text>
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.declineBtn}
+                  onPress={async () => {
+                    declineApplicant(selectedApplicant);
+                  }}>
+                  <Text style={styles.declineBtnText}>Decline</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.inviteBtn}
+                  onPress={async () => {
+                    inviteApplicant(selectedApplicant);
+                  }}>
+                  <Text style={styles.inviteBtnText}>Invite</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -346,20 +333,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: 65,
-    backgroundColor: '#5f4c4c',
-    padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // marginBottom: 15
-
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
   backgroundImage: {
     flex: 1,
     resizeMode: "cover"
@@ -370,7 +343,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#6A9AB0',
     padding: 20,
-    margin: 10,
+    marginTop: 10,
+    marginHorizontal: 10,
     borderRadius: 15,
 
     // Shadow for iOS

@@ -15,6 +15,7 @@ import { useModal } from '../context/ModalContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+
 // type GroupNavProps = {
 //   route:
 //   | RouteProp<RootStackParamList, 'MyGroupScreen'>
@@ -120,7 +121,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-
+    // borderWidth: 2,
+    // width: "100%"
   },
   // leftButtons: {
   //   flexDirection: 'row',
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
   // },
   button: {
     height: 50,
-    width: 200,
+    minWidth: "50%",
     // borderRadius: 50,
     backgroundColor: '#5f4c4c',
     // backgroundColor: 'red',
@@ -155,7 +157,7 @@ const styles = StyleSheet.create({
   },
   activePage: {
     height: 5,
-    width: 200,
+    width: "100%",
     // width: 10,
     backgroundColor: '#5f4c4c',
     // borderWidth: 5

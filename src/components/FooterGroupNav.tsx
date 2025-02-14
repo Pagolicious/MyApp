@@ -14,6 +14,7 @@ import { useGroup } from '../context/GroupContext';
 import Icon1 from 'react-native-vector-icons/Entypo';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
 import Icon3 from 'react-native-vector-icons/AntDesign';
+import Icon4 from 'react-native-vector-icons/FontAwesome6';
 
 
 
@@ -57,6 +58,23 @@ const FooterGroupNav = () => {
                   : {},
               ]}>
               My Group
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('FindGroup')}
+            style={styles.button}>
+            <Icon4
+              name="users-viewfinder"
+              size={30}
+              color={isActive('FindGroup') ? '#00BFFF' : 'lightgray'}
+            />
+            <Text
+              style={[
+                styles.title,
+                isActive('FindGroup') ? { color: '#00BFFF' } : {},
+              ]}>
+              Browse
             </Text>
           </TouchableOpacity>
 
@@ -118,7 +136,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 75,
-    width: 120,
+    width: 100,
     borderRadius: 5,
     // borderWidth: 2,
     marginTop: 10,
@@ -127,7 +145,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'lightgray',
     fontWeight: 'bold',
   },

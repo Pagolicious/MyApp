@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, Alert } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import Toast from 'react-native-toast-message';
 
 
 //Navigation
@@ -8,9 +9,11 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 
 //Components
-import GroupMemberNav from '../components/GroupMemberNav';
+import GroupNav from '../components/GroupNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import CustomAvatar from '../components/CustomAvatar';
+import DelistModal from '../components/DelistModal';
+import LeaveModal from '../components/LeaveModal';
 
 //Context
 import { useAuth } from '../context/AuthContext';
@@ -39,20 +42,29 @@ interface Friend {
 
 const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
   const { members = [], owner } = useGroupData();
-  const { currentUser } = useAuth()
+  const { currentUser, userData } = useAuth()
   const [loading, setLoading] = useState(true); // Loading state for data container
   const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
-  const { leaveModalVisible, setLeaveModalVisible } = useModal();
-  const { currentGroupId, currentGroup, checkUserInGroup } = useGroup();
+  // const { leaveModalVisible, setLeaveModalVisible } = useModal();
+  // const [leaveModalVisible, setLeaveModalVisible] = useState(false)
+  // const [delistModalVisible, setDelistModalVisible] = useState(false)
+  const { currentGroupId, currentGroup, checkUserInGroup, delistGroup } = useGroup();
 
   // Simulate data loading
   useEffect(() => {
-    if (owner && members && members.length > 0) {
+    // console.log("HELOOOOOOOOO", owner, members)
+    if (owner || members && members.length > 0) {
       setLoading(false); // Stop loading when both owner and members are available
     } else {
       setLoading(true); // Keep loading if either owner or members is missing
     }
   }, [owner, members]);
+
+  // useEffect(() => {
+  //   console.log("Members: ", members);
+  //   console.log("Owner: ", owner);
+  // }, [members, owner]);
+
 
   // Refresh logic for the data container
   const onRefresh = useCallback(() => {
@@ -67,51 +79,54 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
   const addFriend = async (friend: Friend) => {
     if (currentUser) {
 
-      const friendToAdd = {
-        uid: friend.uid,
-        firstName: friend.firstName || 'Unknown',
-        lastName: friend.lastName || 'Unknown',
-      };
+      // const friendToAdd = {
+      //   uid: friend.uid,
+      //   firstName: friend.firstName || 'Unknown',
+      //   lastName: friend.lastName || 'Unknown',
+      // };
 
       try {
-        await firestore()
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({
-            friends: firestore.FieldValue.arrayUnion(friendToAdd),
+        // Generate a new ID for the invitation document
+        const friendRequestId = firestore().collection('friendRequests').doc().id;
 
+        // Create the invitation document with a specific ID
+        await firestore()
+          .collection('friendRequests')
+          .doc(friendRequestId)
+          .set({
+            sender: currentUser.uid,
+            receiver: friend.uid,
+            firstName: userData?.firstName || 'Unknown',
+            lastName: userData?.lastName || 'Unknown',
+            status: 'pending', // Default status
+            createdAt: firestore.FieldValue.serverTimestamp(),
           });
 
-      } catch {
-        Alert.alert('Error', "Couldn't add friend.");
+        Toast.show({
+          type: 'success', // 'success' | 'error' | 'info'
+          text1: `Friend request sent to ${friend.firstName} 🎉`,
+          text2: 'Waiting for approval...',
+        });
+
+        // await firestore()
+        //   .collection('users')
+        //   .doc(currentUser.uid)
+        //   .update({
+        //     friends: firestore.FieldValue.arrayUnion(friendToAdd),
+
+        //   });
+
+      } catch (error) {
+        console.error('Error sending friend request:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Oops!',
+          text2: 'Something went wrong.',
+        });
       }
     }
 
   }
-
-  const handleLeaveGroup = async () => {
-    try {
-      await firestore()
-        .collection('groups')
-        .doc(currentGroupId)
-        .update({
-          memberUids: firestore.FieldValue.arrayRemove(currentUser?.uid),
-          members: currentGroup?.members.filter((member) => member.uid !== currentUser?.uid),
-        });
-
-      setLeaveModalVisible(false);
-      await checkUserInGroup();
-
-      // Clear group context explicitly
-      // await updateGroup(undefined);
-      // await updateGroupId(undefined);
-
-      navigate('FindOrStart');
-
-    } catch {
-      Alert.alert('Error', 'Something went wrong.');
-    }
-  };
 
   if (!currentUser) {
     return (
@@ -124,10 +139,10 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Members Home Page</Text>
-      </View>
-      {currentUser && <GroupMemberNav />}
+
+      {currentUser && <GroupNav />}
+      <Toast />
+
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
@@ -145,13 +160,18 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
               />
               <Text style={styles.nameText}>{owner?.firstName || 'Unknown'}</Text>
             </View>
-            {currentUser.uid !== owner?.uid && owner &&
-              <View style={styles.addFriendContainer}>
+            {currentUser.uid !== owner?.uid && owner ? (
+              <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.addFriendBtn} onPress={() => addFriend(owner)}>
                   <Icon1 name="person-add" size={20} color="black" />
                 </TouchableOpacity>
               </View>
-            }
+            ) : (
+              // <TouchableOpacity style={styles.leaveButton} onPress={() => setDelistModalVisible(true)}>
+              //   <Text style={styles.leaveText}>Delist group</Text>
+              // </TouchableOpacity>
+              <DelistModal />
+            )}
 
           </View>
 
@@ -169,20 +189,22 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
                   />
                   <Text style={styles.nameText}>{item.firstName}</Text>
                 </View>
-                {currentUser.uid !== item.uid &&
-                  <View style={styles.addFriendContainer}>
+                <View style={styles.buttonContainer}>
+                  {currentUser.uid !== item.uid ? (
                     <TouchableOpacity style={styles.addFriendBtn} onPress={() => addFriend(item)}>
                       <Icon1 name="person-add" size={20} color="black" />
                     </TouchableOpacity>
-                  </View>
-                }
+                  ) : (
+                    <LeaveModal />
+                  )}
+                </View>
               </View>
             )}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           />
-          <Modal
+          {/* <Modal
             animationType="fade"
             transparent
             visible={leaveModalVisible}
@@ -206,7 +228,32 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
                 </TouchableOpacity>
               </View>
             </View>
-          </Modal>
+          </Modal> */}
+          {/* <Modal
+            animationType="fade"
+            transparent
+            visible={delistModalVisible}
+            onRequestClose={() => setDelistModalVisible(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalView}>
+                <TouchableOpacity
+                  style={styles.closeIcon}
+                  onPress={() => setDelistModalVisible(false)}>
+                  <Text style={styles.closeText}>✖</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.modalTitleText}>Delist group</Text>
+                <Text style={styles.modalText}>Would you like to delist the group?</Text>
+
+
+                <TouchableOpacity
+                  style={styles.submitBtn}
+                  onPress={handleDelistMyGroup}>
+                  <Text style={styles.submitBtnText}>Delist</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal> */}
         </>
       )}
 
@@ -218,18 +265,6 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    height: 65,
-    backgroundColor: '#5f4c4c',
-    padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
   },
   loadingContainer: {
     flex: 1,
@@ -270,7 +305,7 @@ const styles = StyleSheet.create({
   //   borderWidth: 1,
 
   // },
-  addFriendContainer: {
+  buttonContainer: {
     // borderWidth: 1
   },
   addFriendBtn: {
@@ -355,6 +390,21 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  leaveButton: {
+    width: 110,
+    height: 50,
+    backgroundColor: "#C41E3A",
+    // alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10
+  },
+  leaveText: {
+    fontSize: 15,
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+
+  }
 
 });
 

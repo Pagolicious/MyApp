@@ -82,8 +82,8 @@ const FindGroup = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>Find a Group</Text>
       </View>
-      {userHasGroup ? <GroupNav /> : null}
-      {userInGroup ? <GroupMemberNav /> : null}
+      {/* {userHasGroup ? <GroupNav /> : null}
+      {userInGroup ? <GroupMemberNav /> : null} */}
       <ImageBackground
         source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
         style={styles.backgroundImage} // Style for the background image

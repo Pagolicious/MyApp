@@ -30,12 +30,27 @@ export const useGroupData = () => {
   const { currentGroupId, currentGroup } = useGroup();
   const { currentUser } = useAuth()
 
+
+  // useEffect(() => {
+  //   if (!currentGroup) {
+  //     console.log("No current group available.");
+  //     return;
+  //   }
+
+  //   console.log("Group in useGroupData:", currentGroup);
+
+  //   setMembers(currentGroup.members || []);
+  //   setOwner(currentGroup.members?.find((m) => m.uid === currentGroup.createdBy) || null);
+  // }, [currentGroup]);
+
+
   useEffect(() => {
     const fetchGroupData = async () => {
 
       if (!currentUser || !currentGroup) {
         setOwner(null);
         setMembers([]);
+        console.log("No current group available.");
         return;
       }
 
@@ -57,6 +72,8 @@ export const useGroupData = () => {
         if (currentGroup) {
           setOwner(ownerData ? { uid: currentGroup.createdBy, firstName: ownerData.firstName, lastName: ownerData.lastName } : null);
           setMembers(currentGroup.members);
+          console.log(currentGroup);
+
         }
       } catch (error) {
         console.error('Error fetching group data:', error);
@@ -68,4 +85,7 @@ export const useGroupData = () => {
   }, [currentGroupId]);
 
   return { members, owner };
+
+
+
 };

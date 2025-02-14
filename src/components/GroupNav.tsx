@@ -71,36 +71,33 @@ const GroupNav = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>My Group</Text>
+      </View>
       {currentUser ? (
         <>
           <View style={styles.navbar}>
             <View style={styles.contentRow}>
-              <View style={styles.leftButtons}>
-                <View>
-                  <TouchableOpacity onPress={() => navigation.navigate('FindGroup')} style={styles.button}>
-                    {/* <Text style={styles.title}>{buttonText}</Text> */}
-                    <Text style={[styles.buttonText, isActive('FindGroup') ? { color: '#00BFFF' } : {},]}>Browse</Text>
-                  </TouchableOpacity>
-                  <View style={[styles.activePage, isActive('FindGroup') ? { backgroundColor: '#00BFFF' } : {},]}></View>
-                </View>
-                <View>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('FindGroup')}
-                    style={styles.button}>
-                    <Text style={[styles.buttonText, isActive('GroupsScreen') ? { color: '#00BFFF' } : {},]}>Edit</Text>
-                  </TouchableOpacity>
-                  <View style={[styles.activePage, isActive('GroupsScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
-                </View>
+              {/* <View style={styles.leftButtons}> */}
+              <View>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('MyGroupScreen')}
+                  style={styles.button}>
+                  <Text style={[styles.buttonText, isActive('MyGroupScreen') ? { color: '#00BFFF' } : {},]}>Applicants</Text>
+                </TouchableOpacity>
+                <View style={[styles.activePage, isActive('MyGroupScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
               </View>
-              <View style={styles.rightButton}>
-                <View>
-                  <TouchableOpacity onPress={() => setDelistModalVisible(true)} style={styles.button}>
-                    <Text style={[styles.leaveButtonText, delistModalVisible === true ? { color: 'red' } : {},]}>Delist</Text>
-                  </TouchableOpacity>
-                  <View style={[styles.activePage, delistModalVisible === true ? { backgroundColor: 'red' } : {},]}></View>
-                </View>
+              <View>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('MembersHomeScreen')}
+                  style={styles.button}>
+                  <Text style={[styles.buttonText, isActive('MembersHomeScreen') ? { color: '#00BFFF' } : {},]}>Members</Text>
+                </TouchableOpacity>
+                <View style={[styles.activePage, isActive('MembersHomeScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
               </View>
             </View>
+
+            {/* </View> */}
           </View>
         </>
       ) : (
@@ -119,6 +116,19 @@ const styles = StyleSheet.create({
     // backgroundColor: "blue",
     // height: 75,
   },
+  header: {
+    height: 65,
+    backgroundColor: '#5f4c4c',
+    padding: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // marginBottom: 15
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
   navbar: {
     // height: 75,
     width: '100%',
@@ -128,20 +138,20 @@ const styles = StyleSheet.create({
   },
   contentRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
 
   },
-  leftButtons: {
-    flexDirection: 'row',
-  },
-  rightButton: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
+  // leftButtons: {
+  //   flexDirection: 'row',
+  // },
+  // rightButton: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'flex-end',
+  // },
   button: {
     height: 50,
-    width: 100,
+    minWidth: "50%",
     // borderRadius: 50,
     backgroundColor: '#5f4c4c',
     // backgroundColor: 'red',
@@ -164,7 +174,7 @@ const styles = StyleSheet.create({
   },
   activePage: {
     height: 5,
-    width: 100,
+    width: "100%",
     // width: 10,
     backgroundColor: '#5f4c4c',
     // borderWidth: 5

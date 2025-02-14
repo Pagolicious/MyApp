@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Modal, TouchableWithoutFeedback, Pressable, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -23,6 +23,7 @@ import { navigate } from '../../services/NavigationService';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
+import Icon2 from 'react-native-vector-icons/Feather';
 
 interface Friend {
   uid: string;
@@ -32,10 +33,13 @@ interface Friend {
 }
 
 const FriendScreen = () => {
-  const { currentUser } = useAuth()
+  const { currentUser, userData } = useAuth()
   const { userInGroup, currentGroup } = useGroup()
   const [userHasGroup, setUserHasGroup] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [moreModalVisible, setMoreModalVisible] = useState(false)
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+
   // const isOnline = useOnlineStatus(currentUser.uid)
   // const route = useRoute();
   // const isOnline = useOnlineStatus();
@@ -43,56 +47,127 @@ const FriendScreen = () => {
   // const isActive = (screenName: string) => route.name === screenName;
 
   useEffect(() => {
-    if (!currentUser) return;
-
+    if (!currentUser) {
+      setFriends([]); // Clear friends list on logout
+      return;
+    }
     // Reference to the user's Firestore document
     const unsubscribeUser = firestore()
       .collection('users')
       .doc(currentUser.uid)
       .onSnapshot((doc) => {
-        if (doc.exists) {
-          const userData = doc.data();
-          const friendsList = userData?.friends || [];
-
-          // Store unsubscribe functions for each friend's listener
-          const friendSubscriptions: (() => void)[] = friendsList.map((friend: Friend) =>
-            firestore()
-              .collection('users')
-              .doc(friend.uid)
-              .onSnapshot((friendDoc) => {
-                if (friendDoc.exists) {
-                  setFriends((prevFriends) =>
-                    prevFriends.map((f) =>
-                      f.uid === friend.uid
-                        ? { ...f, isOnline: friendDoc.data()?.isOnline || false }
-                        : f
-                    )
-                  );
-                }
-              })
-          );
-
-          // Cleanup all friend subscriptions when component unmounts
-          return () => {
-            friendSubscriptions.forEach((unsubscribe) => unsubscribe());
-          };
-        } else {
+        if (!doc || !doc.exists) {
+          console.warn("User document does not exist or was deleted.");
           setFriends([]);
+          return;
         }
+        const userData = doc.data();
+        const friendsList = userData?.friends || [];
+
+        setFriends(friendsList)
+        // Store unsubscribe functions for each friend's listener
+        const friendSubscriptions: (() => void)[] = friendsList.map((friend: Friend) =>
+          firestore()
+            .collection('users')
+            .doc(friend.uid)
+            .onSnapshot((friendDoc) => {
+              if (!friendDoc || !friendDoc.exists) {
+                return;
+              }
+              setFriends((prevFriends) =>
+                prevFriends.map((f) =>
+                  f.uid === friend.uid
+                    ? { ...f, isOnline: friendDoc.data()?.isOnline || false }
+                    : f
+                )
+              );
+
+            })
+        );
+
+        // Cleanup all friend subscriptions when component unmounts
+        return () => {
+          friendSubscriptions.forEach((unsubscribe) => unsubscribe());
+        };
+
       });
 
     // Cleanup user subscription when component unmounts
     return () => unsubscribeUser();
   }, [currentUser]);
 
-
-
-
   useEffect(() => {
     if (currentUser) {
       setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
     }
   }, [currentUser, currentGroup]);
+
+  const handleInviteToSeacrhParty = async (friend: Friend) => {
+    if (currentUser) {
+
+      try {
+        // Generate a new ID for the invitation document
+        const searchPartyId = firestore().collection('searchPartyInvitation').doc().id;
+
+        // Create the invitation document with a specific ID
+        await firestore()
+          .collection('searchPartyInvitation')
+          .doc(searchPartyId)
+          .set({
+            sender: currentUser.uid,
+            receiver: friend.uid,
+            firstName: userData?.firstName || 'Unknown',
+            lastName: userData?.lastName || 'Unknown',
+            status: 'pending', // Default status
+            createdAt: firestore.FieldValue.serverTimestamp(),
+          });
+
+        console.log('Search party invite sent successfully.');
+
+      } catch (error) {
+        console.error('Error sending search party invite:', error);
+        Alert.alert('Error', "Couldn't invite to search party.");
+      }
+    }
+  }
+
+  const handleRemoveFriend = async (friend: Friend) => {
+    if (!currentUser) return;
+
+    try {
+
+      const friendToRemove = {
+        uid: friend.uid,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+      };
+
+      const userToRemove = {
+        uid: currentUser.uid,
+        firstName: userData?.firstName || 'Unknown',
+        lastName: userData?.lastName || 'Unknown',
+      };
+
+      // Remove friend from current user's list
+      await firestore().collection('users').doc(currentUser.uid).update({
+        friends: firestore.FieldValue.arrayRemove(friendToRemove),
+      });
+
+      // Remove current user from the friend's list
+      await firestore().collection('users').doc(friend.uid).update({
+        friends: firestore.FieldValue.arrayRemove(userToRemove),
+      });
+
+      // Update UI instantly
+      setFriends(prevFriends => prevFriends.filter(f => f.uid !== friend.uid));
+
+      console.log("Friend removed successfully!");
+
+    } catch (error) {
+      console.error('Error removing friend:', error);
+    }
+  };
+
 
   if (!currentUser) {
     return (
@@ -136,6 +211,12 @@ const FriendScreen = () => {
             <Text style={{ color: item.isOnline ? 'green' : 'gray' }}>
               {item.isOnline ? '🟢 Online' : '⚪ Offline'}
             </Text>
+            <TouchableOpacity onPress={() => {
+              setMoreModalVisible(true)
+              setSelectedFriend(item)
+            }}>
+              <Icon2 name="more-vertical" size={25} color="black" />
+            </TouchableOpacity>
             {/* {currentUser.uid !== item.uid &&
                 <View>
                   <TouchableOpacity style={styles.inviteFriendBtn} onPress={() => inviteToGroup()}>
@@ -149,11 +230,61 @@ const FriendScreen = () => {
           <Text style={styles.noFriendsText}>No friends available</Text>
         }
       />
+      {currentUser && (
+        <Modal
+          animationType="fade"
+          transparent
+          visible={moreModalVisible}
+          onRequestClose={() => setMoreModalVisible(false)}>
+          <TouchableWithoutFeedback onPress={() => setMoreModalVisible(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalView}>
+                {userData && (!userData.isPartyLeader || !userData.isPartyLeader) &&
+                  <Pressable
+                    style={styles.buttonMid}
+                    onPress={() => {
+                      setMoreModalVisible(false)
+                      if (selectedFriend) {
+                        handleInviteToSeacrhParty(selectedFriend)
+                      }
+                    }}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                    <Text style={styles.buttonText}>Invite to search party</Text>
+                  </Pressable>
+                }
+                <Pressable
+                  style={styles.buttonTop}
+                  onPress={() => setMoreModalVisible(false)}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonText}>Send message</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.buttonMid}
+                  onPress={() => setMoreModalVisible(false)}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonText}>Invite to group</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.buttonBottom}
+                  onPress={() => {
+                    setMoreModalVisible(false)
+                    if (selectedFriend) {
+                      handleRemoveFriend(selectedFriend);
+                    }
+                  }}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonRedText}>Remove friend</Text>
+                </Pressable>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
       <View style={styles.background}>
 
       </View>
-      {(userHasGroup || userInGroup) && <FooterGroupNav />}
-      {(!userHasGroup && !userInGroup) && <FooterNav />}
+      {/* {(userHasGroup || userInGroup) && <FooterGroupNav />}
+      {(!userHasGroup && !userInGroup) && <FooterNav />} */}
     </View>
   )
 }
@@ -163,6 +294,7 @@ export default FriendScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "white"
   },
   header: {
     height: 65,
@@ -229,4 +361,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: 300,
+    // padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+
+  },
+  buttonTop: {
+    height: 50,
+    width: "100%",
+    borderStartStartRadius: 10,
+    borderEndStartRadius: 10,
+    justifyContent: 'center',
+    // backgroundColor: "#6200ea",
+
+
+  },
+  buttonMid: {
+    height: 50,
+    width: "100%",
+    justifyContent: 'center',
+
+  },
+  buttonBottom: {
+    height: 50,
+    width: "100%",
+    borderEndEndRadius: 10,
+    borderStartEndRadius: 10,
+    justifyContent: 'center',
+
+  },
+  buttonText: {
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16
+  },
+  buttonRedText: {
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#C41E3A",
+  }
 })

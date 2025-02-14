@@ -24,6 +24,7 @@ import MembersHomeScreen from './screens/MembersHomScreen';
 import RequestScreen from './screens/RequestScreen';
 
 import FriendScreen from './screens/Profile/FriendScreen';
+import SearchPartyScreen from './screens/Profile/SearchPartyScreen';
 import MessageScreen from './screens/Profile/MessageScreen';
 import SettingScreen from './screens/Profile/SettingScreen';
 import AboutAppScreen from './screens/Profile/AboutAppScreen';
@@ -55,6 +56,7 @@ export type RootStackParamList = {
   ProfileScreen: undefined;
   MembersHomeScreen: undefined;
   FriendScreen: undefined;
+  SearchPartyScreen: undefined;
   MessageScreen: undefined;
   SettingScreen: undefined;
   AboutAppScreen: undefined;
@@ -99,6 +101,7 @@ function App(): React.JSX.Element {
                   <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
                   <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
                   <Stack.Screen name="FriendScreen" component={FriendScreen} />
+                  <Stack.Screen name="SearchPartyScreen" component={SearchPartyScreen} />
                   <Stack.Screen name="MessageScreen" component={MessageScreen} />
                   <Stack.Screen name="SettingScreen" component={SettingScreen} />
                   <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />

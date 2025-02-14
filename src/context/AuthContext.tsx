@@ -15,6 +15,8 @@ interface User {
   email: string;
   createdAt: string;
   fcmToken: string;
+  isPartyLeader: Boolean;
+  isPartyMember: Boolean;
   skills: Skills[];
 }
 

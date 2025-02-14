@@ -108,6 +108,9 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     const savedGroup = await AsyncStorage.getItem(groupKey);
     const savedUserInGroup = await AsyncStorage.getItem(userInGroupKey);
 
+    console.log("📌 Loaded groupId from AsyncStorage:", savedGroupId);
+
+
     setCurrentGroupId(savedGroupId ? savedGroupId : undefined);
     setCurrentGroup(savedGroup ? JSON.parse(savedGroup) : undefined);
     setUserInGroup(savedUserInGroup ? JSON.parse(savedUserInGroup) : undefined);
@@ -163,9 +166,13 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!currentGroupId || !currentUser) {
+      console.log("No currentGroupId or currentUser, setting currentGroup to undefined");
+
       setCurrentGroup(undefined);
       return;
     }
+
+    console.log("Listening for group updates in Firestore...");
 
     const groupKey = getStorageKey('currentGroup', currentUser.uid);
 
@@ -240,7 +247,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserInGroup = async () => {
     if (!currentUser || !currentUser.uid) {
-      console.log('Skipping user group check due to missing currentUser or not userInGroup.');
+      console.log('Skipping user group check due to missing currentUser.');
       return;
     }
     try {
@@ -384,6 +391,8 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       // Close the modal and clear local state
       setNotificationModal(false);
       setNotificationMessage(null);
+
+      await clearGroupData();
 
       navigate('FindOrStart');
 

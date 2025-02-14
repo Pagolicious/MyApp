@@ -12,7 +12,6 @@ import { navigate } from '../services/NavigationService';
 import Icon1 from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon3 from 'react-native-vector-icons/FontAwesome5';
-import LoginScreen from '../screens/LoginScreen';
 
 //Context
 import { useGroup } from '../context/GroupContext';
@@ -22,7 +21,7 @@ import { useGroupData } from '../hooks/useGroupData';
 
 const ProfileButtons = () => {
   const { signOut } = useAuth()
-  // const { clearGroupData } = useGroup()
+  const { clearGroupData } = useGroup()
   // const { userInGroup } = useGroupData()
 
   const logout = async () => {
@@ -53,6 +52,12 @@ const ProfileButtons = () => {
         <View style={[styles.btnBorder, styles.row]}>
           <Icon3 name="user-friends" size={30} color="black" />
           <Text style={styles.profileBtnText}>Friends</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigate("SearchPartyScreen")}>
+        <View style={[styles.btnBorderSmall, styles.row]}>
+          <Icon1 name="person-search" size={35} color="black" />
+          <Text style={styles.profileBtnText}>Search Party</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigate("MessageScreen")}>
@@ -96,8 +101,14 @@ const styles = StyleSheet.create({
     // flexDirection: "row",
     // alignItems: "center",
     // marginBottom: 10,
+    // borderWidth: 2,
     paddingVertical: 15,
     paddingHorizontal: 15,
+  },
+  btnBorderSmall: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    // borderWidth: 2,
   },
   profileBtnText: {
     fontSize: 20,
