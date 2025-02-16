@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, Alert, Platform } from 'react-native';
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //Navigation
@@ -28,57 +28,80 @@ const LoginScreen = ({ navigation }: NameProps) => {
   const { signIn, setCurrentUser, currentUser, userData } = useContext(AuthContext)!;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const { checkUserInGroup } = useGroup();
-  const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
+  const [loading, setLoading] = useState(true);
+  const { currentGroup } = useGroup();
+
+  // const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
+
+  // useEffect(() => {
+  //   console.log("Current Group: ", currentGroup);
+  //   console.log("User In Group: ", userInGroup);
+  // }, [currentGroup, userInGroup]);
 
   const loginWithEmailAndPassword = async () => {
     try {
+      setLoading(true);
       await signIn(email, password); // This updates the Firebase auth state
 
       // Wait briefly to ensure `auth().currentUser` is updated
       const user = auth().currentUser;
       setCurrentUser(user);
 
+
+
       if (!user) {
         Alert.alert('User not found. Please try again.');
+        setLoading(false);
         return;
       }
-      // console.log("////////////", currentGroup)
-      // console.log("///////////", userInGroup)
-      // Call checkUserInGroup to update userInGroup
-      // await checkUserInGroup();
 
-      const groupKey = getStorageKey('currentGroup', user.uid);
-      const userInGroupKey = getStorageKey('userInGroup', user.uid);
-
-      // Fetch user-specific data from AsyncStorage
-      const currentGroupString = await AsyncStorage.getItem(groupKey);
-      const savedUserInGroupString = await AsyncStorage.getItem(userInGroupKey);
-
-      const currentGroup = currentGroupString ? JSON.parse(currentGroupString) : null;
-      const userInGroup = savedUserInGroupString ? JSON.parse(savedUserInGroupString) : null;
-
-      // if (user) {
-      //   await firestore().collection('users').doc(user.uid).update({ isOnline: true });
+      // Wait for group context to load
+      // let retries = 5;
+      // while ((currentGroup === undefined || userInGroup === undefined) && retries > 0) {
+      //   await new Promise(resolve => setTimeout(resolve, 500)); // Wait for 500ms
+      //   retries--;
       // }
-
-      if (currentGroup?.createdBy === user.uid) {
-        // console.log(currentGroup?.createdBy)
-        // console.log(user.uid)
-        // console.log(currentUser?.uid)
-
-        navigation.navigate('MyGroupScreen');
-      } else if (userInGroup) {
-        navigation.navigate('MembersHomeScreen');
-      } else if (userData?.firstName && userData.lastName) {
-        navigation.navigate('FindOrStart');
-      } else {
-        navigation.navigate('NamePage');
+      // ✅ Wait for `userData` to be available
+      let retries = 5;
+      while (!userData && retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+        retries--;
       }
+
+      // const groupKey = getStorageKey('currentGroup', user.uid);
+      // const userInGroupKey = getStorageKey('userInGroup', user.uid);
+
+      // const currentGroupString = await AsyncStorage.getItem(groupKey);
+      // const savedUserInGroupString = await AsyncStorage.getItem(userInGroupKey);
+
+      // const currentGroup = currentGroupString ? JSON.parse(currentGroupString) : null;
+      // const userInGroup = savedUserInGroupString ? JSON.parse(savedUserInGroupString) : null;
+      // setLoading(false);
+      // if (loading) {
+      //   Alert.alert("Still loading group data. Please try again.");
+      //   return;
+      // }
+      if (!userData) {
+        Alert.alert("Error loading user data. Please try again.");
+        setLoading(false);
+        return;
+      }
+      if (userData?.isGroupLeader) {
+        navigation.navigate('MyGroupScreen');
+      } else if (userData?.isGroupMember) {
+        navigation.navigate('MembersHomeScreen');
+      } else if (!userData?.firstName || !userData?.lastName) {
+        navigation.navigate('NamePage');
+      } else {
+        navigation.navigate('FindOrStart');
+      }
+      setLoading(false);
+
     } catch (error) {
       const errorMessage =
         (error as { message?: string }).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
+      // setLoading(false);
     }
   };
 

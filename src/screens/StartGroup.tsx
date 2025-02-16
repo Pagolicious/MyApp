@@ -108,6 +108,10 @@ const StartGroup = () => {
         groupId: groupId,
       })
       .then(() => {
+        firestore().collection('users').doc(currentUser.uid).update({
+          isGroupLeader: true,
+          groupId: groupId
+        })
         navigation.navigate('MyGroupScreen');
       })
       .catch(error => {

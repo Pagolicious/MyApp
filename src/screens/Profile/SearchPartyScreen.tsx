@@ -115,7 +115,7 @@ const SearchPartyScreen = () => {
             {currentUser && currentUser.uid !== userParty?.leaderUid ? (
               <Icon2 name="more-vertical" size={25} color="black" />
             ) : (
-              <DelistModal />
+              <DelistModal userParty={userParty} />
             )}
           </TouchableOpacity>
         </View>

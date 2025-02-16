@@ -107,7 +107,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [partyInvitation, setPartyInvitation] = useState<PartyInvitation | null>(null);
 
-  const { checkUserInGroup, setCurrentGroupId, setCurrentGroup } = useGroup();
+  const { setCurrentGroupId, setCurrentGroup } = useGroup();
 
   useEffect(() => {
     if (!currentUser) {
@@ -248,11 +248,19 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           memberUids: firestore.FieldValue.arrayUnion(currentUser.uid),
 
         });
+        await firestore()
+          .collection('users')
+          .doc(currentUser.uid)
+          .update({
+            isGroupMember: true,
+            groupId: groupInvitation?.groupId
+          })
+
         // setCurrentGroupId(groupData?.groupId)
         // setCurrentGroup({ id: groupData?.groupId, ...groupData });
 
         // console.log("YOOOOOOOOOOOOOOOOOOOO", groupData?.groupId)
-        await checkUserInGroup();
+        // await checkUserInGroup();
 
         navigate("MembersHomeScreen")
 

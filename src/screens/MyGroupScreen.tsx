@@ -89,7 +89,7 @@ const MyGroupScreen = () => {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
   );
-  const { currentGroupId, currentGroup, userInGroup } = useGroup();
+  const { currentGroupId, currentGroup } = useGroup();
   // const { delistModalVisible, setDelistModalVisible } = useModal();
 
   useEffect(() => {
@@ -157,9 +157,9 @@ const MyGroupScreen = () => {
 
 
   const handleCardPress = (item: Applicant) => {
-    if (userInGroup) {
-      return;
-    }
+    // if (userInGroup) {
+    //   return;
+    // }
     setModalVisible(true);
     setSelectedApplicant(item);
   };

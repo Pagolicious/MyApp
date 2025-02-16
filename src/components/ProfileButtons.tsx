@@ -21,7 +21,7 @@ import { useGroupData } from '../hooks/useGroupData';
 
 const ProfileButtons = () => {
   const { signOut } = useAuth()
-  const { clearGroupData } = useGroup()
+  // const { clearGroupData } = useGroup()
   // const { userInGroup } = useGroupData()
 
   const logout = async () => {

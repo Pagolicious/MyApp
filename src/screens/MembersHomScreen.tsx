@@ -48,7 +48,7 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
   // const { leaveModalVisible, setLeaveModalVisible } = useModal();
   // const [leaveModalVisible, setLeaveModalVisible] = useState(false)
   // const [delistModalVisible, setDelistModalVisible] = useState(false)
-  const { currentGroupId, currentGroup, checkUserInGroup, delistGroup } = useGroup();
+  const { currentGroupId, currentGroup, delistGroup } = useGroup();
 
   // Simulate data loading
   useEffect(() => {
