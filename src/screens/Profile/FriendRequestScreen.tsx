@@ -33,7 +33,7 @@ interface FriendRequest {
 
 const FriendRequestScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { userInGroup, currentGroup } = useGroup()
+  const { currentGroup } = useGroup()
   const [userHasGroup, setUserHasGroup] = useState(false);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
 
@@ -126,16 +126,7 @@ const FriendRequestScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate("ProfileScreen")}>
-          <Icon1 name="arrowleft" size={25} color="black" />
-        </TouchableOpacity>
-        <View style={styles.spacer} />
-
-        <Text style={styles.headerText}>Friend requests</Text>
-        <View style={styles.spacer} />
-      </View>
-      <FriendNav />
+      {/* <FriendNav /> */}
       <View style={styles.background}>
         <View style={styles.flatListContainer}>
 
@@ -194,23 +185,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: 65,
-    backgroundColor: '#5f4c4c',
-    padding: 15,
-    alignItems: 'center',
-    flexDirection: "row"
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-    marginRight: 20,
+  // header: {
+  //   height: 65,
+  //   backgroundColor: '#5f4c4c',
+  //   padding: 15,
+  //   alignItems: 'center',
+  //   flexDirection: "row"
+  // },
+  // headerText: {
+  //   fontSize: 20,
+  //   fontWeight: 'bold',
+  //   color: 'white',
+  //   marginRight: 20,
 
-  },
-  spacer: {
-    flex: 1,
-  },
+  // },
+  // spacer: {
+  //   flex: 1,
+  // },
   background: {
     flex: 1,
     backgroundColor: "white"

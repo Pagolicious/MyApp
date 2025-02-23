@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+// import { RootStackParamList } from '../App';
 
 //Components
 import GroupNav from '../components/GroupNav';
@@ -29,10 +29,8 @@ import { navigate } from '../services/NavigationService';
 //Icons
 import Icon1 from 'react-native-vector-icons/MaterialIcons';
 
-type MembersHomeScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'MembersHomeScreen'
->;
+// type MembersHomeScreenProps = StackScreenProps<MyGroupStackParamList, 'MembersHomeScreen'>;
+
 
 interface Friend {
   uid: string;
@@ -40,7 +38,7 @@ interface Friend {
   lastName: string;
 }
 
-const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
+const MembersHomeScreen = () => {
   const { members = [], owner } = useGroupData();
   const { currentUser, userData } = useAuth()
   const [loading, setLoading] = useState(true); // Loading state for data container
@@ -139,8 +137,9 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
 
   return (
     <View style={styles.container}>
+      {/* <GroupNav /> */}
 
-      {currentUser && <GroupNav />}
+      {/* {currentUser && <GroupNav />} */}
       <Toast />
 
       {loading ? (
@@ -257,7 +256,7 @@ const MembersHomeScreen = ({ route }: MembersHomeScreenProps) => {
         </>
       )}
 
-      <FooterGroupNav />
+      {/* <FooterGroupNav /> */}
     </View>
   );
 };

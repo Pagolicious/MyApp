@@ -14,7 +14,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import GroupMemberNav from '../components/GroupMemberNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import CustomAvatar from '../components/CustomAvatar';
-import MembersHomeScreen from './MembersHomScreen';
+import MembersHomeScreen from './MembersHomeScreen';
 import ProfileButtons from '../components/ProfileButtons';
 import FooterNav from '../components/FooterNav';
 

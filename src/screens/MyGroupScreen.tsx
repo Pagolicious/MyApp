@@ -13,7 +13,7 @@ import React, { useState, useEffect } from 'react';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 // import StarRating from 'react-native-star-rating-widget';
 
 //Components
@@ -239,8 +239,9 @@ const MyGroupScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* <GroupNav /> */}
 
-      {currentUser && <GroupNav />}
+      {/* {currentUser && <GroupNav />} */}
       <ImageBackground
         source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
         style={styles.backgroundImage} // Style for the background image
@@ -322,7 +323,7 @@ const MyGroupScreen = () => {
           </View>
         </Modal>
       </ImageBackground>
-      <FooterGroupNav />
+      {/* <FooterGroupNav /> */}
     </View>
   );
 };

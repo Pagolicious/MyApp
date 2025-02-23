@@ -2,10 +2,11 @@ import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 //Navigation
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { useNavigationState } from '@react-navigation/native';
 
 // AuthContext
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +16,8 @@ import { useModal } from '../context/ModalContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+//Icons
+import Icon1 from 'react-native-vector-icons/AntDesign';
 
 // type GroupNavProps = {
 //   route:
@@ -26,17 +29,31 @@ import { navigate } from '../services/NavigationService';
 // };
 
 const FriendNav = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { currentUser } = useAuth();
+  const navigation = useNavigation();
+
+  const { currentUser, userData } = useAuth();
   // const [buttonText, setButtonText] = useState('Browse');
   // const { setDelistModalVisible, delistModalVisible } = useModal();
   // const { delistGroup } = useGroup();
-  const route = useRoute();
+  // const route = useRoute();
 
 
-  const isActive = (screenName: string) => route.name === screenName;
+  // ✅ Get active screen inside `FriendStack`
+  const currentRouteName = useNavigationState((state) => {
+    if (!state) return "FriendScreen"
+    const activeTabRoute = state?.routes.find((r) => r.name === "Friends")?.state;
+    return activeTabRoute && "routes" in activeTabRoute
+      ? activeTabRoute.routes[activeTabRoute.index ?? 0]?.name || "FriendScreen"
+      : "FriendScreen";
+  });
 
+  useEffect(() => {
+    if (currentRouteName) {
+      navigation.setOptions({
+        headerTitle: currentRouteName === 'FriendScreen' ? 'Friends List' : 'Friend Requests',
+      });
+    }
+  }, [currentRouteName, navigation]);
   // if (!currentUser) {
   //   return null;
   // }
@@ -68,28 +85,66 @@ const FriendNav = () => {
   //     Alert.alert('Error', 'Something went wrong.');
   //   }
   // };
+  const handleGoBackButton = () => {
+    if (!userData) return;
+
+    if (userData.isGroupLeader || userData.isGroupMember) {
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'GroupApp' as keyof RootStackParamList, // ✅ Ensures GroupApp is recognized
+            params: { screen: 'Profile' }, // ✅ Ensure 'ProfileScreen' exists in RootStackParamList
+          } as unknown as never,
+        ],
+      });
+    } else {
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'PublicApp' as keyof RootStackParamList, // ✅ Ensures GroupApp is recognized
+            params: { screen: 'Profile' }, // ✅ Ensure 'ProfileScreen' exists in RootStackParamList
+          } as unknown as never,
+        ],
+      });
+    }
+  }
+
+  useEffect(() => {
+    console.log('Current Route:', currentRouteName, 'Navigation State:', navigation.getState());
+  }, [currentRouteName, navigation]);
 
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => handleGoBackButton()}>
+          <Icon1 name="arrowleft" size={25} color="white" />
+        </TouchableOpacity>
+        <View style={styles.spacer} />
+
+        <Text style={styles.headerText}>{currentRouteName === 'FriendScreen' ? 'Friends List' : 'Friend Requests'}</Text>
+        <View style={styles.spacer} />
+      </View>
       {currentUser ? (
         <>
           <View style={styles.navbar}>
             <View style={styles.contentRow}>
               <View>
-                <TouchableOpacity onPress={() => navigation.navigate('FriendScreen')} style={styles.button}>
+                <TouchableOpacity onPress={() => navigate('Friends', { screen: 'FriendScreen' })} style={styles.button}>
                   {/* <Text style={styles.title}>{buttonText}</Text> */}
-                  <Text style={[styles.buttonText, isActive('FriendScreen') ? { color: '#00BFFF' } : {},]}>Friends list</Text>
+                  <Text style={[styles.buttonText, currentRouteName === 'FriendScreen' ? { color: '#00BFFF' } : {},]}>Friends list</Text>
                 </TouchableOpacity>
-                <View style={[styles.activePage, isActive('FriendScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
+                <View style={[styles.activePage, currentRouteName === 'FriendScreen' ? { backgroundColor: '#00BFFF' } : {},]}></View>
               </View>
               <View>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('FriendRequestScreen')}
+                  onPress={() => navigate('Friends', { screen: 'FriendRequestScreen' })}
                   style={styles.button}>
-                  <Text style={[styles.buttonText, isActive('FriendRequestScreen') ? { color: '#00BFFF' } : {},]}>Friend requests</Text>
+                  <Text style={[styles.buttonText, currentRouteName === 'FriendRequestScreen' ? { color: '#00BFFF' } : {},]}>Friend requests</Text>
                 </TouchableOpacity>
-                <View style={[styles.activePage, isActive('FriendRequestScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
+                <View style={[styles.activePage, currentRouteName === 'FriendRequestScreen' ? { backgroundColor: '#00BFFF' } : {},]}></View>
               </View>
             </View>
           </View>
@@ -109,6 +164,23 @@ const styles = StyleSheet.create({
     // justifyContent: "flex-end",
     // backgroundColor: "blue",
     // height: 75,
+  },
+  header: {
+    height: 65,
+    backgroundColor: '#5f4c4c',
+    padding: 15,
+    alignItems: 'center',
+    flexDirection: "row"
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginRight: 20,
+
+  },
+  spacer: {
+    flex: 1,
   },
   navbar: {
     // height: 75,

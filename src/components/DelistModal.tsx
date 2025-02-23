@@ -36,6 +36,7 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
         return;
       }
       if (!userParty || !currentUser) {
+        console.log(userParty)
         console.error("Party not found or user not signed in!");
         return;
       }
@@ -77,7 +78,7 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
         })
       );
       setDelistModalVisible(false);
-      navigate("FindOrStart");
+      // navigate("FindOrStart");
     } catch (error) {
       console.error("Error deleting party:", error);
       Alert.alert("Error", "Something went wrong while deleting the party.");
@@ -119,7 +120,7 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={() => {
-                  if (userData && userData.isPartyLeader) {
+                  if (userParty) {
                     handleDelistMyParty()
                   } else {
                     handleDelistMyGroup()

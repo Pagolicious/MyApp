@@ -1,21 +1,36 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native';
 import React from 'react';
-
-//Navigation
-import { RootStackParamList } from '../App';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Toast from 'react-native-toast-message';
 
 //Components
 import FooterNav from '../components/FooterNav';
 import MyButton from '../components/MyButton';
-//AuthContext
+
+//Contexts
 import { useAuth } from '../context/AuthContext';
 
+//Services
+import { navigate } from '../services/NavigationService';
+
 const FindOrStart = () => {
-  const { currentUser } = useAuth();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { currentUser, userData } = useAuth();
+  // const navigation =
+  //   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const handleStartGroup = () => {
+    if (!userData) return;
+
+    if (!userData.isPartyMember) {
+      navigate("StartGroup")
+    } else {
+      Toast.show({
+        type: 'error', // 'success' | 'error' | 'info'
+        text1: 'Action Not Allowed 🚫',
+        text2: 'Only the leader can start. Ask them or create your own!',
+      });
+
+    }
+  }
 
   if (!currentUser) {
     return (
@@ -33,7 +48,7 @@ const FindOrStart = () => {
       >
         <View style={styles.buttonContainer}>
 
-          <TouchableOpacity onPress={() => navigation.navigate('FindGroup')} style={styles.button}>
+          <TouchableOpacity onPress={() => navigate('PublicApp', { screen: 'Find a Group' })} style={styles.button}>
             <Text style={styles.buttonText}>Find a group</Text>
           </TouchableOpacity>
           <View style={styles.lineContainer}>
@@ -42,13 +57,13 @@ const FindOrStart = () => {
             <View style={styles.line} />
           </View>
 
-          <TouchableOpacity onPress={() => navigation.navigate('StartGroup')} style={styles.button}>
+          <TouchableOpacity onPress={handleStartGroup} style={styles.button}>
             <Text style={styles.buttonText}>Start a group</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
       {/* <View style={styles.flexEnd}> */}
-      <FooterNav />
+      {/* <FooterNav /> */}
 
       {/* </View> */}
     </View>

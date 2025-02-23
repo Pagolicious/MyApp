@@ -48,7 +48,7 @@ const ProfileButtons = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigate("FriendScreen")}>
+      <TouchableOpacity onPress={() => navigate("Friends")}>
         <View style={[styles.btnBorder, styles.row]}>
           <Icon3 name="user-friends" size={30} color="black" />
           <Text style={styles.profileBtnText}>Friends</Text>

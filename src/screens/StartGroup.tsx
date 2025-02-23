@@ -18,7 +18,7 @@ import DateTimePicker, {
 import Slider from '@react-native-community/slider';
 
 //Navigation
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -32,14 +32,24 @@ import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
+//Services
+import { navigate } from '../services/NavigationService';
+
 //Icons
-import Icon1 from 'react-native-vector-icons/Entypo';
+import Icon1 from 'react-native-vector-icons/AntDesign';
+// import Icon2 from 'react-native-vector-icons/Entypo';
+
+interface Member {
+  uid: string;
+  firstName: string;
+  lastName: string
+}
 
 const StartGroup = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
 
   const [activity, setActivity] = useState('');
   const [location, setLocation] = useState('');
@@ -83,7 +93,7 @@ const StartGroup = () => {
     };
   }, []);
 
-  const addGroup = () => {
+  const addGroup = async () => {
     if (!currentUser) {
       Alert.alert('Error', 'User is not authenticated.');
       return;
@@ -91,32 +101,72 @@ const StartGroup = () => {
     const groupId = firestore().collection('groups').doc().id;
     setCurrentGroupId(groupId);
 
-    firestore()
-      .collection('groups')
-      .doc(groupId)
-      .set({
-        activity: activity,
-        location: location,
-        fromDate: formatDate(fromDate),
-        fromTime: formatTime(fromTime),
-        toDate: formatDate(toDate),
-        toTime: formatTime(toTime),
-        skillvalue: skillvalue,
-        memberLimit: memberLimit,
-        details: details,
-        createdBy: currentUser.uid,
-        groupId: groupId,
-      })
-      .then(() => {
-        firestore().collection('users').doc(currentUser.uid).update({
-          isGroupLeader: true,
-          groupId: groupId
+    // Initialize empty members array (only party members will be added)
+    let members: Member[] = [];
+    let memberUids: string[] = [];
+
+    // If the user is a party leader, fetch all party members
+    if (userData?.isPartyLeader) {
+      const partyDocRef = firestore().collection('searchParties').doc(currentUser.uid);
+      const partyDoc = await partyDocRef.get();
+
+      if (partyDoc.exists) {
+        const partyData = partyDoc.data();
+        const partyMembers = partyData?.members || [];
+
+        // Add party members to the group
+        partyMembers.forEach((member: any) => {
+          members.push({
+            uid: member.uid,
+            firstName: member.firstName || '',
+            lastName: member.lastName || '',
+          });
+          memberUids.push(member.uid);
+        });
+        // ✅ Remove the `searchParties` document since the leader is starting a group
+        await partyDocRef.delete();
+        console.log("✅ searchParties entry removed for leader:", currentUser.uid);
+      }
+    }
+
+    await firestore().collection('groups').doc(groupId).set({
+      activity: activity,
+      location: location,
+      fromDate: formatDate(fromDate),
+      fromTime: formatTime(fromTime),
+      toDate: formatDate(toDate),
+      toTime: formatTime(toTime),
+      skillvalue: skillvalue,
+      memberLimit: memberLimit,
+      details: details,
+      createdBy: currentUser.uid,
+      groupId: groupId,
+      members: members,
+      memberUids: memberUids
+    })
+
+    // ✅ Update each party member to reflect their new group
+    if (memberUids.length > 0) {
+      const updatePromises = memberUids.map(uid =>
+        firestore().collection('users').doc(uid).update({
+          groupId: groupId,
+          isGroupMember: true,
+          isPartyMember: false
         })
-        navigation.navigate('MyGroupScreen');
-      })
-      .catch(error => {
-        Alert.alert('Error submitting group', error.message);
-      });
+      );
+      await Promise.all(updatePromises);
+    }
+
+
+    // ✅ Mark the creator as group leader
+    await firestore().collection('users').doc(currentUser.uid).update({
+      groupId: groupId,
+      isGroupLeader: true,
+      isPartyLeader: false
+    });
+
+    navigate("GroupApp", { screen: 'MyGroupScreen' })
+
   };
 
   let syncTimeCheck = 0;
@@ -210,7 +260,12 @@ const StartGroup = () => {
       <ScrollView>
 
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Icon1 name="arrowleft" size={25} color="white" />
+          </TouchableOpacity>
+          <View style={styles.spacer} />
           <Text style={styles.headerText}>Start a Group</Text>
+          <View style={styles.spacer} />
         </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Activity</Text>
@@ -382,13 +437,19 @@ const styles = StyleSheet.create({
     height: 65,
     backgroundColor: '#5f4c4c',
     padding: 15,
-    justifyContent: 'center',
+    // justifyContent: "space-between",
     alignItems: 'center',
+    flexDirection: "row",
   },
   headerText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
+    // marginLeft: 'auto',
+    marginRight: 20,
+  },
+  spacer: {
+    flex: 1,
   },
   bodyContainer: {
     borderBottomWidth: 1,

@@ -70,6 +70,9 @@ const SignUpScreen = ({ navigation }: NameProps) => {
         isOnline: false,
         isPartyLeader: false,
         isPartyMember: false,
+        isGroupLeader: false,
+        isGroupMember: false,
+        groupId: ''
       });
 
       Alert.alert('User Created! Please Login');

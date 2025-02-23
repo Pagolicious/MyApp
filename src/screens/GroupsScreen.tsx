@@ -18,10 +18,11 @@ import { BlurView } from '@react-native-community/blur';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 import StarRating from 'react-native-star-rating-widget';
 import { RouteProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 //Components
 import GroupNav from '../components/GroupNav';
@@ -46,10 +47,15 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
 
-// type GroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
+// type RootStackParamList = {
+//   GroupsScreen: { activity: string };
+// };
+
+type GroupsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'GroupsScreen'>;
 type GroupsScreenRouteProp = RouteProp<RootStackParamList, 'GroupsScreen'>;
 
 type Props = {
+  navigation: GroupsScreenNavigationProp;
   route: GroupsScreenRouteProp;
 };
 
@@ -73,32 +79,32 @@ interface Applicant {
 }
 
 
-const GroupsScreen: React.FC<Props> = ({ route }) => {
+const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { currentUser, userData } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userHasGroup, setUserHasGroup] = useState(false);
+  // const [userHasGroup, setUserHasGroup] = useState(false);
   // const [userInGroup, setUserInGroup] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [applyModalVisible, setApplyModalVisible] = useState(false);
   const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
-  const { currentGroup, currentGroupId, userInGroup, setCurrentGroup, setCurrentGroupId } = useGroup();
+  const { currentGroup, currentGroupId, setCurrentGroupId } = useGroup();
   const { activity } = route.params;
-  const navigation = useNavigation();
+  // const navigation = useNavigation();
   // const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   // const { userInGroup } = useGroupData()
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
 
   // Define mapping of activity names to image paths
-  const activityImages: { [key: string]: any } = {
-    tennis: require('../assets/SportImages/tennis.jpg'),
-    // soccer: require('./assets/SportImages/soccer.png'),
-    // basketball: require('./assets/SportImages/basketball.png'),
-    // Add other activities and their respective images here
-  };
+  // const activityImages: { [key: string]: any } = {
+  //   tennis: require('../assets/SportImages/tennis.jpg'),
+  // soccer: require('./assets/SportImages/soccer.png'),
+  // basketball: require('./assets/SportImages/basketball.png'),
+  // Add other activities and their respective images here
+  // };
 
   // useEffect(() => {
   //   if (!currentUser) {
@@ -186,9 +192,9 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
             ? groupList
             : groupList.filter(group => group.activity.toLowerCase() === activity.toLowerCase());
 
-        if (currentUser) {
-          setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
-        }
+        // if (currentUser) {
+        //   setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
+        // }
         // Update state with the real-time data
         setGroups(filteredGroups);
       }, error => {
@@ -354,7 +360,7 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
   };
 
   const handleCardPress = async (item: Group) => {
-    if (userHasGroup || userInGroup) {
+    if (userData?.isGroupLeader || userData?.isGroupMember || userData?.isPartyMember) {
       console.log("User is already in a group");
       return;
     }
@@ -403,13 +409,14 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icon1 name="arrowleft" size={25} color="black" />
+              <Icon1 name="arrowleft" size={25} color="white" />
             </TouchableOpacity>
             <View style={styles.spacer} />
             <Text style={styles.headerText}>Groups</Text>
             <View style={styles.spacer} />
 
           </View>
+
           {/* {userHasGroup ? <GroupNav /> : null}
           {userInGroup ? <GroupMemberNav /> : null} */}
           <ImageBackground
@@ -579,8 +586,8 @@ const GroupsScreen: React.FC<Props> = ({ route }) => {
         </>
       )}
       {/* </ImageBackground> */}
-      {(userHasGroup || userInGroup) && <FooterGroupNav />}
-      {(!userHasGroup && !userInGroup) && <FooterNav />}
+      {/* {(userData?.isGroupLeader || userData?.isGroupMember) && <FooterGroupNav />}
+      {(!userData?.isGroupLeader && !userData?.isGroupMember) && <FooterNav />} */}
     </View>
 
   );

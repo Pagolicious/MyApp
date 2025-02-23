@@ -10,6 +10,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
+//Services
+import { navigate } from '../services/NavigationService';
+
 //Icons
 import Icon1 from 'react-native-vector-icons/Entypo';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
@@ -19,8 +22,6 @@ import Icon4 from 'react-native-vector-icons/FontAwesome6';
 
 
 const FooterGroupNav = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const { currentUser } = useAuth();
   const { currentGroup } = useGroup()
@@ -31,9 +32,9 @@ const FooterGroupNav = () => {
 
   const handleNavigation = () => {
     if (currentGroup?.createdBy === currentUser.uid) {
-      navigation.navigate('MyGroupScreen');
+      navigate('MyGroupScreen');
     } else {
-      navigation.navigate('MembersHomeScreen');
+      navigate('MembersHomeScreen');
     }
   };
 
@@ -62,7 +63,7 @@ const FooterGroupNav = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('FindGroup')}
+            onPress={() => navigate('FindGroup')}
             style={styles.button}>
             <Icon4
               name="users-viewfinder"
@@ -79,7 +80,7 @@ const FooterGroupNav = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('GroupChatScreen')}
+            onPress={() => navigate('GroupChatScreen')}
             style={styles.button}>
             <Icon1
               name="chat"
@@ -96,7 +97,7 @@ const FooterGroupNav = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('ProfileScreen')}
+            onPress={() => navigate('ProfileScreen')}
             style={styles.button}>
             <Icon3
               name="profile"

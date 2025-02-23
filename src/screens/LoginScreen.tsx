@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+// import { RootStackParamList } from '../App';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -22,21 +22,17 @@ import { useGroup } from '../context/GroupContext'
 //Hooks
 import { useGroupData } from '../hooks/useGroupData';
 
-type NameProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
+//Services
+import { navigate } from '../services/NavigationService';
 
-const LoginScreen = ({ navigation }: NameProps) => {
+// type NameProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
+
+const LoginScreen = () => {
   const { signIn, setCurrentUser, currentUser, userData } = useContext(AuthContext)!;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const { currentGroup } = useGroup();
-
-  // const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
-
-  // useEffect(() => {
-  //   console.log("Current Group: ", currentGroup);
-  //   console.log("User In Group: ", userInGroup);
-  // }, [currentGroup, userInGroup]);
 
   const loginWithEmailAndPassword = async () => {
     try {
@@ -55,12 +51,6 @@ const LoginScreen = ({ navigation }: NameProps) => {
         return;
       }
 
-      // Wait for group context to load
-      // let retries = 5;
-      // while ((currentGroup === undefined || userInGroup === undefined) && retries > 0) {
-      //   await new Promise(resolve => setTimeout(resolve, 500)); // Wait for 500ms
-      //   retries--;
-      // }
       // ✅ Wait for `userData` to be available
       let retries = 5;
       while (!userData && retries > 0) {
@@ -68,32 +58,21 @@ const LoginScreen = ({ navigation }: NameProps) => {
         retries--;
       }
 
-      // const groupKey = getStorageKey('currentGroup', user.uid);
-      // const userInGroupKey = getStorageKey('userInGroup', user.uid);
-
-      // const currentGroupString = await AsyncStorage.getItem(groupKey);
-      // const savedUserInGroupString = await AsyncStorage.getItem(userInGroupKey);
-
-      // const currentGroup = currentGroupString ? JSON.parse(currentGroupString) : null;
-      // const userInGroup = savedUserInGroupString ? JSON.parse(savedUserInGroupString) : null;
-      // setLoading(false);
-      // if (loading) {
-      //   Alert.alert("Still loading group data. Please try again.");
-      //   return;
-      // }
       if (!userData) {
         Alert.alert("Error loading user data. Please try again.");
         setLoading(false);
         return;
       }
+
+
       if (userData?.isGroupLeader) {
-        navigation.navigate('MyGroupScreen');
+        navigate('GroupApp', { screen: 'MyGroupScreen' });
       } else if (userData?.isGroupMember) {
-        navigation.navigate('MembersHomeScreen');
+        navigate('GroupApp', { screen: 'MembersHomeScreen' });
       } else if (!userData?.firstName || !userData?.lastName) {
-        navigation.navigate('NamePage');
+        navigate('NamePage');
       } else {
-        navigation.navigate('FindOrStart');
+        navigate('PublicApp', { screen: 'FindOrStart' })
       }
       setLoading(false);
 

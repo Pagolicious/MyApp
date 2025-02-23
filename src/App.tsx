@@ -8,6 +8,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import PublicTabNavigator from './navigation/PublicTabNavigator';
+import GroupTabNavigator from './navigation/GroupTabNavigator';
+import RootStackNavigator from './navigation/RootStackNavigator';
 
 //Screens
 import SignUpScreen from './screens/SignUpScreen';
@@ -20,7 +23,7 @@ import GroupsScreen from './screens/GroupsScreen';
 import MyGroupScreen from './screens/MyGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
-import MembersHomeScreen from './screens/MembersHomScreen';
+import MembersHomeScreen from './screens/MembersHomeScreen';
 import RequestScreen from './screens/RequestScreen';
 
 import FriendScreen from './screens/Profile/FriendScreen';
@@ -29,6 +32,9 @@ import MessageScreen from './screens/Profile/MessageScreen';
 import SettingScreen from './screens/Profile/SettingScreen';
 import AboutAppScreen from './screens/Profile/AboutAppScreen';
 import FriendRequestScreen from './screens/Profile/FriendRequestScreen';
+
+//Components
+import { useAuth } from './context/AuthContext';
 
 //Contexts
 import { AuthProvider } from './context/AuthContext';
@@ -43,28 +49,43 @@ import { navigationRef } from './services/NavigationService';
 import useOnlineStatus from './hooks/useOnlineStatus';
 
 
-export type RootStackParamList = {
-  SignUpScreen: undefined;
-  LoginScreen: undefined;
-  NamePage: undefined;
-  FindOrStart: undefined;
-  FindGroup: undefined;
-  StartGroup: undefined;
-  GroupsScreen: { activity: string };
-  MyGroupScreen: undefined;
-  GroupChatScreen: undefined;
-  ProfileScreen: undefined;
-  MembersHomeScreen: undefined;
-  FriendScreen: undefined;
-  SearchPartyScreen: undefined;
-  MessageScreen: undefined;
-  SettingScreen: undefined;
-  AboutAppScreen: undefined;
-  RequestScreen: undefined;
-  FriendRequestScreen: undefined;
-};
+// export type RootStackParamList = {
+//   SignUpScreen: undefined;
+//   LoginScreen: undefined;
+//   NamePage: undefined;
+//   FindOrStart: undefined;
+//   FindGroup: undefined;
+//   StartGroup: undefined;
+//   GroupsScreen: { activity: string };
+//   MyGroupScreen: undefined;
+//   GroupChatScreen: undefined;
+//   ProfileScreen: undefined;
+//   MembersHomeScreen: undefined;
+//   FriendScreen: undefined;
+//   SearchPartyScreen: undefined;
+//   MessageScreen: undefined;
+//   SettingScreen: undefined;
+//   AboutAppScreen: undefined;
+//   RequestScreen: undefined;
+//   FriendRequestScreen: undefined;
+// };
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// const AppNavigator = () => {
+//   const { currentUser, userData } = useAuth();
+//   if (!currentUser) return;
+
+//   return (
+//     <NavigationContainer>
+//       {userData?.isGroupLeader || userData?.isGroupMember ? (
+//         <GroupTabNavigator /> // ✅ Show Group Navigation for Group Members
+//       ) : (
+//         <PublicTabNavigator /> // ✅ Show Public Navigation for Others
+//       )}
+//     </NavigationContainer>
+//   );
+// };
 
 
 function App(): React.JSX.Element {
@@ -77,6 +98,8 @@ function App(): React.JSX.Element {
           <InvitationProvider>
             <ModalProvider>
               <NavigationContainer ref={navigationRef}>
+
+                {/* <NavigationContainer ref={navigationRef}>
                 <Stack.Navigator
                   initialRouteName="SignUpScreen"
                   screenOptions={{
@@ -109,7 +132,11 @@ function App(): React.JSX.Element {
                   <Stack.Screen name="FriendRequestScreen" component={FriendRequestScreen} />
 
                 </Stack.Navigator>
+              </NavigationContainer> */}
+                <RootStackNavigator />
+                {/* <AppNavigator /> */}
               </NavigationContainer>
+
             </ModalProvider>
           </InvitationProvider>
         </GroupProvider>

@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList, P
 import React, { useState, useEffect, useReducer } from 'react';
 
 //Navigation
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -21,6 +21,9 @@ import sportsList from "../assets/JsonFiles/sportsList.json"
 import { useGroup } from '../context/GroupContext';
 import { useAuth } from '../context/AuthContext';
 
+//Services
+import { navigate } from '../services/NavigationService';
+
 // type FindGroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
 
 const FindGroup = () => {
@@ -29,18 +32,18 @@ const FindGroup = () => {
   const [activity, setActivity] = useState('Any');
   const [showDropdown, setShowDropdown] = useState(false);
   const [Location, setLocation] = useState('Close to your location');
-  const [userHasGroup, setUserHasGroup] = useState(false);
-  const { currentGroup, userInGroup } = useGroup()
-  const { currentUser } = useAuth()
+  // const [userHasGroup, setUserHasGroup] = useState(false);
+  const { currentGroup } = useGroup()
+  const { currentUser, userData } = useAuth()
 
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // const navigation =
+  //   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    if (currentUser) {
-      setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
-    }
-  })
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
+  //   }
+  // })
 
   const handleSearch = (text: string) => {
     setActivity(text);
@@ -65,7 +68,7 @@ const FindGroup = () => {
 
   const SearchGroup = async () => {
     try {
-      navigation.navigate('GroupsScreen', { activity: activity });
+      navigate('GroupsScreen', { activity: activity });
     } catch (error) {
       const errorMessage =
         (error as { message?: string }).message || 'An unknown error occurred';
@@ -130,8 +133,8 @@ const FindGroup = () => {
         </View>
       </ImageBackground>
 
-      {(userHasGroup || userInGroup) && <FooterGroupNav />}
-      {(!userHasGroup && !userInGroup) && <FooterNav />}
+      {/* {(userData?.isGroupLeader || userData?.isGroupMember) && <FooterGroupNav />} */}
+      {/* {(!userData?.isGroupLeader && !userData?.isGroupMember) && <FooterNav />} */}
 
     </KeyboardAvoidingView>
   );

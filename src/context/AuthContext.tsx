@@ -19,6 +19,7 @@ interface User {
   isPartyMember: Boolean;
   isGroupLeader: Boolean;
   isGroupMember: Boolean;
+  groupId: string;
   skills: Skills[];
 }
 

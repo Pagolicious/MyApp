@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import { Alert, Modal, View, Text, Button, StyleSheet, Pressable } from 'react-native';
+import Toast from 'react-native-toast-message'; // ✅ Import if not already
 
 //Context
 import { useAuth } from './AuthContext';
@@ -72,7 +73,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   // const [userInGroup, setUserInGroup] = useState<boolean | undefined>(undefined);
   const [notificationId, setLatestNotificationId] = useState<string | undefined>(undefined);
   const [groupNotifications, setGroupNotifications] = useState()
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
 
   // const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
 
@@ -321,6 +322,10 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       // Fetch the group document
       const groupData = currentGroup || (await firestore().collection('groups').doc(currentGroupId).get()).data();
 
+      await firestore().collection("users").doc(currentUser.uid).update({
+        isGroupLeader: false,
+        groupId: ""
+      });
 
       // Notify all members using `memberUids`
       if (groupData && groupData.memberUids) {
@@ -338,10 +343,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
               isGroupMember: false,
               groupId: ""
             });
-            await firestore().collection("users").doc(currentUser.uid).update({
-              isGroupLeader: false,
-              groupId: ""
-            });
+
           })
         )
       }
@@ -365,7 +367,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       // await updateGroup(undefined);
       // await updateGroupId(undefined);
       // await updateUserInGroup(false); // User is no longer in a group
-      navigate('FindOrStart');
+      navigate('PublicApp', { screen: 'FindOrStart' });
 
     } catch (error) {
       Alert.alert('Error', 'Something went wrong.');
@@ -496,6 +498,32 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
     navigate('FindOrStart');
   };
+
+  useEffect(() => {
+    if (!currentUser || !userData) return;
+
+    const newGroupId = userData.groupId || undefined;
+
+    // ✅ First, update state before checking navigation
+    if (newGroupId !== currentGroupId) {
+      setCurrentGroupId(newGroupId);
+
+      if (newGroupId) {
+        console.log("✅ User's groupId updated, navigating to MyGroupScreen...");
+
+        Toast.show({
+          type: 'info',
+          text1: 'You have been added to a group!',
+          text2: 'Redirecting to MyGroupScreen...',
+        });
+
+        // ✅ Delay navigation by 2 seconds
+        setTimeout(() => navigate('MyGroupScreen'), 2000);
+      }
+    }
+  }, [userData]);
+
+
 
   return (
     <GroupContext.Provider

@@ -20,7 +20,7 @@ const GroupChatScreen = () => {
             <GroupChat />
           </View>
           <View style={styles.footerContainer}>
-            <FooterGroupNav />
+            {/* <FooterGroupNav /> */}
           </View>
         </>
       )}

@@ -97,7 +97,7 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
       // await updateGroup(undefined);
       // await updateGroupId(undefined);
 
-      navigate('FindOrStart');
+      navigate('PublicApp', { screen: 'FindOrStart' })
 
     } catch {
       Alert.alert('Error', 'Something went wrong.');

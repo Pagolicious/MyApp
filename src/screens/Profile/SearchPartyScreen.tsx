@@ -41,7 +41,7 @@ interface Member {
 }
 
 const SearchPartyScreen = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const [userParty, setUserParty] = useState<SearchParty | null>(null);
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -84,11 +84,21 @@ const SearchPartyScreen = () => {
 
   }
 
+  const handleGoBackButton = () => {
+    if (!userData) return;
+
+    if (userData.isGroupLeader || userData.isGroupMember) {
+      navigate('GroupApp', { screen: 'Profile' })
+    } else {
+      navigate('PublicApp', { screen: 'Profile' })
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate("ProfileScreen")}>
-          <Icon1 name="arrowleft" size={25} color="black" />
+        <TouchableOpacity onPress={() => handleGoBackButton()}>
+          <Icon1 name="arrowleft" size={25} color="white" />
         </TouchableOpacity>
         <View style={styles.spacer} />
         <Text style={styles.headerText}>Search Party</Text>

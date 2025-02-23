@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types'
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -11,12 +11,14 @@ import firestore from '@react-native-firebase/firestore';
 //Context
 import { useAuth } from '../context/AuthContext';
 
+//Services
+import { navigate } from '../services/NavigationService';
+
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
-type NamePageProps = NativeStackScreenProps<RootStackParamList, 'NamePage'>;
 
-const NamePage = ({ navigation }: NamePageProps) => {
+const NamePage = () => {
   const { currentUser } = useAuth();
 
   const [firstName, setFirstName] = useState('');
@@ -35,7 +37,7 @@ const NamePage = ({ navigation }: NamePageProps) => {
       })
       .then(() => {
         Alert.alert('Form Submitted', `${firstName} ${lastName}`);
-        navigation.navigate('FindOrStart');
+        navigate('FindOrStart');
       })
       .catch(error => {
         console.error('Error saving user data: ', error);
@@ -81,7 +83,7 @@ const NamePage = ({ navigation }: NamePageProps) => {
       <Button title="Submit" onPress={handleSubmit} />
       <Button
         title="Move On"
-        onPress={() => navigation.navigate('FindOrStart')}
+        onPress={() => navigate('FindOrStart')}
       />
     </View>
   );

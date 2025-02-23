@@ -2,10 +2,15 @@ import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 //Navigation
-import { RootStackParamList } from '../App';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+// import MyGroupStackNavigator
+// from '../navigation/MyGroupStackNavigator';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useNavigationState } from '@react-navigation/native';
 
 // AuthContext
 import { useAuth } from '../context/AuthContext';
@@ -24,18 +29,54 @@ import { navigate } from '../services/NavigationService';
 
 // };
 
+// import { useNavigationState } from '@react-navigation/native';
+
+// type GroupTabParamList = {
+//   'My Group': undefined; // This is the bottom tab name
+// };
+
+type MyGroupStackParamList = {
+  MyGroupScreen: undefined;
+  MembersHomeScreen: undefined;
+};
+
+// type NavigationProps = CompositeNavigationProp<
+//   BottomTabNavigationProp<GroupTabParamList, 'My Group'>,
+//   StackNavigationProp<MyGroupStackParamList>
+// >;
+
 const GroupNav = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { currentUser } = useAuth();
+  const navigation = useNavigation()
+
+  const { currentUser, userData } = useAuth();
   // const [buttonText, setButtonText] = useState('Browse');
   const { setDelistModalVisible, delistModalVisible } = useModal();
   // const { delistGroup } = useGroup();
   const route = useRoute();
 
+  const [currentScreen, setCurrentScreen] = useState<string | null>(null);
 
-  const isActive = (screenName: string) => route.name === screenName;
+  // Track the active screen inside MyGroupStack
+  const currentRouteName = useNavigationState((state) => {
+    const activeTabRoute = state?.routes.find((r) => r.name === "My Group")?.state;
 
+    // Default to "MyGroupScreen" if leader, otherwise "MembersHomeScreen"
+    const defaultRoute = userData?.isGroupLeader ? "MyGroupScreen" : "MembersHomeScreen";
+
+    return activeTabRoute && "routes" in activeTabRoute
+      ? activeTabRoute.routes[activeTabRoute.index ?? 0]?.name || defaultRoute
+      : defaultRoute;
+  });
+
+  useEffect(() => {
+    if (currentRouteName) {
+      navigation.setOptions({
+        tabBarLabel: currentRouteName === 'MyGroupScreen' ? 'Applicants' : 'Members',
+      });
+    }
+  }, [currentRouteName]);
+
+  // const parentNavigation = navigation.getParent();
   // if (!currentUser) {
   //   return null;
   // }
@@ -67,6 +108,9 @@ const GroupNav = () => {
   //     Alert.alert('Error', 'Something went wrong.');
   //   }
   // };
+  useEffect(() => {
+    console.log('Current Route:', currentRouteName);
+  }, [currentRouteName]);
 
 
   return (
@@ -81,23 +125,22 @@ const GroupNav = () => {
               {/* <View style={styles.leftButtons}> */}
               <View>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('MyGroupScreen')}
+                  onPress={() => navigate('MyGroupScreen')}
                   style={styles.button}>
-                  <Text style={[styles.buttonText, isActive('MyGroupScreen') ? { color: '#00BFFF' } : {},]}>Applicants</Text>
+                  <Text style={[styles.buttonText, currentRouteName === 'MyGroupScreen' ? { color: '#00BFFF' } : {},]}>Applicants</Text>
                 </TouchableOpacity>
-                <View style={[styles.activePage, isActive('MyGroupScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
+                <View style={[styles.activePage, currentRouteName === 'MyGroupScreen' ? { backgroundColor: '#00BFFF' } : {},]}></View>
               </View>
               <View>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('MembersHomeScreen')}
+                  onPress={() => navigate('MembersHomeScreen')}
                   style={styles.button}>
-                  <Text style={[styles.buttonText, isActive('MembersHomeScreen') ? { color: '#00BFFF' } : {},]}>Members</Text>
+                  <Text style={[styles.buttonText, currentRouteName === 'MembersHomeScreen' ? { color: '#00BFFF' } : {},]}>Members</Text>
                 </TouchableOpacity>
-                <View style={[styles.activePage, isActive('MembersHomeScreen') ? { backgroundColor: '#00BFFF' } : {},]}></View>
+                <View style={[styles.activePage, currentRouteName === 'MembersHomeScreen' ? { backgroundColor: '#00BFFF' } : {},]}></View>
               </View>
             </View>
 
-            {/* </View> */}
           </View>
         </>
       ) : (

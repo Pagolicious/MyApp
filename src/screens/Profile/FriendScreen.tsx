@@ -34,7 +34,7 @@ interface Friend {
 
 const FriendScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { userInGroup, currentGroup } = useGroup()
+  const { currentGroup } = useGroup()
   const [userHasGroup, setUserHasGroup] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [moreModalVisible, setMoreModalVisible] = useState(false)
@@ -180,8 +180,8 @@ const FriendScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate("ProfileScreen")}>
+      {/* <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigate('GroupApp', { screen: 'Profile' })}>
           <Icon1 name="arrowleft" size={25} color="black" />
         </TouchableOpacity>
         <View style={styles.spacer} />
@@ -189,8 +189,8 @@ const FriendScreen = () => {
         <Text style={styles.headerText}>Friends list</Text>
         <View style={styles.spacer} />
 
-      </View>
-      <FriendNav />
+      </View> */}
+      {/* <FriendNav /> */}
 
       {/* <View style={styles.onlineHeader}>
         <Text style={styles.onlineText}>Online</Text>
@@ -296,23 +296,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white"
   },
-  header: {
-    height: 65,
-    backgroundColor: '#5f4c4c',
-    padding: 15,
-    alignItems: 'center',
-    flexDirection: "row"
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-    marginRight: 20,
+  // header: {
+  //   height: 65,
+  //   backgroundColor: '#5f4c4c',
+  //   padding: 15,
+  //   alignItems: 'center',
+  //   flexDirection: "row"
+  // },
+  // headerText: {
+  //   fontSize: 20,
+  //   fontWeight: 'bold',
+  //   color: 'white',
+  //   marginRight: 20,
 
-  },
-  spacer: {
-    flex: 1,
-  },
+  // },
+  // spacer: {
+  //   flex: 1,
+  // },
   background: {
     flex: 1,
     backgroundColor: "white"

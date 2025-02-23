@@ -5,7 +5,7 @@ import React from 'react';
 import GroupMemberNav from '../components/GroupMemberNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import CustomAvatar from '../components/CustomAvatar';
-import MembersHomeScreen from './MembersHomScreen';
+import MembersHomeScreen from './MembersHomeScreen';
 import ProfileButtons from '../components/ProfileButtons';
 import FooterNav from '../components/FooterNav';
 
@@ -18,8 +18,6 @@ import { useGroupData } from '../hooks/useGroupData';
 
 const ProfileScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { owner } = useGroupData()
-  const { userInGroup } = useGroup()
 
   return (
     <View style={styles.container}>
@@ -38,8 +36,8 @@ const ProfileScreen = () => {
         </View>
       </View>
       <ProfileButtons />
-      {(owner?.uid === currentUser?.uid || userInGroup) && <FooterGroupNav />}
-      {(owner?.uid !== currentUser?.uid && !userInGroup) && <FooterNav />}
+      {/* {(userData?.isGroupLeader || userData?.isGroupMember) && <FooterGroupNav />} */}
+      {/* {(!userData?.isGroupLeader && !userData?.isGroupMember) && <FooterNav />} */}
     </View>
   );
 };
