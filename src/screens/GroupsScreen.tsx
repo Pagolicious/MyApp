@@ -29,6 +29,7 @@ import GroupNav from '../components/GroupNav';
 import GroupMemberNav from '../components/GroupMemberNav';
 import FooterNav from '../components/FooterNav';
 import FooterGroupNav from '../components/FooterGroupNav';
+import PartyDisplay from '../components/PartyDisplay';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -411,10 +412,12 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Icon1 name="arrowleft" size={25} color="white" />
             </TouchableOpacity>
-            <View style={styles.spacer} />
+            {/* <View style={styles.spacer} /> */}
             <Text style={styles.headerText}>Groups</Text>
-            <View style={styles.spacer} />
-
+            {/* <View style={styles.spacer} /> */}
+            <View style={styles.partyContainer}>
+              <PartyDisplay />
+            </View>
           </View>
 
           {/* {userHasGroup ? <GroupNav /> : null}
@@ -606,20 +609,34 @@ const styles = StyleSheet.create({
   header: {
     height: 65,
     backgroundColor: '#5f4c4c',
-    padding: 15,
+    paddingHorizontal: 15,
     // justifyContent: "space-between",
     alignItems: 'center',
     flexDirection: "row",
+    justifyContent: "space-between", // Ensures PartyDisplay stays in position
+
   },
   headerText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
-    // marginLeft: 'auto',
-    marginRight: 20,
+    position: 'absolute', // Keeps it centered
+    left: "50%",
+    transform: [{ translateX: -20 }], // Adjust based on text width
   },
-  spacer: {
-    flex: 1,
+  partyContainer: {
+    // flexGrow: 1, // Allow PartyDisplay to use available space
+    // alignItems: "flex-end", // Align PartyDisplay to the right
+    // paddingRight: 10, // Ensure spacing from edge
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden", // Prevents overflow
+    // borderWidth: 2, // Keep for debugging
+    // borderColor: "red",
+    width: 120, // Ensure enough space for avatars
+    height: 40, // Match avatar size
+    position: "relative", // Important for absolute children
+
   },
   backgroundImage: {
     flex: 1,

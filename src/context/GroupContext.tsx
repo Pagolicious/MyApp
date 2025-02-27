@@ -496,7 +496,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     setNotificationMessage(null);
 
 
-    navigate('FindOrStart');
+    navigate("PublicApp", { screen: 'FindOrStart' })
   };
 
   useEffect(() => {
@@ -518,7 +518,8 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         });
 
         // ✅ Delay navigation by 2 seconds
-        setTimeout(() => navigate('MyGroupScreen'), 2000);
+        setTimeout(() => navigate("GroupApp", { screen: 'MembersHomeScreen' })
+          , 2000);
       }
     }
   }, [userData]);

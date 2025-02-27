@@ -239,7 +239,7 @@ const FriendScreen = () => {
           <TouchableWithoutFeedback onPress={() => setMoreModalVisible(false)}>
             <View style={styles.modalOverlay}>
               <View style={styles.modalView}>
-                {userData && (!userData.isPartyLeader || !userData.isPartyLeader) &&
+                {userData && !userData.isGroupLeader && !userData.isGroupMember && !userData.isPartyMember &&
                   <Pressable
                     style={styles.buttonMid}
                     onPress={() => {

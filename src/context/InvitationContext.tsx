@@ -262,7 +262,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // console.log("YOOOOOOOOOOOOOOOOOOOO", groupData?.groupId)
         // await checkUserInGroup();
 
-        navigate("MembersHomeScreen")
+        navigate("GroupApp", { screen: 'MembersHomeScreen' })
 
       } else {
         setModalVisible(false);

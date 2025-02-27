@@ -63,7 +63,7 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
 
       setLeaveModalVisible(false);
 
-      navigate('FindOrStart');
+      navigate('PublicApp', { screen: 'FindOrStart' })
 
     } catch {
       Alert.alert('Error', 'Something went wrong.');
