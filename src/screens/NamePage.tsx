@@ -37,7 +37,7 @@ const NamePage = () => {
       })
       .then(() => {
         Alert.alert('Form Submitted', `${firstName} ${lastName}`);
-        navigate('FindOrStart');
+        navigate('PublicApp', { screen: 'FindOrStart' })
       })
       .catch(error => {
         console.error('Error saving user data: ', error);
@@ -83,7 +83,7 @@ const NamePage = () => {
       <Button title="Submit" onPress={handleSubmit} />
       <Button
         title="Move On"
-        onPress={() => navigate('FindOrStart')}
+        onPress={() => navigate('PublicApp', { screen: 'FindOrStart' })}
       />
     </View>
   );

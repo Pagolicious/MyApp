@@ -52,7 +52,7 @@ const LoginScreen = () => {
       }
 
       // ✅ Wait for `userData` to be available
-      let retries = 5;
+      let retries = 10;
       while (!userData && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
         retries--;
@@ -94,12 +94,16 @@ const LoginScreen = () => {
             value={email}
             onChangeText={(text: string) => setEmail(text.trim())}
             placeholder="Email"
+            placeholderTextColor="lightgray"
           />
           <MyTextInput
             value={password}
             onChangeText={(text: string) => setPassword(text.trim())}
             placeholder="Password"
+            placeholderTextColor="lightgray"
             secureTextEntry
+            style={{ color: 'black' }}
+
           />
 
           <MyButton title={'Login'} onPress={loginWithEmailAndPassword} />

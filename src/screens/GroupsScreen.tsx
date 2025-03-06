@@ -415,9 +415,11 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* <View style={styles.spacer} /> */}
             <Text style={styles.headerText}>Groups</Text>
             {/* <View style={styles.spacer} /> */}
-            <View style={styles.partyContainer}>
-              <PartyDisplay />
-            </View>
+            {userData && (userData.isPartyLeader || userData.isPartyMember) && (
+              <View style={styles.partyContainer}>
+                <PartyDisplay />
+              </View>
+            )}
           </View>
 
           {/* {userHasGroup ? <GroupNav /> : null}

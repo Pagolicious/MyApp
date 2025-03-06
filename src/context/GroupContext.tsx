@@ -20,6 +20,8 @@ interface Group {
   fromDate: string;
   fromTime: string;
   toTime: string;
+  toDate: string;
+  skillvalue: number;
   createdBy: string;
   memberLimit: number;
   details: string;

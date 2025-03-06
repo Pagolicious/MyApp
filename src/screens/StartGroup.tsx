@@ -73,11 +73,34 @@ const StartGroup = () => {
   const [skillvalue, setSkillvalue] = useState(0);
   const [details, setDetails] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const { setCurrentGroupId } = useGroup();
+  const { setCurrentGroupId, currentGroup } = useGroup();
   const [memberLimit, setMemberLimit] = useState(1);
 
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
   const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 1)); // Min limit 1
+
+  useEffect(() => {
+    if (userData?.isGroupLeader && currentGroup) {
+      const parseTime = (timeString: string): Date => {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0);
+        return date;
+      };
+
+      setActivity(currentGroup.activity || '');
+      setLocation(currentGroup.location || '');
+      setFromDate(new Date(currentGroup.fromDate || Date.now()));
+      setFromTime(parseTime(currentGroup.fromTime));
+      setToDate(new Date(currentGroup.toDate || Date.now()));
+      setToTime(parseTime(currentGroup.toTime));
+      setSkillvalue(currentGroup.skillvalue || 0);
+      setDetails(currentGroup.details || '');
+      setMemberLimit(currentGroup.memberLimit || 1);
+    }
+  }, [userData, currentGroup]);
+
+
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', () =>
@@ -97,6 +120,10 @@ const StartGroup = () => {
     if (!currentUser) {
       Alert.alert('Error', 'User is not authenticated.');
       return;
+    }
+
+    if (userData?.isGroupLeader) {
+      return
     }
     const groupId = firestore().collection('groups').doc().id;
     setCurrentGroupId(groupId);
@@ -132,9 +159,9 @@ const StartGroup = () => {
     await firestore().collection('groups').doc(groupId).set({
       activity: activity,
       location: location,
-      fromDate: formatDate(fromDate),
+      fromDate: fromDate.toISOString().split('T')[0],
       fromTime: formatTime(fromTime),
-      toDate: formatDate(toDate),
+      toDate: toDate.toISOString().split('T')[0],
       toTime: formatTime(toTime),
       skillvalue: skillvalue,
       memberLimit: memberLimit,
@@ -272,6 +299,7 @@ const StartGroup = () => {
           <TextInput
             style={styles.input}
             placeholder="Tennis"
+            placeholderTextColor="lightgray"
             value={activity}
             onChangeText={setActivity}
           />
@@ -409,22 +437,30 @@ const StartGroup = () => {
             multiline={true}
             numberOfLines={3}
             placeholder="More details about your group (optional)"
+            placeholderTextColor="lightgray"
             value={details}
             onChangeText={setDetails}
           />
         </View>
       </ScrollView>
       {!isKeyboardVisible && (
-
         <View style={styles.footerContainer}>
-          <TouchableOpacity style={styles.moreOptionBtn} onPress={addGroup}>
+          <TouchableOpacity style={styles.moreOptionBtn} onPress={() => console.log("More")}>
             <Text style={styles.moreOptionText}>More</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.startGroupBtn} onPress={addGroup}>
-            <Text style={styles.startGroupText}>Create</Text>
-          </TouchableOpacity>
+
+          {!userData?.isGroupLeader ? (
+            <TouchableOpacity style={styles.startGroupBtn} onPress={addGroup}>
+              <Text style={styles.startGroupText}>Create</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.startGroupBtn} onPress={() => console.log("Edit")}>
+              <Text style={styles.startGroupText}>Edit</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
+
     </View>
   );
 };

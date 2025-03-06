@@ -45,6 +45,7 @@ const RootStackNavigator = () => {
       <Stack.Screen name="PublicApp" component={PublicTabNavigator} />
       <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
       <Stack.Screen name="StartGroup" component={StartGroup} />
+      <Stack.Screen name="NamePage" component={NamePage} />
 
       {/* 🚀 TAB NAVIGATOR (MAIN APP) */}
       {/* <Stack.Screen name="MainApp" component={GroupTabNavigator} /> */}

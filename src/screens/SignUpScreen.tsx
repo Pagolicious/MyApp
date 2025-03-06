@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -105,18 +105,23 @@ const SignUpScreen = ({ navigation }: NameProps) => {
             value={email}
             onChangeText={setEmail}
             placeholder="Email"
+            placeholderTextColor="lightgray"
           />
           <MyTextInput
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
+            placeholderTextColor="lightgray"
             secureTextEntry
+            style={{ color: 'black' }}
           />
           <MyTextInput
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm Password"
+            placeholderTextColor="lightgray"
             secureTextEntry
+            style={{ color: 'black' }}
           />
 
           <MyButton onPress={signUp} title={'Sign Up'} />

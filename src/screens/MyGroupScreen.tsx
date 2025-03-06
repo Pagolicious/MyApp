@@ -31,6 +31,10 @@ import { useModal } from '../context/ModalContext';
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
+//Icons
+import Icon1 from 'react-native-vector-icons/AntDesign';
+import { navigate } from '../services/NavigationService';
+
 type MyGroupScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'MyGroupScreen'
@@ -278,7 +282,15 @@ const MyGroupScreen = () => {
             }
           />
         </View>
-
+        {userData?.isGroupLeader && (
+          <TouchableOpacity
+            style={styles.editGroupButton}
+            onPress={() => navigate("StartGroup")}
+            activeOpacity={0.7} // Slight opacity on press
+          >
+            <Icon1 name="edit" size={40} color="white" />
+          </TouchableOpacity>
+        )}
         <Modal
           animationType="fade"
           transparent
@@ -464,5 +476,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 200,
     fontSize: 24
-  }
+  },
+  editGroupButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 60 / 2,
+    backgroundColor: "green",
+    bottom: 20,
+    right: 20,
+    position: "absolute",
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 10,          // Adds shadow on Android
+    shadowColor: '#000',   // Adds shadow on iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
 });
