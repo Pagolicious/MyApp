@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, Modal, TouchableWithoutFeedback, Pressable } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-toast-message';
 
@@ -28,6 +28,7 @@ import { navigate } from '../services/NavigationService';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/MaterialIcons';
+import Icon2 from 'react-native-vector-icons/Feather';
 
 // type MembersHomeScreenProps = StackScreenProps<MyGroupStackParamList, 'MembersHomeScreen'>;
 
@@ -47,10 +48,11 @@ const MembersHomeScreen = () => {
   // const [leaveModalVisible, setLeaveModalVisible] = useState(false)
   // const [delistModalVisible, setDelistModalVisible] = useState(false)
   const { currentGroupId, currentGroup, delistGroup } = useGroup();
+  const [moreModalVisible, setMoreModalVisible] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
 
   // Simulate data loading
   useEffect(() => {
-    // console.log("HELOOOOOOOOO", owner, members)
     if (owner || members && members.length > 0) {
       setLoading(false); // Stop loading when both owner and members are available
     } else {
@@ -74,56 +76,71 @@ const MembersHomeScreen = () => {
     }, 1000); // Simulate a refresh delay
   }, []);
 
-  const addFriend = async (friend: Friend) => {
-    if (currentUser) {
-
-      // const friendToAdd = {
-      //   uid: friend.uid,
-      //   firstName: friend.firstName || 'Unknown',
-      //   lastName: friend.lastName || 'Unknown',
-      // };
-
-      try {
-        // Generate a new ID for the invitation document
-        const friendRequestId = firestore().collection('friendRequests').doc().id;
-
-        // Create the invitation document with a specific ID
-        await firestore()
-          .collection('friendRequests')
-          .doc(friendRequestId)
-          .set({
-            sender: currentUser.uid,
-            receiver: friend.uid,
-            firstName: userData?.firstName || 'Unknown',
-            lastName: userData?.lastName || 'Unknown',
-            status: 'pending', // Default status
-            createdAt: firestore.FieldValue.serverTimestamp(),
-          });
-
-        Toast.show({
-          type: 'success', // 'success' | 'error' | 'info'
-          text1: `Friend request sent to ${friend.firstName} 🎉`,
-          text2: 'Waiting for approval...',
-        });
-
-        // await firestore()
-        //   .collection('users')
-        //   .doc(currentUser.uid)
-        //   .update({
-        //     friends: firestore.FieldValue.arrayUnion(friendToAdd),
-
-        //   });
-
-      } catch (error) {
-        console.error('Error sending friend request:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Oops!',
-          text2: 'Something went wrong.',
-        });
-      }
+  const handleAddFriend = async (selectedUser: Friend | null) => {
+    if (!currentUser) return
+    if (!selectedUser) {
+      return
     }
 
+    // const friendToAdd = {
+    //   uid: friend.uid,
+    //   firstName: friend.firstName || 'Unknown',
+    //   lastName: friend.lastName || 'Unknown',
+    // };
+
+    try {
+      // Generate a new ID for the invitation document
+      const friendRequestId = firestore().collection('friendRequests').doc().id;
+
+      // Create the invitation document with a specific ID
+      await firestore()
+        .collection('friendRequests')
+        .doc(friendRequestId)
+        .set({
+          sender: currentUser.uid,
+          receiver: selectedUser.uid,
+          firstName: userData?.firstName || 'Unknown',
+          lastName: userData?.lastName || 'Unknown',
+          status: 'pending', // Default status
+          createdAt: firestore.FieldValue.serverTimestamp(),
+        });
+
+      Toast.show({
+        type: 'success', // 'success' | 'error' | 'info'
+        text1: `Friend request sent to ${selectedUser.firstName} 🎉`,
+        text2: 'Waiting for approval...',
+      });
+
+      // await firestore()
+      //   .collection('users')
+      //   .doc(currentUser.uid)
+      //   .update({
+      //     friends: firestore.FieldValue.arrayUnion(friendToAdd),
+
+      //   });
+
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Oops!',
+        text2: 'Something went wrong.',
+      });
+    }
+
+
+  }
+
+  const handleViewProfile = (selectedUser: Friend | null) => {
+    if (!selectedUser) {
+      return
+    }
+  }
+
+  const handleReportUser = (selectedUser: Friend | null) => {
+    if (!selectedUser) {
+      return
+    }
   }
 
   if (!currentUser) {
@@ -161,8 +178,11 @@ const MembersHomeScreen = () => {
             </View>
             {currentUser.uid !== owner?.uid && owner ? (
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.addFriendBtn} onPress={() => addFriend(owner)}>
-                  <Icon1 name="person-add" size={20} color="black" />
+                <TouchableOpacity onPress={() => {
+                  setMoreModalVisible(true)
+                  setSelectedUser(owner)
+                }}>
+                  <Icon2 name="more-vertical" size={25} color="black" />
                 </TouchableOpacity>
               </View>
             ) : (
@@ -190,8 +210,14 @@ const MembersHomeScreen = () => {
                 </View>
                 <View style={styles.buttonContainer}>
                   {currentUser.uid !== item.uid ? (
-                    <TouchableOpacity style={styles.addFriendBtn} onPress={() => addFriend(item)}>
-                      <Icon1 name="person-add" size={20} color="black" />
+                    // <TouchableOpacity style={styles.addFriendBtn} onPress={() => addFriend(item)}>
+                    //   <Icon1 name="person-add" size={20} color="black" />
+                    // </TouchableOpacity>
+                    <TouchableOpacity onPress={() => {
+                      setMoreModalVisible(true)
+                      setSelectedUser(item)
+                    }}>
+                      <Icon2 name="more-vertical" size={25} color="black" />
                     </TouchableOpacity>
                   ) : (
                     <LeaveModal />
@@ -203,60 +229,52 @@ const MembersHomeScreen = () => {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           />
-          {/* <Modal
-            animationType="fade"
-            transparent
-            visible={leaveModalVisible}
-            onRequestClose={() => setLeaveModalVisible(false)}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalView}>
-                <TouchableOpacity
-                  style={styles.closeIcon}
-                  onPress={() => setLeaveModalVisible(false)}>
-                  <Text style={styles.closeText}>✖</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.modalTitleText}>Leave group</Text>
-                <Text style={styles.modalText}>Would you like to leave the group?</Text>
-
-
-                <TouchableOpacity
-                  style={styles.submitBtn}
-                  onPress={handleLeaveGroup}>
-                  <Text style={styles.submitBtnText}>Leave</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal> */}
-          {/* <Modal
-            animationType="fade"
-            transparent
-            visible={delistModalVisible}
-            onRequestClose={() => setDelistModalVisible(false)}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalView}>
-                <TouchableOpacity
-                  style={styles.closeIcon}
-                  onPress={() => setDelistModalVisible(false)}>
-                  <Text style={styles.closeText}>✖</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.modalTitleText}>Delist group</Text>
-                <Text style={styles.modalText}>Would you like to delist the group?</Text>
-
-
-                <TouchableOpacity
-                  style={styles.submitBtn}
-                  onPress={handleDelistMyGroup}>
-                  <Text style={styles.submitBtnText}>Delist</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal> */}
         </>
       )}
-
-      {/* <FooterGroupNav /> */}
+      {currentUser && (
+        <Modal
+          animationType="fade"
+          transparent
+          visible={moreModalVisible}
+          onRequestClose={() => setMoreModalVisible(false)}>
+          <TouchableWithoutFeedback onPress={() => setMoreModalVisible(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalView}>
+                <Pressable
+                  style={styles.buttonMid}
+                  onPress={() => handleViewProfile(selectedUser)}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonText}>View Profile</Text>
+                </Pressable>
+                { }
+                {!userData?.friends?.some(friend => friend.uid === selectedUser?.uid) && (
+                  <Pressable
+                    style={styles.buttonTop}
+                    onPress={() => handleAddFriend(selectedUser)}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                  >
+                    <Text style={styles.buttonText}>Add Friend</Text>
+                  </Pressable>
+                )}
+                {userData?.isGroupLeader &&
+                  <Pressable
+                    style={styles.buttonBottom}
+                    onPress={() => handleReportUser(selectedUser)}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                    <Text style={styles.buttonRedText}>Remove</Text>
+                  </Pressable>
+                }
+                <Pressable
+                  style={styles.buttonBottom}
+                  onPress={() => handleReportUser(selectedUser)}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonRedText}>Report</Text>
+                </Pressable>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -321,31 +339,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  // modalView: {
+  //   width: 350,
+  //   padding: 20,
+  //   backgroundColor: 'white',
+  //   borderRadius: 20,
+  //   alignItems: 'center',
+
+  // },
   modalView: {
-    width: 350,
-    padding: 20,
+    width: 300,
+    // padding: 20,
     backgroundColor: 'white',
-    borderRadius: 20,
+    borderRadius: 10,
     alignItems: 'center',
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 4,
-    // elevation: 5,
-    // position: 'relative', // Needed for positioning the close button
+
   },
-  // modalDetailContainer: {
-  //   width: 300,
-  //   height: 120,
-  //   borderRadius: 5,
-  //   backgroundColor: '#F9F6EE',
-  //   borderWidth: 1,
-  //   borderColor: 'grey',
-  // },
-  // modalDetailText: {
-  //   padding: 10,
-  //   color: 'black',
-  // },
   closeIcon: {
     position: 'absolute',
     top: 5,
@@ -403,6 +412,41 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center"
 
+  },
+  buttonTop: {
+    height: 50,
+    width: "100%",
+    borderStartStartRadius: 10,
+    borderEndStartRadius: 10,
+    justifyContent: 'center',
+    // backgroundColor: "#6200ea",
+
+
+  },
+  buttonMid: {
+    height: 50,
+    width: "100%",
+    justifyContent: 'center',
+
+  },
+  buttonBottom: {
+    height: 50,
+    width: "100%",
+    borderEndEndRadius: 10,
+    borderStartEndRadius: 10,
+    justifyContent: 'center',
+
+  },
+  buttonText: {
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16
+  },
+  buttonRedText: {
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#C41E3A",
   }
 
 });

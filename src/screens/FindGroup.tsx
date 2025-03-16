@@ -61,7 +61,7 @@ const FindGroup = () => {
   };
 
   const handleSelect = (sport: string) => {
-    setActivity(sport);
+    // setActivity(sport);
     setActivity(sport); // Update the search bar with the selected sport
     setShowDropdown(false); // Hide dropdown
   };

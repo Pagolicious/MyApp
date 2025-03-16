@@ -94,13 +94,13 @@ const LoginScreen = () => {
             value={email}
             onChangeText={(text: string) => setEmail(text.trim())}
             placeholder="Email"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
           />
           <MyTextInput
             value={password}
             onChangeText={(text: string) => setPassword(text.trim())}
             placeholder="Password"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
             secureTextEntry
             style={{ color: 'black' }}
 

@@ -30,6 +30,7 @@ import { useModal } from '../context/ModalContext';
 
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
+import { inviteApplicant } from '../utils/inviteHelpers';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
@@ -56,10 +57,12 @@ interface Group {
 interface Applicant {
   uid: string;
   firstName: string;
-  lastName: string;
-  skills: Skills[];
+  lastName?: string;
+  // skills: Skills[];
   note?: string;
-};
+  role?: "leader" | "member";
+  members?: Member[];
+}
 
 interface Skills {
   sport: string;
@@ -70,7 +73,7 @@ interface Member {
   uid: string;
   firstName: string;
   lastName: string;
-  skillLevel: string;
+  skillLevel?: string;
 }
 
 interface Invitation {
@@ -96,133 +99,165 @@ const MyGroupScreen = () => {
   const { currentGroupId, currentGroup } = useGroup();
   // const { delistModalVisible, setDelistModalVisible } = useModal();
 
+  // useEffect(() => {
+  //   if (!currentUser) {
+  //     console.log("No currentUser, skipping fetchApplicants.");
+  //     setApplicants([]);
+  //     return;
+  //   }
+  //   if (!currentGroup?.applicants?.length) {
+  //     setApplicants([]); // Clear applicants if no data
+  //     return;
+  //   }
+
+  //   const fetchApplicants = async () => {
+  //     try {
+  //       if (!currentGroup) return;
+  //       if (currentGroup.applicants && currentGroup.applicants.length > 0) {
+  //         const applicantsList = await Promise.all(
+  //           currentGroup.applicants.map(async (applicant) => {
+  //             try {
+  //               const userDoc = await firestore()
+  //                 .collection('users')
+  //                 .doc(applicant.uid)
+  //                 .get();
+
+  //               if (!userDoc.exists) {
+  //                 console.log(`Applicant ${applicant.uid} does not exist.`);
+  //                 return null; // 🔹 Skip missing applicants
+  //               }
+  //               const userData = userDoc.data();
+
+  //               const skill =
+  //                 userData?.skills?.find(
+  //                   (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
+  //                 ) || {};
+
+  //               return {
+  //                 uid: applicant.uid,
+  //                 firstName: userData?.firstName || 'Unknown',
+  //                 lastName: userData?.lastName || 'Unknown',
+  //                 skillLevel: skill.skillLevel || 'Unknown',
+  //                 note: applicant.note || '',
+  //               };
+  //             } catch (error) {
+  //               console.error(`Error fetching applicant ${applicant.uid}:`, error);
+  //               return null; // 🔹 If there's an error fetching one applicant, don't crash everything
+  //             }
+  //           })
+  //         );
+
+  //         setApplicants(applicantsList);
+  //       } else {
+  //         setApplicants([]); // Clear the list if no applicants exist
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching applicant details:', error);
+  //       Alert.alert('Error', 'Failed to fetch applicant details.');
+  //       handleFirestoreError(error)
+
+  //     }
+  //   };
+
+  //   fetchApplicants();
+  // }, [currentUser, currentGroup]);
+
   useEffect(() => {
-    if (!currentUser) {
-      console.log("No currentUser, skipping fetchApplicants.");
-      setApplicants([]);
-      return;
-    }
-    if (!currentGroup?.applicants?.length) {
-      setApplicants([]); // Clear applicants if no data
+    if (!currentGroup?.applicants) {
+      setApplicants([]); // Clear list if no applicants
       return;
     }
 
-    const fetchApplicants = async () => {
-      try {
-        if (!currentGroup) return;
-        if (currentGroup.applicants && currentGroup.applicants.length > 0) {
-          const applicantsList = await Promise.all(
-            currentGroup.applicants.map(async (applicant) => {
-              try {
-                const userDoc = await firestore()
-                  .collection('users')
-                  .doc(applicant.uid)
-                  .get();
+    setApplicants(currentGroup.applicants);
+  }, [currentGroup]); // ✅ Runs only when `currentGroup` changes
 
-                if (!userDoc.exists) {
-                  console.log(`Applicant ${applicant.uid} does not exist.`);
-                  return null; // 🔹 Skip missing applicants
-                }
-                const userData = userDoc.data();
 
-                const skill =
-                  userData?.skills?.find(
-                    (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
-                  ) || {};
-
-                return {
-                  uid: applicant.uid,
-                  firstName: userData?.firstName || 'Unknown',
-                  lastName: userData?.lastName || 'Unknown',
-                  skillLevel: skill.skillLevel || 'Unknown',
-                  note: applicant.note || '',
-                };
-              } catch (error) {
-                console.error(`Error fetching applicant ${applicant.uid}:`, error);
-                return null; // 🔹 If there's an error fetching one applicant, don't crash everything
-              }
-            })
-          );
-
-          setApplicants(applicantsList);
-        } else {
-          setApplicants([]); // Clear the list if no applicants exist
-        }
-      } catch (error) {
-        console.error('Error fetching applicant details:', error);
-        Alert.alert('Error', 'Failed to fetch applicant details.');
-        handleFirestoreError(error)
-
-      }
-    };
-
-    fetchApplicants();
-  }, [currentUser, currentGroup]);
 
 
   const handleCardPress = (item: Applicant) => {
-    // if (userInGroup) {
-    //   return;
-    // }
+    if (!userData?.isGroupLeader) {
+      return;
+    }
     setModalVisible(true);
     setSelectedApplicant(item);
   };
 
-  const inviteApplicant = async (selectedApplicant: Applicant | null) => {
+  // const inviteApplicant = async (selectedApplicant: Applicant | null) => {
 
+  //   if (!currentUser) {
+  //     console.log("User is not authenticated.");
+  //     Alert.alert("Error", "User is not authenticated. Please log in.");
+  //     return;
+  //   }
+
+
+  //   setModalVisible(false);
+  //   if (!selectedApplicant) {
+  //     Alert.alert('Error', 'No applicant selected');
+  //     return;
+  //   }
+
+  //   try {
+
+  //     if (!currentGroup) {
+  //       Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
+  //       return;
+  //     }
+
+  //     try {
+  //       // Generate a new ID for the invitation document
+  //       const invitationId = firestore().collection('groupInvitations').doc().id;
+
+  //       // Create the invitation document with a specific ID
+  //       await firestore()
+  //         .collection('groupInvitations')
+  //         .doc(invitationId)
+  //         .set({
+  //           sender: currentUser.uid,
+  //           receiver: selectedApplicant.uid,
+  //           groupId: currentGroupId,
+  //           activity: currentGroup?.activity || 'Unknown',
+  //           location: currentGroup?.location || 'Unknown',
+  //           fromDate: currentGroup?.fromDate || 'Unknown',
+  //           fromTime: currentGroup?.fromTime || 'Unknown',
+  //           toTime: currentGroup?.toTime || 'Unknown',
+  //           status: 'pending', // Default status
+  //           createdAt: firestore.FieldValue.serverTimestamp(),
+  //           members: selectedApplicant.members || null
+  //         });
+
+  //       console.log('Invitation sent successfully.');
+  //     } catch (error) {
+  //       console.error('Error sending invitation:', error);
+  //       Alert.alert('Error', 'Failed to send invitation.');
+  //     }
+
+  //   } catch (error) {
+  //     console.error('Error saving user data: ', error);
+  //     Alert.alert('Error', 'Could not apply for group');
+  //     handleFirestoreError(error)
+
+  //   }
+  // };
+
+  const handleInvite = (selectedApplicant: Applicant | null) => {
     if (!currentUser) {
-      console.log("User is not authenticated.");
       Alert.alert("Error", "User is not authenticated. Please log in.");
       return;
     }
 
-
-    setModalVisible(false);
-    if (!selectedApplicant) {
-      Alert.alert('Error', 'No applicant selected');
+    if (!currentGroup || !currentGroupId) {
+      Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
       return;
     }
 
-    try {
-
-      if (!currentGroup) {
-        Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
-        return;
-      }
-
-      try {
-        // Generate a new ID for the invitation document
-        const invitationId = firestore().collection('groupInvitations').doc().id;
-
-        // Create the invitation document with a specific ID
-        await firestore()
-          .collection('groupInvitations')
-          .doc(invitationId)
-          .set({
-            sender: currentUser.uid,
-            receiver: selectedApplicant.uid,
-            groupId: currentGroupId,
-            activity: currentGroup?.activity || 'Unknown',
-            location: currentGroup?.location || 'Unknown',
-            fromDate: currentGroup?.fromDate || 'Unknown',
-            fromTime: currentGroup?.fromTime || 'Unknown',
-            toTime: currentGroup?.toTime || 'Unknown',
-            status: 'pending', // Default status
-            createdAt: firestore.FieldValue.serverTimestamp(),
-          });
-
-        console.log('Invitation sent successfully.');
-      } catch (error) {
-        console.error('Error sending invitation:', error);
-        Alert.alert('Error', 'Failed to send invitation.');
-      }
-
-    } catch (error) {
-      console.error('Error saving user data: ', error);
-      Alert.alert('Error', 'Could not apply for group');
-      handleFirestoreError(error)
-
+    if (!selectedApplicant) {
+      Alert.alert('Error', 'No applicant selected.');
+      return;
     }
+    setModalVisible(false);
+    inviteApplicant(currentUser, currentGroup, currentGroupId, selectedApplicant);
+    // console.log("DAWDWADAWDADWWDAWD", typeof currentGroupId, typeof currentGroup, typeof currentUser)
   };
 
   const declineApplicant = async (selectedApplicant: Applicant | null) => {
@@ -241,6 +276,8 @@ const MyGroupScreen = () => {
 
 
 
+
+
   return (
     <View style={styles.container}>
       {/* <GroupNav /> */}
@@ -251,37 +288,66 @@ const MyGroupScreen = () => {
         style={styles.backgroundImage} // Style for the background image
       >
         <View style={styles.flatListContainer}>
-
           <FlatList
             data={applicants.filter((applicant) => applicant !== null)} // Prevents null errors
-            keyExtractor={item => item.uid} // Unique key for each item
+            keyExtractor={(item) => item.uid} // Unique key for each item
             renderItem={({ item }) => {
               if (!item || !item.uid) return null; // Skip invalid applicants
 
+              if (item.role === "leader" && item.members?.length > 0) {
+                // 🔥 Render party leader with stacked members
+                return (
+                  <View>
+                    {/* Party Leader Card */}
+                    <Pressable
+                      onPress={() => handleCardPress(item)}
+                      android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                      style={styles.card}>
+                      <View style={styles.column}>
+                        <Text style={styles.cardText}>{item.firstName} (Leader)</Text>
+                        <Text style={styles.cardText}>
+                          Skill Level: {item.skillLevel ?? "N/A"}
+                        </Text>
+                      </View>
+                      {/* Stacked Members Below */}
+                      <View style={styles.memberContainer}>
+                        {item.members.map((member: Member) => (
+                          <View
+                            key={member.uid}
+                            style={styles.memberCard}>
+                            <Text style={styles.cardText}>{member.firstName}</Text>
+                          </View>
+                        ))}
+                      </View>
+
+                    </Pressable>
+
+
+                  </View>
+                );
+              }
+
+              // 🔥 Render Individual Applicants
               return (
-                // <View>
-                <Pressable onPress={() => handleCardPress(item)}
+                <Pressable
+                  onPress={() => handleCardPress(item)}
                   android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
                   style={styles.card}>
-                  {/* <View > */}
                   <View style={styles.column}>
                     <Text style={styles.cardText}>{item.firstName}</Text>
                     <Text style={styles.cardText}>
                       Skill Level: {item.skillLevel ?? "N/A"}
                     </Text>
-                    {/* <Text style={styles.cardText}>{item.note}</Text> */}
                   </View>
-                  {/* </View> */}
-                  {/* <View style={styles.line} /> */}
                 </Pressable>
-                // </View>
-              )
+              );
             }}
             ListEmptyComponent={
               <Text style={styles.noApplicantsText}>No applicants available</Text>
             }
           />
         </View>
+
         {userData?.isGroupLeader && (
           <TouchableOpacity
             style={styles.editGroupButton}
@@ -326,7 +392,7 @@ const MyGroupScreen = () => {
                 <TouchableOpacity
                   style={styles.inviteBtn}
                   onPress={async () => {
-                    inviteApplicant(selectedApplicant);
+                    handleInvite(selectedApplicant);
                   }}>
                   <Text style={styles.inviteBtnText}>Invite</Text>
                 </TouchableOpacity>
@@ -360,6 +426,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     borderRadius: 15,
 
+
     // Shadow for iOS
     shadowColor: '#000', // Shadow color
     shadowOffset: { width: 0, height: 2 }, // Shadow position
@@ -372,6 +439,33 @@ const styles = StyleSheet.create({
   column: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  memberContainer: {
+    marginTop: 15,
+    // borderRadius: 20,
+    borderWidth: 1
+  },
+  memberCard: {
+    backgroundColor: '#6CB4EE',
+    padding: 10,
+    // marginHorizontal: 10,
+    // width: "100%",
+    // borderRadius: 15,
+    // position: 'relative',
+    // zIndex: -1,
+    // borderBottomEndRadius: 15
+
+    // opacity: 0.85, // Slightly faded to indicate stacking
+
+    // // ✅ Add Shadow for iOS
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 3.84,
+
+    // // ✅ Add Shadow for Android
+    // elevation: 5,
+
   },
   cardText: {
     color: 'black',

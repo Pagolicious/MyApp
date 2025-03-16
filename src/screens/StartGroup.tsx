@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
+  FlatList
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import DateTimePicker, {
@@ -24,6 +25,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 //Components
 import MyButton from '../components/MyButton';
+
+//Assets
+import sportsList from "../assets/JsonFiles/sportsList.json"
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -73,8 +77,11 @@ const StartGroup = () => {
   const [skillvalue, setSkillvalue] = useState(0);
   const [details, setDetails] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const { setCurrentGroupId, currentGroup } = useGroup();
+  const { setCurrentGroupId, currentGroup, currentGroupId } = useGroup();
   const [memberLimit, setMemberLimit] = useState(1);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredSports, setFilteredSports] = useState(sportsList);
+
 
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
   const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 1)); // Min limit 1
@@ -196,6 +203,28 @@ const StartGroup = () => {
 
   };
 
+  const editGroup = async () => {
+    if (!currentUser) return
+
+    try {
+      await firestore().collection('groups').doc(currentGroupId).update({
+        activity: activity,
+        location: location,
+        fromDate: fromDate.toISOString().split('T')[0],
+        fromTime: formatTime(fromTime),
+        toDate: toDate.toISOString().split('T')[0],
+        toTime: formatTime(toTime),
+        skillvalue: skillvalue,
+        memberLimit: memberLimit,
+        details: details,
+        applicants: []
+      })
+    } catch (error) {
+      console.log("Coudn't edit group", error)
+    }
+    navigate("GroupApp", { screen: 'MyGroupScreen' })
+  }
+
   let syncTimeCheck = 0;
 
   const onChangeFromDate = (
@@ -282,27 +311,84 @@ const StartGroup = () => {
   //   Keyboard.dismiss();
   // };
 
+  const handleSearch = (text: string) => {
+    setActivity(text);
+
+    if (text === '') {
+      setFilteredSports(sportsList); // Show all options if search is empty
+      setShowDropdown(false); // Hide dropdown
+    } else {
+      const filtered = sportsList.filter((sport) =>
+        sport.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredSports(filtered);
+      setShowDropdown(true);
+    }
+  };
+
+  const handleSelect = (sport: string) => {
+    // setActivity(sport);
+    setActivity(sport); // Update the search bar with the selected sport
+    setShowDropdown(false); // Hide dropdown
+  };
+
   return (
-    <View style={styles.container}>
-      <ScrollView>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+      >
 
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon1 name="arrowleft" size={25} color="white" />
           </TouchableOpacity>
           <View style={styles.spacer} />
-          <Text style={styles.headerText}>Start a Group</Text>
+          {!userData?.isGroupLeader ? (
+            <Text style={styles.headerText}>Start a Group</Text>
+          ) : (
+            <Text style={styles.headerText}>Edit Group</Text>
+          )}
           <View style={styles.spacer} />
         </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Activity</Text>
-          <TextInput
+          {/* <TextInput
             style={styles.input}
             placeholder="Tennis"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
             value={activity}
             onChangeText={setActivity}
+          /> */}
+          <TextInput
+            style={styles.input}
+            // placeholder={activity === 'Any' ? 'Search for a sport' : activity} // Show selected activity as placeholder
+            value={activity}
+            onChangeText={handleSearch}
+            placeholder="Tennis"
+            placeholderTextColor="gray"
+            onFocus={() => setShowDropdown(true)} // Show dropdown when focused
           />
+          {showDropdown && (
+
+            <FlatList
+              style={styles.dropdown}
+              data={filteredSports}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => handleSelect(item)}
+                >
+                  <Text style={styles.dropdownText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+
+          )}
         </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Location</Text>
@@ -437,7 +523,7 @@ const StartGroup = () => {
             multiline={true}
             numberOfLines={3}
             placeholder="More details about your group (optional)"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
             value={details}
             onChangeText={setDetails}
           />
@@ -454,14 +540,15 @@ const StartGroup = () => {
               <Text style={styles.startGroupText}>Create</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.startGroupBtn} onPress={() => console.log("Edit")}>
+            <TouchableOpacity style={styles.startGroupBtn} onPress={editGroup}>
               <Text style={styles.startGroupText}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
 
-    </View>
+    </KeyboardAvoidingView>
+
   );
 };
 
@@ -650,7 +737,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "black",
     fontWeight: "bold",
-  }
+  },
+  dropdown: {
+    marginTop: 5,
+    maxHeight: 220, // Limit height of dropdown for scrolling
+    // borderWidth: 1,
+    // borderColor: 'gray',
+    // borderRadius: 5,
+    backgroundColor: 'white',
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  dropdownText: {
+    fontSize: 16,
+  },
 });
 
 export default StartGroup;

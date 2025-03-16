@@ -21,6 +21,13 @@ interface User {
   isGroupMember: Boolean;
   groupId: string;
   skills: Skills[];
+  friends?: Friend[];
+}
+
+interface Friend {
+  uid: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface Skills {

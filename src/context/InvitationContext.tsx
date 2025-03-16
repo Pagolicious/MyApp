@@ -37,7 +37,8 @@ interface Member {
   uid: string;
   firstName: string;
   lastName: string;
-  skillLevel: string;
+  role: string;
+  // skillLevel: string;
 }
 
 interface GroupInvitation {
@@ -50,6 +51,7 @@ interface GroupInvitation {
   fromDate: string;
   fromTime: string;
   toTime: string;
+  members: Member[]
   status: 'pending' | 'accepted' | 'declined';
 }
 
@@ -203,10 +205,14 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
 
     if (!currentUser) return;
+    if (!groupInvitation) {
+      console.log('No group invitation has been sent')
+      return
+    }
 
     // Get group reference
     try {
-      const groupRef = firestore().collection('groups').doc(groupInvitation?.groupId);
+      const groupRef = firestore().collection('groups').doc(groupInvitation.groupId);
       const groupDoc = await groupRef.get();
       const groupData = groupDoc.data();
 
@@ -235,26 +241,39 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           skillLevel: currentUserData.skillLevel || 0,
         };
 
+        // Get all members from `groupInvitation` (excluding currentUser)
+        const invitedMembers = (groupInvitation?.members ?? []).map(member => ({
+          uid: member.uid,
+          firstName: member.firstName || 'Unknown',
+          lastName: member.lastName || 'Unknown',
+          // skillLevel: member.skillLevel || 0,
+        }));
 
+        // Combine `currentUser` and invited members into one list
+        const allMembersToAdd = [memberToAdd, ...invitedMembers];
 
-        if (!groupDoc.exists) {
-          Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
-          return;
-        }
-
-        // Add the member to the group
+        // Add members to the group in Firestore
         await groupRef.update({
-          members: firestore.FieldValue.arrayUnion(memberToAdd),
-          memberUids: firestore.FieldValue.arrayUnion(currentUser.uid),
-
+          members: firestore.FieldValue.arrayUnion(...allMembersToAdd),
+          memberUids: firestore.FieldValue.arrayUnion(...allMembersToAdd.map(m => m.uid)),
         });
-        await firestore()
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({
+
+
+
+        // if (!groupDoc.exists) {
+        //   Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
+        //   return;
+        // }
+
+        // Update Firestore for each user in parallel
+        const userUpdates = allMembersToAdd.map(async (member) => {
+          return firestore().collection('users').doc(member.uid).update({
             isGroupMember: true,
-            groupId: groupInvitation?.groupId
-          })
+            groupId: groupInvitation?.groupId,
+          });
+        });
+
+        await Promise.all(userUpdates);
 
         // setCurrentGroupId(groupData?.groupId)
         // setCurrentGroup({ id: groupData?.groupId, ...groupData });
@@ -268,7 +287,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setModalVisible(false);
       }
 
-      if (groupData && groupData.applicants) {
+      if (groupData?.applicants) {
         const applicantToRemove = groupData.applicants.find(
           (applicant: Applicant) => applicant.uid === currentUser.uid,
         );
@@ -280,7 +299,8 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
       }
 
-      await firestore().collection('groupInvitations').doc(invitationId).delete();
+      // await firestore().collection('groupInvitations').doc(invitationId).delete();
+      await firestore().collection('searchParties').doc(currentUser.uid).delete()
 
       setGroupInvitation(null);
     } catch (error) {

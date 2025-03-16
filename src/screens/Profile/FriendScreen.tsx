@@ -21,6 +21,10 @@ import useOnlineStatus from '../../hooks/useOnlineStatus';
 //Services
 import { navigate } from '../../services/NavigationService';
 
+//Utils
+import handleFirestoreError from '../../utils/firebaseErrorHandler';
+import { inviteApplicant } from '../../utils/inviteHelpers'
+
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/Feather';
@@ -34,7 +38,7 @@ interface Friend {
 
 const FriendScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { currentGroup } = useGroup()
+  const { currentGroup, currentGroupId } = useGroup()
   const [userHasGroup, setUserHasGroup] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [moreModalVisible, setMoreModalVisible] = useState(false)
@@ -168,6 +172,25 @@ const FriendScreen = () => {
     }
   };
 
+  const handleInviteToGroup = (selectedFriend: Friend | null) => {
+    if (!currentUser) {
+      Alert.alert("Error", "User is not authenticated. Please log in.");
+      return;
+    }
+
+    if (!currentGroup || !currentGroupId) {
+      Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
+      return;
+    }
+
+    if (!selectedFriend) {
+      Alert.alert('Error', 'No friend selected.');
+      return;
+    }
+    setMoreModalVisible(false);
+    inviteApplicant(currentUser, currentGroup, currentGroupId, selectedFriend);
+  };
+
 
   if (!currentUser) {
     return (
@@ -258,12 +281,14 @@ const FriendScreen = () => {
                   android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
                   <Text style={styles.buttonText}>Send message</Text>
                 </Pressable>
-                <Pressable
-                  style={styles.buttonMid}
-                  onPress={() => setMoreModalVisible(false)}
-                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
-                  <Text style={styles.buttonText}>Invite to group</Text>
-                </Pressable>
+                {userData && !userData.isPartyLeader && !userData.isGroupMember && !userData.isPartyMember &&
+                  <Pressable
+                    style={styles.buttonMid}
+                    onPress={() => handleInviteToGroup(selectedFriend)}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                    <Text style={styles.buttonText}>Invite to group</Text>
+                  </Pressable>
+                }
                 <Pressable
                   style={styles.buttonBottom}
                   onPress={() => {

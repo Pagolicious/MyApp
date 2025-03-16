@@ -105,13 +105,13 @@ const SignUpScreen = ({ navigation }: NameProps) => {
             value={email}
             onChangeText={setEmail}
             placeholder="Email"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
           />
           <MyTextInput
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
             secureTextEntry
             style={{ color: 'black' }}
           />
@@ -119,7 +119,7 @@ const SignUpScreen = ({ navigation }: NameProps) => {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Confirm Password"
-            placeholderTextColor="lightgray"
+            placeholderTextColor="gray"
             secureTextEntry
             style={{ color: 'black' }}
           />

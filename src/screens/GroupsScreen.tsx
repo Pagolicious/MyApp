@@ -76,7 +76,23 @@ interface Group {
 
 interface Applicant {
   uid: string;
+  firstName: string;
+  lastName?: string;
+  skillLevel?: number; // ✅ Add this to match the Firestore data
   note?: string;
+  role?: "leader" | "member";
+  members?: Omit<Applicant, "members" | "role">[];
+}
+
+interface Member {
+  uid: string;
+  firstName: string;
+  lastName?: string;
+}
+
+interface Skills {
+  sport: string;
+  skillLevel: number
 }
 
 
@@ -255,7 +271,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         });
 
 
-      setModalVisible(false);
+      // setModalVisible(false);
       setHasSkillLevel(true);
     } catch (error) {
       console.error('Error saving user data: ', error);
@@ -269,17 +285,58 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log("not online or in a group already")
       return;
     }
-    const applicantData = {
-      uid: currentUser.uid,
-      note: note,
-    };
+
+    let applicantData: Applicant;
     try {
+      // 🔍 Fetch the searchParty where doc ID = currentUser.uid (leader's party)
+      const partyDoc = await firestore()
+        .collection("searchParties")
+        .doc(currentUser.uid)
+        .get();
+
+      const userParty = partyDoc.exists ? partyDoc.data() : null;
+
+      const skill =
+        userData?.skills?.find(
+          (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
+        ) || null;
+
+      // 🔹 If user is a party leader, submit the whole party as ONE applicant
+      if (userParty) {
+        applicantData = {
+          uid: userParty.leaderUid,
+          firstName: userParty.leaderFirstName,
+          lastName: userParty.leaderLastName,
+          skillLevel: skill?.skillLevel,
+          note: note, // Optional note
+          role: "leader",
+          members: userParty.members?.map((member: Member) => ({
+            uid: member.uid,
+            firstName: member.firstName,
+            lastName: member.lastName || "",
+            role: "member",
+          })) || [],
+        };
+      } else {
+        // 🔹 If user is not in a party, submit as an individual applicant
+        applicantData = {
+          uid: currentUser.uid,
+          firstName: userData?.firstName || "",
+          lastName: userData?.lastName || "",
+          skillLevel: skill?.skillLevel,
+          note: note,
+        };
+      }
+
+      // 🔥 Save applicant data to Firestore
       await firestore()
         .collection('groups')
         .doc(currentGroupId)
         .update({
           applicants: firestore.FieldValue.arrayUnion(applicantData),
         });
+
+      // ✅ Update local state
       setGroups(prevGroups =>
         prevGroups.map(group =>
           group.id === currentGroupId
@@ -356,7 +413,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     opacity: animationValue,
     height: animationValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 100], // Adjust height as needed
+      outputRange: [0, 450], // Adjust height as needed
     }),
   };
 
@@ -365,23 +422,17 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log("User is already in a group");
       return;
     }
+    // setApplyModalVisible(true);
 
-    await checkUserSkillLevel(item.activity); // Ensure this runs first
-    // setSelectedGroup(item)
-    // Use functional update to get the latest state
+    await checkUserSkillLevel(item.activity);
+
     setCurrentGroupId(item?.id)
 
     setHasSkillLevel((prevHasSkillLevel) => {
-      // console.log("Skill level check completed:", prevHasSkillLevel);
-
-      if (!prevHasSkillLevel) {
-        setModalVisible(true);
-      } else {
-        setApplyModalVisible(true);
-      }
-
-      return prevHasSkillLevel; // Ensure state remains correctly set
+      setApplyModalVisible(true);
+      return prevHasSkillLevel;
     });
+
   };
 
 
@@ -489,7 +540,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
 
             {/* Modal Component */}
-            {currentUser && !hasSkillLevel && (
+            {/* {currentUser && !hasSkillLevel && (
               <Modal
                 animationType="fade"
                 transparent
@@ -499,14 +550,12 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                   <View style={styles.modalOverlay}>
                     <View style={styles.modalView}>
-                      {/* Close Button in top-right corner */}
                       <TouchableOpacity
                         style={styles.closeIcon}
                         onPress={() => setModalVisible(false)}>
                         <Text style={styles.closeText}>✖</Text>
                       </TouchableOpacity>
 
-                      {/* Modal Content */}
                       <Text style={styles.modalTitleText}>Skill level</Text>
                       <Text style={styles.modalText}>
                         We need to know your skill level for this activity
@@ -533,8 +582,8 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                   </View>
                 </TouchableWithoutFeedback>
               </Modal>
-            )}
-            {currentUser && currentUser.uid && hasSkillLevel && (
+            )} */}
+            {currentUser && (
               <Modal
                 animationType="fade"
                 transparent
@@ -553,31 +602,53 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                       {/* Modal Content */}
                       <Text style={styles.modalTitleText}>Apply For Group</Text>
-                      <Text style={styles.modalText}>Group Details:</Text>
-                      <View style={styles.modalDetailContainer}>
-                        <Text style={styles.modalDetailText}>
-                          {currentGroup?.details}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={styles.modalText}>Your message to the group:</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="This is optional"
-                          value={note}
-                          onChangeText={setNote}
-                          multiline={true} // Allow multiple lines
-                          numberOfLines={4} // Set number of lines to display by default
-                          textAlignVertical="top" // Align text to the top of the input
-                        />
-                      </View>
-                      <TouchableOpacity
-                        style={styles.submitBtn}
-                        onPress={async () => {
-                          applyForGroup();
-                        }}>
-                        <Text style={styles.submitBtnText}>Submit</Text>
-                      </TouchableOpacity>
+                      {!hasSkillLevel && (
+                        <View style={styles.setLevelContainer}>
+                          <Text style={styles.modalText}>
+                            We need to know your skill level for this activity
+                          </Text>
+                          <StarRating
+                            rating={skillLevel}
+                            onChange={setSkillLevel}
+                            enableHalfStar={false}
+                          />
+                          <Text style={styles.modalObervationText}>
+                            You can NOT change your skill level later
+                          </Text>
+                        </View>
+                      )}
+                      <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
+
+                        <Text style={styles.modalText}>Group Details:</Text>
+                        <View style={styles.modalDetailContainer}>
+                          <Text style={styles.modalDetailText}>
+                            {currentGroup?.details}
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={styles.modalText}>Your message to the group:</Text>
+                          <TextInput
+                            style={styles.input}
+                            placeholder="This is optional"
+                            value={note}
+                            onChangeText={setNote}
+                            multiline={true}
+                            numberOfLines={4}
+                            textAlignVertical="top"
+                          />
+                        </View>
+                        <TouchableOpacity
+                          style={styles.submitBtn}
+                          onPress={async () => {
+                            if (!hasSkillLevel) {
+                              addSkillLevel()
+                            }
+                            applyForGroup();
+                          }}>
+                          <Text style={styles.submitBtnText}>Submit</Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+
                     </View>
                   </View>
                 </TouchableWithoutFeedback>
@@ -635,7 +706,7 @@ const styles = StyleSheet.create({
     overflow: "hidden", // Prevents overflow
     // borderWidth: 2, // Keep for debugging
     // borderColor: "red",
-    width: 120, // Ensure enough space for avatars
+    width: 160, // Ensure enough space for avatars
     height: 40, // Match avatar size
     position: "relative", // Important for absolute children
 
@@ -715,6 +786,9 @@ const styles = StyleSheet.create({
     // shadowRadius: 4,
     // elevation: 5,
     // position: 'relative', // Needed for positioning the close button
+  },
+  setLevelContainer: {
+    alignItems: 'center',
   },
   modalDetailContainer: {
     width: 300,

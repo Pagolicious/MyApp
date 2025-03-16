@@ -58,13 +58,14 @@ const PartyDisplay = () => {
 
   // Handle empty party
   const members = userParty?.members || [];
-  const displayedMembers = members.slice(0, 3); // Show up to 3 avatars
-  const extraCount = members.length - 3;
+  const displayedMembers = members.slice(0, 2); // Show up to 3 avatars
+  const extraCount = members.length - 2;
+
   // Ensure leader is first
   const avatars: Member[] = [...displayedMembers]; // Copy members list
   avatars.unshift({
-    uid: userParty?.leaderUid || 'default-uid',
-    firstName: userParty?.leaderFirstName || 'Unknown',
+    uid: userParty?.leaderUid || '',
+    firstName: userParty?.leaderFirstName || '',
   });
 
   return (
@@ -83,7 +84,7 @@ const PartyDisplay = () => {
 
         {/* +X Extra Count */}
         {extraCount > 0 && (
-          <View style={[styles.extraAvatar, { marginLeft: avatars.length * 15, zIndex: 1 }]}>
+          <View style={[styles.extraAvatar, { marginLeft: avatars.length * 21, zIndex: 1 }]}>
             <Text style={styles.extraText}>+{extraCount}</Text>
           </View>
         )}
@@ -110,18 +111,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   extraAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
+    // width: 40,
+    // height: 40,
+    // borderRadius: 20,
+    // backgroundColor: '#ddd',
+    // justifyContent: 'center',
+    // alignItems: 'center',
     position: 'absolute',
+    // left: 20
+
   },
   extraText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: "#555",
+    color: "white",
   },
 });
 
