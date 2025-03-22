@@ -14,7 +14,7 @@ import React, { useState, useEffect } from 'react';
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../utils/types';
-// import StarRating from 'react-native-star-rating-widget';
+import { navigate } from '../services/NavigationService';
 
 //Components
 import GroupNav from '../components/GroupNav';
@@ -34,7 +34,7 @@ import { inviteApplicant } from '../utils/inviteHelpers';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
-import { navigate } from '../services/NavigationService';
+import Icon2 from 'react-native-vector-icons/Entypo';
 
 type MyGroupScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -306,8 +306,11 @@ const MyGroupScreen = () => {
                       <View style={styles.column}>
                         <Text style={styles.cardText}>{item.firstName} (Leader)</Text>
                         <Text style={styles.cardText}>
-                          Skill Level: {item.skillLevel ?? "N/A"}
+                          {item.skillLevel ?? "N/A"}
                         </Text>
+                        <View style={styles.cardStar}>
+                          <Icon2 name="star" size={23} color="black" />
+                        </View>
                       </View>
                       {/* Stacked Members Below */}
                       <View style={styles.memberContainer}>
@@ -335,9 +338,14 @@ const MyGroupScreen = () => {
                   style={styles.card}>
                   <View style={styles.column}>
                     <Text style={styles.cardText}>{item.firstName}</Text>
-                    <Text style={styles.cardText}>
-                      Skill Level: {item.skillLevel ?? "N/A"}
-                    </Text>
+                    <View style={styles.column}>
+                      <Text style={styles.cardText}>
+                        {item.skillLevel ?? "N/A"}
+                      </Text>
+                      <View style={styles.cardStar}>
+                        <Icon2 name="star" size={23} color="black" />
+                      </View>
+                    </View>
                   </View>
                 </Pressable>
               );
@@ -471,6 +479,10 @@ const styles = StyleSheet.create({
     color: 'black',
     // fontWeight: "bold",
     fontSize: 20,
+  },
+  cardStar: {
+    // borderWidth: 2
+    marginLeft: 4
   },
   // line: {
   //   height: 1,

@@ -143,6 +143,12 @@ const MembersHomeScreen = () => {
     }
   }
 
+  const handleSendMessage = (selectedUser: Friend | null) => {
+    if (!selectedUser) {
+      return
+    }
+  }
+
   if (!currentUser) {
     return (
       <View style={styles.loadingContainer}>
@@ -247,13 +253,21 @@ const MembersHomeScreen = () => {
                   <Text style={styles.buttonText}>View Profile</Text>
                 </Pressable>
                 { }
-                {!userData?.friends?.some(friend => friend.uid === selectedUser?.uid) && (
+                {!userData?.friends?.some(friend => friend.uid === selectedUser?.uid) ? (
                   <Pressable
                     style={styles.buttonTop}
                     onPress={() => handleAddFriend(selectedUser)}
                     android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
                   >
                     <Text style={styles.buttonText}>Add Friend</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    style={styles.buttonTop}
+                    onPress={() => handleSendMessage(selectedUser)}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                  >
+                    <Text style={styles.buttonText}>Send Message</Text>
                   </Pressable>
                 )}
                 {userData?.isGroupLeader &&

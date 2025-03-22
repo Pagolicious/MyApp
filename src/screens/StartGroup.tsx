@@ -17,6 +17,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -374,19 +375,32 @@ const StartGroup = () => {
           />
           {showDropdown && (
 
-            <FlatList
-              style={styles.dropdown}
-              data={filteredSports}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dropdownItem}
-                  onPress={() => handleSelect(item)}
-                >
-                  <Text style={styles.dropdownText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
+            // <FlatList
+            //   style={styles.dropdown}
+            //   data={filteredSports}
+            //   keyExtractor={(item) => item}
+            //   renderItem={({ item }) => (
+            //     <TouchableOpacity
+            //       style={styles.dropdownItem}
+            //       onPress={() => handleSelect(item)}
+            //     >
+            //       <Text style={styles.dropdownText}>{item}</Text>
+            //     </TouchableOpacity>
+            //   )}
+            // />
+            <Picker
+              selectedValue={activity}
+              onValueChange={(itemValue) => setActivity(itemValue)}
+            >
+              <Picker.Item label="Select a sport..." value="" />
+              {sportsList.map((sport, index) => (
+                <Picker.Item
+                  key={index}
+                  label={sport}
+                  value={sport}
+                />
+              ))}
+            </Picker>
 
           )}
         </View>
