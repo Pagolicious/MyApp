@@ -12,7 +12,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import GroupNav from '../components/GroupNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import CustomAvatar from '../components/CustomAvatar';
-import DelistModal from '../components/DelistModal';
+import DisbandModal from '../components/DisbandModal';
 import LeaveModal from '../components/LeaveModal';
 
 //Context
@@ -46,8 +46,8 @@ const MembersHomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
   // const { leaveModalVisible, setLeaveModalVisible } = useModal();
   // const [leaveModalVisible, setLeaveModalVisible] = useState(false)
-  // const [delistModalVisible, setDelistModalVisible] = useState(false)
-  const { currentGroupId, currentGroup, delistGroup } = useGroup();
+  // const [disbandModalVisible, setdisbandModalVisible] = useState(false)
+  const { currentGroupId, currentGroup, disbandGroup } = useGroup();
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
 
@@ -192,10 +192,10 @@ const MembersHomeScreen = () => {
                 </TouchableOpacity>
               </View>
             ) : (
-              // <TouchableOpacity style={styles.leaveButton} onPress={() => setDelistModalVisible(true)}>
-              //   <Text style={styles.leaveText}>Delist group</Text>
+              // <TouchableOpacity style={styles.leaveButton} onPress={() => setDisbandModalVisible(true)}>
+              //   <Text style={styles.leaveText}>Disband group</Text>
               // </TouchableOpacity>
-              <DelistModal />
+              <DisbandModal />
             )}
 
           </View>

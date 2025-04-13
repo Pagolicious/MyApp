@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   FlatList,
   ImageBackground,
-  Pressable
+  Pressable,
+  SafeAreaView
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import Toast from 'react-native-toast-message';
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -19,6 +21,7 @@ import { navigate } from '../services/NavigationService';
 //Components
 import GroupNav from '../components/GroupNav';
 import FooterGroupNav from '../components/FooterGroupNav';
+import CustomSlider from '../components/CustomSlider';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -97,6 +100,8 @@ const MyGroupScreen = () => {
     null,
   );
   const { currentGroupId, currentGroup } = useGroup();
+  // const [isDelisted, setIsDelisted] = useState(false);
+
   // const { delistModalVisible, setDelistModalVisible } = useModal();
 
   // useEffect(() => {
@@ -274,6 +279,45 @@ const MyGroupScreen = () => {
     }
   }
 
+  const handleDelistGroup = async () => {
+    try {
+      await firestore().collection('groups').doc(currentGroupId).update({
+        applicants: [],
+        isDelisted: true
+      })
+    } catch (error) {
+      console.log("Coudn't remove applicants from the group", error)
+    }
+
+  }
+
+  const handleActivateGroup = async () => {
+    if (!currentGroup) return
+
+    const currentMembers = currentGroup?.members ?? [];
+
+
+    if (currentMembers.length < currentGroup?.memberLimit) {
+      try {
+        await firestore().collection('groups').doc(currentGroupId).update({
+          isDelisted: false
+        })
+      } catch (error) {
+        console.log("Coudn't remove applicants from the group", error)
+      }
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Cannot Activate Group 😕',
+        text2: 'This group is full. Edit the group to increase the member limit.',
+        visibilityTime: 4000,
+      });
+      console.log("22222")
+    }
+
+
+  }
+
 
 
 
@@ -286,7 +330,11 @@ const MyGroupScreen = () => {
       <ImageBackground
         source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
         style={styles.backgroundImage} // Style for the background image
+
       >
+        {currentGroup?.isDelisted && (
+          <View style={styles.overlay} />
+        )}
         <View style={styles.flatListContainer}>
           <FlatList
             data={applicants.filter((applicant) => applicant !== null)} // Prevents null errors
@@ -322,10 +370,7 @@ const MyGroupScreen = () => {
                           </View>
                         ))}
                       </View>
-
                     </Pressable>
-
-
                   </View>
                 );
               }
@@ -356,7 +401,35 @@ const MyGroupScreen = () => {
           />
         </View>
 
-        {userData?.isGroupLeader && (
+        {userData?.isGroupLeader && currentGroup?.isDelisted && (
+          <View style={styles.activateGroupContainer}>
+            <Text style={styles.activateGroupText}>
+              This group is currently delisted.{"\n"}
+              You've either chosen to pause it or it reached the member limit.{"\n\n"}
+              If you're looking for more members, tap "Activate".{"\n"}
+              Want to allow more people? Go to "Edit Group" and increase the member limit.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.activateGroupButton}
+              onPress={() => handleActivateGroup()}
+              activeOpacity={0.7} // Slight opacity on press
+            >
+              <Text style={styles.activateButtonText}>Activate</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.editDelistedGroupButton}
+              onPress={() => navigate("StartGroup")}
+              activeOpacity={0.7} // Slight opacity on press
+            >
+              <Text style={styles.activateButtonText}>Edit</Text>
+              <Icon1 name="edit" size={25} color="white" />
+            </TouchableOpacity>
+          </View>
+
+        )}
+
+        {userData?.isGroupLeader && !currentGroup?.isDelisted && (
           <TouchableOpacity
             style={styles.editGroupButton}
             onPress={() => navigate("StartGroup")}
@@ -365,6 +438,33 @@ const MyGroupScreen = () => {
             <Icon1 name="edit" size={40} color="white" />
           </TouchableOpacity>
         )}
+        {userData?.isGroupLeader && !currentGroup?.isDelisted && (
+          <TouchableOpacity
+            style={styles.closeGroupButton}
+            onPress={() => handleDelistGroup()}
+            activeOpacity={0.7} // Slight opacity on press
+          >
+            <Icon1 name="close" size={40} color="white" />
+          </TouchableOpacity>
+        )}
+        {/* {userData?.isGroupLeader && isDelisted && (
+          <TouchableOpacity
+            style={styles.closeTestGroupButton}
+            onPress={() => setIsDelisted(false)}
+            activeOpacity={0.7} // Slight opacity on press
+          >
+            <Icon1 name="close" size={40} color="white" />
+          </TouchableOpacity>
+        )} */}
+        {/* {userData?.isGroupLeader && (
+          <SafeAreaView style={styles.slider}>
+
+            <CustomSlider
+              onDelist={() => console.log('Group delisted ❌')}
+              onReactivate={() => console.log('Group activated 🔍')}
+            />
+          </SafeAreaView>
+        )} */}
         <Modal
           animationType="fade"
           transparent
@@ -599,4 +699,122 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
   },
+  closeGroupButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 60 / 2,
+    backgroundColor: '#C41E3A',
+    bottom: 20,
+    left: 20,
+    position: "absolute",
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 10,          // Adds shadow on Android
+    shadowColor: '#000',   // Adds shadow on iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  slider: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    bottom: 20,
+    left: 20,
+    position: "absolute",
+  },
+  // closeTestGroupButton: {
+  //   width: 60,
+  //   height: 60,
+  //   borderRadius: 60 / 2,
+  //   backgroundColor: '#C41E3A',
+  //   bottom: 20,
+  //   left: 200,
+  //   position: "absolute",
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   elevation: 10,          // Adds shadow on Android
+  //   shadowColor: '#000',   // Adds shadow on iOS
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.3,
+  //   shadowRadius: 3,
+  // },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // darker overlay
+    zIndex: 1, // put this below buttons
+    pointerEvents: 'none', // ✅ allows clicks to pass through!
+  },
+  activateGroupContainer: {
+    zIndex: 5, // 🔝 Make sure it's above the overlay's zIndex: 1
+    position: 'absolute', // Important to make zIndex work properly
+    top: '20%', // position it visually center-ish (adjust as needed)
+    alignSelf: 'center',
+    // justifyContent: 'center',
+    // alignItems: 'center',
+    padding: 20,
+    paddingTop: 25,
+    width: 330,
+    height: 350,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 15,
+    elevation: 10, // shadow on Android
+    shadowColor: '#000', // iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+
+  activateGroupButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    alignSelf: 'center',
+    backgroundColor: '#0f5e9c',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 30,
+    elevation: 5,
+    flexDirection: 'row', // 🔥 put text and icon side-by-side
+    alignItems: 'center', // vertically align them
+    justifyContent: 'center',
+    gap: 10, // optional spacing between text and icon (React Native 0.71+)
+  },
+  editDelistedGroupButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    alignSelf: 'center',
+    backgroundColor: 'green',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 30,
+    elevation: 5,
+    flexDirection: 'row', // 🔥 put text and icon side-by-side
+    alignItems: 'center', // vertically align them
+    justifyContent: 'center',
+    gap: 10, // optional spacing between text and icon (React Native 0.71+)
+  },
+
+  activateButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  activateGroupText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+
+
+
+
+
+
 });

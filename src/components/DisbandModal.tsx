@@ -18,21 +18,21 @@ interface PartyGroup {
   members: { uid: string; firstName: string; lastName: string }[];
 }
 
-interface DelistModalProps {
+interface DisbandModalProps {
   userParty?: PartyGroup | null;
 }
 
-const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
+const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
   const { currentUser, userData } = useAuth()
-  const [delistModalVisible, setDelistModalVisible] = useState(false)
-  const { delistGroup } = useGroup()
+  const [disbandModalVisible, setDisbandModalVisible] = useState(false)
+  const { disbandGroup } = useGroup()
 
 
-  const handleDelistMyParty = async () => {
+  const handleDisbandMyParty = async () => {
     try {
 
       if (!userData || !userData.isPartyLeader) {
-        console.error("Only the party leader can delist the party!");
+        console.error("Only the party leader can disband the party!");
         return;
       }
       if (!userParty || !currentUser) {
@@ -77,7 +77,7 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
           });
         })
       );
-      setDelistModalVisible(false);
+      setDisbandModalVisible(false);
       // navigate("FindOrStart");
     } catch (error) {
       console.error("Error deleting party:", error);
@@ -85,10 +85,10 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
     }
   }
 
-  const handleDelistMyGroup = async () => {
+  const handleDisbandMyGroup = async () => {
     try {
-      setDelistModalVisible(false);
-      await delistGroup();
+      setDisbandModalVisible(false);
+      await disbandGroup();
     } catch {
       Alert.alert('Error', 'Something went wrong.');
     }
@@ -96,37 +96,37 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
 
   return (
     <View>
-      <TouchableOpacity style={styles.leaveButton} onPress={() => setDelistModalVisible(true)}>
-        <Text style={styles.leaveText}>Delist group</Text>
+      <TouchableOpacity style={styles.leaveButton} onPress={() => setDisbandModalVisible(true)}>
+        <Text style={styles.leaveText}>Disband group</Text>
       </TouchableOpacity>
       {currentUser && (
         <Modal
           animationType="fade"
           transparent
-          visible={delistModalVisible}
-          onRequestClose={() => setDelistModalVisible(false)}>
+          visible={disbandModalVisible}
+          onRequestClose={() => setDisbandModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalView}>
               <TouchableOpacity
                 style={styles.closeIcon}
-                onPress={() => setDelistModalVisible(false)}>
+                onPress={() => setDisbandModalVisible(false)}>
                 <Text style={styles.closeText}>✖</Text>
               </TouchableOpacity>
 
-              <Text style={styles.modalTitleText}>Delist group</Text>
-              <Text style={styles.modalText}>Would you like to delist the group?</Text>
+              <Text style={styles.modalTitleText}>Disband group</Text>
+              <Text style={styles.modalText}>Would you like to disband the group?</Text>
 
 
               <TouchableOpacity
                 style={styles.submitBtn}
                 onPress={() => {
                   if (userParty) {
-                    handleDelistMyParty()
+                    handleDisbandMyParty()
                   } else {
-                    handleDelistMyGroup()
+                    handleDisbandMyGroup()
                   }
                 }}>
-                <Text style={styles.submitBtnText}>Delist</Text>
+                <Text style={styles.submitBtnText}>Disband</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -136,7 +136,7 @@ const DelistModal: React.FC<DelistModalProps> = ({ userParty }) => {
   )
 }
 
-export default DelistModal
+export default DisbandModal
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   leaveButton: {
-    width: 110,
+    width: 120,
     height: 50,
     backgroundColor: "#C41E3A",
     justifyContent: "center",

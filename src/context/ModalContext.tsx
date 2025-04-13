@@ -2,29 +2,29 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface ModalContextType {
   leaveModalVisible: boolean;
-  delistModalVisible: boolean;
+  disbandModalVisible: boolean;
   setLeaveModalVisible: (visible: boolean) => void;
-  setDelistModalVisible: (visible: boolean) => void;
+  setDisbandModalVisible: (visible: boolean) => void;
 }
 
 const ModalContext = createContext<ModalContextType>({
   leaveModalVisible: false,
-  delistModalVisible: false,
+  disbandModalVisible: false,
   setLeaveModalVisible: () => { },
-  setDelistModalVisible: () => { },
+  setDisbandModalVisible: () => { },
 });
 
 export const ModalProvider = ({ children }: { children: ReactNode }) => {
   const [leaveModalVisible, setLeaveModalVisible] = useState(false);
-  const [delistModalVisible, setDelistModalVisible] = useState(false);
+  const [disbandModalVisible, setDisbandModalVisible] = useState(false);
 
   return (
     <ModalContext.Provider
       value={{
         leaveModalVisible,
-        delistModalVisible,
+        disbandModalVisible,
         setLeaveModalVisible,
-        setDelistModalVisible,
+        setDisbandModalVisible,
       }}
     >
       {children}

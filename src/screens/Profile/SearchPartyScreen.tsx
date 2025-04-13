@@ -10,7 +10,7 @@ import FooterGroupNav from '../../components/FooterGroupNav';
 import FooterNav from '../../components/FooterNav';
 import FriendNav from '../../components/FriendNav';
 import CustomAvatar from '../../components/CustomAvatar';
-import DelistModal from '../../components/DelistModal';
+import DisbandModal from '../../components/DisbandModal';
 import LeaveModal from '../../components/LeaveModal';
 
 //Contexts
@@ -125,7 +125,7 @@ const SearchPartyScreen = () => {
             {currentUser && currentUser.uid !== userParty?.leaderUid ? (
               <Icon2 name="more-vertical" size={25} color="black" />
             ) : (
-              <DelistModal userParty={userParty} />
+              <DisbandModal userParty={userParty} />
             )}
           </TouchableOpacity>
         </View>

@@ -33,8 +33,8 @@ const FriendNav = () => {
 
   const { currentUser, userData } = useAuth();
   // const [buttonText, setButtonText] = useState('Browse');
-  // const { setDelistModalVisible, delistModalVisible } = useModal();
-  // const { delistGroup } = useGroup();
+  // const { setDisbandModalVisible, disbandModalVisible } = useModal();
+  // const { disbandGroup } = useGroup();
   // const route = useRoute();
 
 
@@ -78,9 +78,9 @@ const FriendNav = () => {
 
   // };
 
-  // const handleDelistMyGroup = async () => {
+  // const handleDisbandMyGroup = async () => {
   //   try {
-  //     await delistGroup();
+  //     await disbandGroup();
   //   } catch {
   //     Alert.alert('Error', 'Something went wrong.');
   //   }

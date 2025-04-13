@@ -26,6 +26,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 //Components
 import MyButton from '../components/MyButton';
+import SearchableDropdown from '../components/SearchableDropdown';
 
 //Assets
 import sportsList from "../assets/JsonFiles/sportsList.json"
@@ -80,8 +81,8 @@ const StartGroup = () => {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const { setCurrentGroupId, currentGroup, currentGroupId } = useGroup();
   const [memberLimit, setMemberLimit] = useState(1);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [filteredSports, setFilteredSports] = useState(sportsList);
+  // const [showDropdown, setShowDropdown] = useState(false);
+  // const [filteredSports, setFilteredSports] = useState(sportsList);
 
 
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
@@ -176,6 +177,7 @@ const StartGroup = () => {
       details: details,
       createdBy: currentUser.uid,
       groupId: groupId,
+      isDelisted: false,
       members: members,
       memberUids: memberUids
     })
@@ -218,7 +220,8 @@ const StartGroup = () => {
         skillvalue: skillvalue,
         memberLimit: memberLimit,
         details: details,
-        applicants: []
+        applicants: [],
+        isDelisted: false
       })
     } catch (error) {
       console.log("Coudn't edit group", error)
@@ -312,26 +315,26 @@ const StartGroup = () => {
   //   Keyboard.dismiss();
   // };
 
-  const handleSearch = (text: string) => {
-    setActivity(text);
+  // const handleSearch = (text: string) => {
+  //   setActivity(text);
 
-    if (text === '') {
-      setFilteredSports(sportsList); // Show all options if search is empty
-      setShowDropdown(false); // Hide dropdown
-    } else {
-      const filtered = sportsList.filter((sport) =>
-        sport.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredSports(filtered);
-      setShowDropdown(true);
-    }
-  };
+  //   if (text === '') {
+  //     setFilteredSports(sportsList); // Show all options if search is empty
+  //     setShowDropdown(false); // Hide dropdown
+  //   } else {
+  //     const filtered = sportsList.filter((sport) =>
+  //       sport.toLowerCase().includes(text.toLowerCase())
+  //     );
+  //     setFilteredSports(filtered);
+  //     setShowDropdown(true);
+  //   }
+  // };
 
-  const handleSelect = (sport: string) => {
-    // setActivity(sport);
-    setActivity(sport); // Update the search bar with the selected sport
-    setShowDropdown(false); // Hide dropdown
-  };
+  // const handleSelect = (sport: string) => {
+  //   // setActivity(sport);
+  //   setActivity(sport); // Update the search bar with the selected sport
+  //   setShowDropdown(false); // Hide dropdown
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -357,52 +360,12 @@ const StartGroup = () => {
         </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Activity</Text>
-          {/* <TextInput
-            style={styles.input}
-            placeholder="Tennis"
-            placeholderTextColor="gray"
+          <SearchableDropdown
             value={activity}
-            onChangeText={setActivity}
-          /> */}
-          <TextInput
-            style={styles.input}
-            // placeholder={activity === 'Any' ? 'Search for a sport' : activity} // Show selected activity as placeholder
-            value={activity}
-            onChangeText={handleSearch}
-            placeholder="Tennis"
-            placeholderTextColor="gray"
-            onFocus={() => setShowDropdown(true)} // Show dropdown when focused
+            onChange={(val) => setActivity(val)}
+            options={sportsList.filter(sport => sport.toLowerCase() !== 'any')}
+            placeholder="Search for a sport..."
           />
-          {showDropdown && (
-
-            // <FlatList
-            //   style={styles.dropdown}
-            //   data={filteredSports}
-            //   keyExtractor={(item) => item}
-            //   renderItem={({ item }) => (
-            //     <TouchableOpacity
-            //       style={styles.dropdownItem}
-            //       onPress={() => handleSelect(item)}
-            //     >
-            //       <Text style={styles.dropdownText}>{item}</Text>
-            //     </TouchableOpacity>
-            //   )}
-            // />
-            <Picker
-              selectedValue={activity}
-              onValueChange={(itemValue) => setActivity(itemValue)}
-            >
-              <Picker.Item label="Select a sport..." value="" />
-              {sportsList.map((sport, index) => (
-                <Picker.Item
-                  key={index}
-                  label={sport}
-                  value={sport}
-                />
-              ))}
-            </Picker>
-
-          )}
         </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Location</Text>

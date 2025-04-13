@@ -25,10 +25,10 @@ interface Group {
   createdBy: string;
   memberLimit: number;
   details: string;
+  isDelisted: boolean;
   members: Member[];
   memberUids: string[];
   applicants: Applicant[];
-
 }
 
 interface Member {
@@ -52,7 +52,7 @@ interface GroupContextType {
   setCurrentGroupId: (groupId: string | undefined) => void;
   currentGroup: Group | undefined;
   setCurrentGroup: (group: Group | undefined) => void;
-  delistGroup: () => Promise<void>;
+  disbandGroup: () => Promise<void>;
   notificationModal: boolean;
   notificationMessage: string | null;
   closeNotificationModal: () => void;
@@ -314,10 +314,10 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   //   }
   // };
 
-  const delistGroup = async () => {
+  const disbandGroup = async () => {
 
     if (!currentGroupId || !currentUser) {
-      Alert.alert('Error', 'No group to delist or no signed user.');
+      Alert.alert('Error', 'No group to disband or no signed user.');
       return;
     }
     try {
@@ -535,7 +535,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         setCurrentGroupId,
         currentGroup,
         setCurrentGroup,
-        delistGroup,
+        disbandGroup,
         notificationModal,
         notificationMessage,
         closeNotificationModal,

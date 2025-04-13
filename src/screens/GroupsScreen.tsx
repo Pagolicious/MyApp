@@ -200,9 +200,10 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             details: data.details || '',
             applicants: data.applicants || [],
             memberUids: data.memberUids || [],
+            isDelisted: data.isDelisted || false
           };
-        });
-
+        })
+          .filter(group => !group.isDelisted);
         // Filter groups based on `activity` parameter
         const filteredGroups =
           activity === 'Any'

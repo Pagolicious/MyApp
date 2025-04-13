@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 //Navigation
-import { RootStackParamList } from '../App';
+import { RootStackParamList } from '../utils/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';

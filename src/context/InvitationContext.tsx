@@ -258,6 +258,18 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           memberUids: firestore.FieldValue.arrayUnion(...allMembersToAdd.map(m => m.uid)),
         });
 
+        // ✅ Check if group is full and auto-delist
+        const updatedGroupDoc = await groupRef.get();
+        const updatedGroupData = updatedGroupDoc.data();
+
+        const currentMembers = updatedGroupData?.members ?? [];
+        const memberLimit = updatedGroupData?.memberLimit ?? 1;
+
+        if (currentMembers.length >= memberLimit) {
+          await groupRef.update({
+            isDelisted: true,
+          });
+        }
 
 
         // if (!groupDoc.exists) {
