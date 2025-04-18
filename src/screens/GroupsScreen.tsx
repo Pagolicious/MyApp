@@ -63,6 +63,7 @@ type Props = {
 interface Group {
   id: string;
   activity: string;
+  title?: string;
   location: string;
   fromDate: string;
   fromTime: string;
@@ -191,6 +192,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           return {
             id: doc.id,
             activity: data.activity || '',
+            title: data.title || '',
             location: data.location || '',
             fromDate: data.fromDate || '',
             fromTime: data.fromTime || '',
@@ -493,7 +495,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                   );
                   const isMember = item.memberUids.includes(currentUser?.uid);
                   const isOwner = item.createdBy === currentUser.uid
-
                   // <View>
                   return (
 
@@ -509,7 +510,11 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                         {/* Card Content: Activity & Location */}
                         <View style={styles.cardContentActivity}>
-                          <Text style={styles.cardText}>{item.activity}</Text>
+                          {item.activity === "Custom" ? (
+                            <Text style={styles.cardText}>{item.title}</Text>
+                          ) : (
+                            <Text style={styles.cardText}>{item.activity}</Text>
+                          )}
                           <Text style={styles.cardText}>{item.location}</Text>
                         </View>
 
@@ -523,7 +528,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                         {/* Card Content: People */}
                         <View style={styles.cardContentPeople}>
-                          <Text style={styles.cardTextPeople}>+{item.memberLimit}</Text>
+                          <Text style={styles.cardTextPeople}>{item.memberUids.length}/{item.memberLimit + 1}</Text>
                         </View>
                       </View>
                       {/* </View> */}
@@ -760,8 +765,8 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   cardTextPeople: {
-    fontSize: 24,
-    // fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: "black"
   },
   // line: {

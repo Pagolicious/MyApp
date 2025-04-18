@@ -25,7 +25,7 @@ interface LeaveModalProps {
 const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
   const { currentUser, userData } = useAuth()
   const [leaveModalVisible, setLeaveModalVisible] = useState(false)
-  const { currentGroup, currentGroupId } = useGroup()
+  const { currentGroup, currentGroupId, setUserLeftManually } = useGroup()
 
 
   const handleLeaveParty = async () => {
@@ -74,6 +74,9 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
     if (!currentUser) return;
 
     try {
+
+      setUserLeftManually(true)
+
       await firestore()
         .collection('groups')
         .doc(currentGroupId)

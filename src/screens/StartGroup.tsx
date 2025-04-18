@@ -59,6 +59,7 @@ const StartGroup = () => {
 
   const [activity, setActivity] = useState('');
   const [location, setLocation] = useState('');
+  const [title, setTitle] = useState('');
   const [fromDate, setFromDate] = useState(new Date());
   const [showFromDatepicker, setShowFromDatepicker] = useState(false);
   const [fromTime, setFromTime] = useState(() => {
@@ -131,6 +132,11 @@ const StartGroup = () => {
       return;
     }
 
+    if (!activity.trim() || !location.trim()) {
+      Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
+      return;
+    }
+
     if (userData?.isGroupLeader) {
       return
     }
@@ -140,6 +146,13 @@ const StartGroup = () => {
     // Initialize empty members array (only party members will be added)
     let members: Member[] = [];
     let memberUids: string[] = [];
+
+    members.push({
+      uid: currentUser.uid,
+      firstName: userData?.firstName || 'Unknown',
+      lastName: userData?.lastName || 'Unknown',
+    });
+    memberUids.push(currentUser.uid);
 
     // If the user is a party leader, fetch all party members
     if (userData?.isPartyLeader) {
@@ -168,6 +181,7 @@ const StartGroup = () => {
     await firestore().collection('groups').doc(groupId).set({
       activity: activity,
       location: location,
+      title: title,
       fromDate: fromDate.toISOString().split('T')[0],
       fromTime: formatTime(fromTime),
       toDate: toDate.toISOString().split('T')[0],
@@ -183,16 +197,17 @@ const StartGroup = () => {
     })
 
     // ✅ Update each party member to reflect their new group
-    if (memberUids.length > 0) {
-      const updatePromises = memberUids.map(uid =>
-        firestore().collection('users').doc(uid).update({
-          groupId: groupId,
-          isGroupMember: true,
-          isPartyMember: false
-        })
-      );
-      await Promise.all(updatePromises);
-    }
+    const memberUidsExceptLeader = memberUids.filter(uid => uid !== currentUser.uid);
+
+    const updatePromises = memberUidsExceptLeader.map(uid =>
+      firestore().collection('users').doc(uid).update({
+        groupId: groupId,
+        isGroupMember: true,
+        isPartyMember: false
+      })
+    );
+    await Promise.all(updatePromises);
+
 
 
     // ✅ Mark the creator as group leader
@@ -213,6 +228,7 @@ const StartGroup = () => {
       await firestore().collection('groups').doc(currentGroupId).update({
         activity: activity,
         location: location,
+        title: title,
         fromDate: fromDate.toISOString().split('T')[0],
         fromTime: formatTime(fromTime),
         toDate: toDate.toISOString().split('T')[0],
@@ -367,6 +383,17 @@ const StartGroup = () => {
             placeholder="Search for a sport..."
           />
         </View>
+        {activity === "Custom" && (
+          <View style={styles.bodyContainer}>
+            <Text style={styles.bodyLabel}>Title</Text>
+
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
+        )}
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Location</Text>
 

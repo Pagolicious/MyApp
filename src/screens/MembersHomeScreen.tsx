@@ -21,7 +21,7 @@ import { useGroup } from '../context/GroupContext';
 import { useModal } from '../context/ModalContext';
 
 //Hooks
-import { useGroupData } from '../hooks/useGroupData';
+// import { useGroupData } from '../hooks/useGroupData';
 
 //Services
 import { navigate } from '../services/NavigationService';
@@ -40,25 +40,35 @@ interface Friend {
 }
 
 const MembersHomeScreen = () => {
-  const { members = [], owner } = useGroupData();
+  // const { members = [], owner } = useGroupData();
+  const { currentGroupId, currentGroup, disbandGroup } = useGroup();
+  const members = currentGroup?.members ?? [];
   const { currentUser, userData } = useAuth()
   const [loading, setLoading] = useState(true); // Loading state for data container
   const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
   // const { leaveModalVisible, setLeaveModalVisible } = useModal();
   // const [leaveModalVisible, setLeaveModalVisible] = useState(false)
   // const [disbandModalVisible, setdisbandModalVisible] = useState(false)
-  const { currentGroupId, currentGroup, disbandGroup } = useGroup();
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
+  // const [ownerUser, setOwnerUser] = useState<any>(null);
 
-  // Simulate data loading
   useEffect(() => {
-    if (owner || members && members.length > 0) {
-      setLoading(false); // Stop loading when both owner and members are available
-    } else {
-      setLoading(true); // Keep loading if either owner or members is missing
-    }
-  }, [owner, members]);
+    setLoading(!(currentGroup?.members?.length || currentGroup?.createdBy));
+  }, [currentGroup]);
+
+
+  // useEffect(() => {
+  //   if (!currentGroup?.createdBy) return;
+  //   const fetchOwner = async () => {
+  //     const ownerDoc = await firestore().collection('users').doc(currentGroup.createdBy).get();
+  //     if (ownerDoc.exists) {
+  //       setOwnerUser({ uid: ownerDoc.id, ...ownerDoc.data() });
+  //     }
+  //   };
+  //   fetchOwner();
+  // }, [currentGroup?.createdBy]);
+
 
   // useEffect(() => {
   //   console.log("Members: ", members);
@@ -76,17 +86,18 @@ const MembersHomeScreen = () => {
     }, 1000); // Simulate a refresh delay
   }, []);
 
+
+  const handleViewProfile = (selectedUser: Friend | null) => {
+    if (!selectedUser) {
+      return
+    }
+  }
+
   const handleAddFriend = async (selectedUser: Friend | null) => {
     if (!currentUser) return
     if (!selectedUser) {
       return
     }
-
-    // const friendToAdd = {
-    //   uid: friend.uid,
-    //   firstName: friend.firstName || 'Unknown',
-    //   lastName: friend.lastName || 'Unknown',
-    // };
 
     try {
       // Generate a new ID for the invitation document
@@ -111,14 +122,6 @@ const MembersHomeScreen = () => {
         text2: 'Waiting for approval...',
       });
 
-      // await firestore()
-      //   .collection('users')
-      //   .doc(currentUser.uid)
-      //   .update({
-      //     friends: firestore.FieldValue.arrayUnion(friendToAdd),
-
-      //   });
-
     } catch (error) {
       console.error('Error sending friend request:', error);
       Toast.show({
@@ -131,9 +134,44 @@ const MembersHomeScreen = () => {
 
   }
 
-  const handleViewProfile = (selectedUser: Friend | null) => {
+  const handleSendMessage = (selectedUser: Friend | null) => {
     if (!selectedUser) {
       return
+    }
+  }
+
+  const handleRemoveUser = async (selectedUser: Friend | null) => {
+    if (!selectedUser) {
+      return
+    }
+    try {
+      await firestore()
+        .collection('groups')
+        .doc(currentGroupId)
+        .update({
+          memberUids: firestore.FieldValue.arrayRemove(selectedUser.uid),
+          members: currentGroup?.members.filter((member) => member.uid !== selectedUser.uid),
+        });
+
+      await firestore()
+        .collection('users')
+        .doc(selectedUser.uid)
+        .update({
+          isGroupMember: false,
+          groupId: ""
+        })
+
+      // setLeaveModalVisible(false);
+      // await checkUserInGroup();
+
+      // Clear group context explicitly
+      // await updateGroup(undefined);
+      // await updateGroupId(undefined);
+
+      // navigate('PublicApp', { screen: 'FindOrStart' })
+      setMoreModalVisible(false)
+    } catch (error) {
+      console.log('Error', 'Something went wrong.', error);
     }
   }
 
@@ -143,11 +181,6 @@ const MembersHomeScreen = () => {
     }
   }
 
-  const handleSendMessage = (selectedUser: Friend | null) => {
-    if (!selectedUser) {
-      return
-    }
-  }
 
   if (!currentUser) {
     return (
@@ -171,34 +204,29 @@ const MembersHomeScreen = () => {
         </View>
       ) : (
         <>
-          {/* <Text style={styles.textTitle}>Leader</Text> */}
-
-          <View style={styles.ownerContainer}>
+          {/* <View style={styles.ownerContainer}>
             <View style={styles.row}>
               <CustomAvatar
-                uid={owner?.uid || 'default-uid'}
-                firstName={owner?.firstName || 'Unknown'}
+                uid={ownerUser?.uid || 'default-uid'}
+                firstName={ownerUser?.firstName || 'Unknown'}
                 size={60}
               />
-              <Text style={styles.nameText}>{owner?.firstName || 'Unknown'}</Text>
+              <Text style={styles.nameText}>{ownerUser?.firstName || 'Unknown'}</Text>
             </View>
-            {currentUser.uid !== owner?.uid && owner ? (
+            {currentUser.uid !== ownerUser?.uid ? (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity onPress={() => {
                   setMoreModalVisible(true)
-                  setSelectedUser(owner)
+                  setSelectedUser(ownerUser)
                 }}>
                   <Icon2 name="more-vertical" size={25} color="black" />
                 </TouchableOpacity>
               </View>
             ) : (
-              // <TouchableOpacity style={styles.leaveButton} onPress={() => setDisbandModalVisible(true)}>
-              //   <Text style={styles.leaveText}>Disband group</Text>
-              // </TouchableOpacity>
               <DisbandModal />
             )}
 
-          </View>
+          </View> */}
 
           {/* <Text style={styles.textTitle}>Members</Text> */}
           <FlatList
@@ -225,6 +253,8 @@ const MembersHomeScreen = () => {
                     }}>
                       <Icon2 name="more-vertical" size={25} color="black" />
                     </TouchableOpacity>
+                  ) : currentUser.uid === currentGroup?.createdBy ? (
+                    <DisbandModal />
                   ) : (
                     <LeaveModal />
                   )}
@@ -273,7 +303,7 @@ const MembersHomeScreen = () => {
                 {userData?.isGroupLeader &&
                   <Pressable
                     style={styles.buttonBottom}
-                    onPress={() => handleReportUser(selectedUser)}
+                    onPress={() => handleRemoveUser(selectedUser)}
                     android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
                     <Text style={styles.buttonRedText}>Remove</Text>
                   </Pressable>

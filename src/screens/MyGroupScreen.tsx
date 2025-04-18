@@ -297,7 +297,7 @@ const MyGroupScreen = () => {
     const currentMembers = currentGroup?.members ?? [];
 
 
-    if (currentMembers.length < currentGroup?.memberLimit) {
+    if (currentMembers.length <= currentGroup?.memberLimit) {
       try {
         await firestore().collection('groups').doc(currentGroupId).update({
           isDelisted: false
@@ -312,7 +312,6 @@ const MyGroupScreen = () => {
         text2: 'This group is full. Edit the group to increase the member limit.',
         visibilityTime: 4000,
       });
-      console.log("22222")
     }
 
 
@@ -403,11 +402,15 @@ const MyGroupScreen = () => {
 
         {userData?.isGroupLeader && currentGroup?.isDelisted && (
           <View style={styles.activateGroupContainer}>
+            <Text style={styles.activateGroupTitleText}>This group is currently
+              delisted.</Text>
             <Text style={styles.activateGroupText}>
-              This group is currently delisted.{"\n"}
-              You've either chosen to pause it or it reached the member limit.{"\n\n"}
-              If you're looking for more members, tap "Activate".{"\n"}
-              Want to allow more people? Go to "Edit Group" and increase the member limit.
+              You've either chosen to pause it or it reached the member limit.
+            </Text>
+            <Text style={styles.activateGroupText}>
+              If you're looking for more members, tap "Activate".
+              Want to allow more people? Go to "Edit Group" and increase the
+              member limit.
             </Text>
 
             <TouchableOpacity
@@ -427,6 +430,16 @@ const MyGroupScreen = () => {
             </TouchableOpacity>
           </View>
 
+        )}
+        {userData?.isGroupMember && currentGroup?.isDelisted && (
+          <View style={styles.activateGroupMemberContainer}>
+            <Text style={styles.activateGroupTitleText}>This group is currently
+              delisted.</Text>
+            <Text style={styles.activateGroupText}>Your leader have either
+              chosen to pause it or it reached the member limit.
+            </Text>
+
+          </View>
         )}
 
         {userData?.isGroupLeader && !currentGroup?.isDelisted && (
@@ -491,18 +504,18 @@ const MyGroupScreen = () => {
               </View>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={styles.declineBtn}
-                  onPress={async () => {
-                    declineApplicant(selectedApplicant);
-                  }}>
-                  <Text style={styles.declineBtnText}>Decline</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
                   style={styles.inviteBtn}
                   onPress={async () => {
                     handleInvite(selectedApplicant);
                   }}>
                   <Text style={styles.inviteBtnText}>Invite</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.declineBtn}
+                  onPress={async () => {
+                    declineApplicant(selectedApplicant);
+                  }}>
+                  <Text style={styles.declineBtnText}>Decline</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -755,7 +768,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 25,
     width: 330,
-    height: 350,
+    height: 330,
     backgroundColor: '#F5F5F5',
     borderRadius: 15,
     elevation: 10, // shadow on Android
@@ -764,7 +777,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
-
+  activateGroupMemberContainer: {
+    zIndex: 5, // 🔝 Make sure it's above the overlay's zIndex: 1
+    position: 'absolute', // Important to make zIndex work properly
+    top: '25%', // position it visually center-ish (adjust as needed)
+    alignSelf: 'center',
+    justifyContent: 'center',
+    // alignItems: 'center',
+    textAlign: "center",
+    padding: 15,
+    paddingTop: 25,
+    width: 330,
+    height: 160,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 15,
+    elevation: 10, // shadow on Android
+    shadowColor: '#000', // iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
   activateGroupButton: {
     position: 'absolute',
     bottom: 20,
@@ -801,6 +833,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  activateGroupTitleText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#C41E3A',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    lineHeight: 22,
   },
   activateGroupText: {
     fontSize: 16,

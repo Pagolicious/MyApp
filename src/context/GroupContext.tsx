@@ -16,6 +16,7 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 interface Group {
   id: string;
   activity: string;
+  title?: string;
   location: string;
   fromDate: string;
   fromTime: string;
@@ -56,6 +57,8 @@ interface GroupContextType {
   notificationModal: boolean;
   notificationMessage: string | null;
   closeNotificationModal: () => void;
+  userLeftManually: boolean;
+  setUserLeftManually: (value: boolean) => void;
   // userInGroup: boolean | undefined;
   // setUserInGroup: (inGroup: boolean | undefined) => void;
   // checkUserInGroup: () => Promise<void>;
@@ -76,6 +79,8 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   const [notificationId, setLatestNotificationId] = useState<string | undefined>(undefined);
   const [groupNotifications, setGroupNotifications] = useState()
   const { currentUser, userData } = useAuth();
+  const [userLeftManually, setUserLeftManually] = useState(false);
+
 
   // const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
 
@@ -235,6 +240,21 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         const userData = doc.data();
         const groupId = userData?.groupId || undefined;
         setCurrentGroupId(groupId);
+
+        // ✅ Automatically navigate if user is removed from group
+        if (!groupId) {
+          if (userLeftManually) {
+            setUserLeftManually(false);
+          } else {
+            Toast.show({
+              type: 'info',
+              text1: 'You have been removed from the group.',
+            });
+          }
+
+          navigate('PublicApp', { screen: 'FindOrStart' });
+        }
+
       } else {
         setCurrentGroupId(undefined);
       }
@@ -242,6 +262,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, [currentUser]);
+
 
   // 🔥 **Listen for changes in `currentGroupId` to get Group Data**
   useEffect(() => {
@@ -539,6 +560,8 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         notificationModal,
         notificationMessage,
         closeNotificationModal,
+        userLeftManually,
+        setUserLeftManually,
         // userInGroup,
         // setUserInGroup,
         // checkUserInGroup, // Add this to allow other components to trigger updates
