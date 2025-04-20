@@ -221,7 +221,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (response === 'accepted') {
 
         setModalVisible(false);
-
+        setCurrentGroupId(groupInvitation.groupId)
         // Fetch current user data
         const userDoc = await firestore()
           .collection('users')
@@ -265,7 +265,7 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const currentMembers = updatedGroupData?.members ?? [];
         const memberLimit = updatedGroupData?.memberLimit ?? 1;
 
-        if (currentMembers.length >= memberLimit) {
+        if (currentMembers.length > memberLimit) {
           await groupRef.update({
             isDelisted: true,
           });

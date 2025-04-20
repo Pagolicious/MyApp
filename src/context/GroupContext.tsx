@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import { Alert, Modal, View, Text, Button, StyleSheet, Pressable } from 'react-native';
@@ -22,7 +22,7 @@ interface Group {
   fromTime: string;
   toTime: string;
   toDate: string;
-  skillvalue: number;
+  skillvalue?: number;
   createdBy: string;
   memberLimit: number;
   details: string;
@@ -80,6 +80,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   const [groupNotifications, setGroupNotifications] = useState()
   const { currentUser, userData } = useAuth();
   const [userLeftManually, setUserLeftManually] = useState(false);
+  const previousGroupId = useRef<string | undefined>();
 
 
   // const getStorageKey = (key: string, userId: string) => `${userId}_${key}`;
@@ -239,10 +240,10 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       if (doc.exists) {
         const userData = doc.data();
         const groupId = userData?.groupId || undefined;
-        setCurrentGroupId(groupId);
 
         // ✅ Automatically navigate if user is removed from group
-        if (!groupId) {
+        if (!groupId && previousGroupId.current) {
+
           if (userLeftManually) {
             setUserLeftManually(false);
           } else {
@@ -251,12 +252,14 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
               text1: 'You have been removed from the group.',
             });
           }
-
           navigate('PublicApp', { screen: 'FindOrStart' });
         }
+        setCurrentGroupId(groupId);
+        previousGroupId.current = groupId;
 
       } else {
         setCurrentGroupId(undefined);
+        previousGroupId.current = undefined;
       }
     });
 

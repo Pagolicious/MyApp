@@ -17,7 +17,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
-import { Picker } from '@react-native-picker/picker';
+// import { Picker } from '@react-native-picker/picker';
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -477,31 +477,34 @@ const StartGroup = () => {
             </View>
           </View>
         </View>
-        <View style={styles.bodyContainer}>
-          {/* <View style={styles.row}> */}
-          {/* <View style={styles.skillLevelContainer}> */}
-          <View style={styles.bodySkillTitle}>
-            <Text style={styles.bodyLabel}>Skill Level</Text>
-            <Text style={styles.bodyValueTitle}>{skillvalue}</Text>
-            <TouchableOpacity style={styles.infoButton} onPress={skillInfo}>
-              <Text style={styles.infoButtonText}>?</Text>
-            </TouchableOpacity>
-          </View>
-          <Slider
-            style={{ width: "100%", height: 50 }}
-            minimumValue={0}
-            maximumValue={5}
-            step={1}
-            value={skillvalue}
-            onValueChange={setSkillvalue}
-            minimumTrackTintColor="red"
-            maximumTrackTintColor="#000000"
-            thumbTintColor="red"
-          />
-          {/* </View> */}
+        {activity !== "Custom" && (
+          <View style={styles.bodyContainer}>
+            {/* <View style={styles.row}> */}
+            {/* <View style={styles.skillLevelContainer}> */}
+            <View style={styles.bodySkillTitle}>
+              <Text style={styles.bodyLabel}>Skill Level</Text>
+              <Text style={styles.bodyValueTitle}>{skillvalue}</Text>
+              <TouchableOpacity style={styles.infoButton} onPress={skillInfo}>
+                <Text style={styles.infoButtonText}>?</Text>
+              </TouchableOpacity>
+            </View>
+            <Slider
+              style={{ width: "100%", height: 50 }}
+              minimumValue={0}
+              maximumValue={5}
+              step={1}
+              value={skillvalue}
+              onValueChange={setSkillvalue}
+              minimumTrackTintColor="red"
+              maximumTrackTintColor="#000000"
+              thumbTintColor="red"
+            />
+            {/* </View> */}
 
-          {/* </View> */}
-        </View>
+            {/* </View> */}
+          </View>
+        )}
+
         <View style={styles.bodyContainer}>
           {/* <View style={styles.memberNeededContainer}> */}
           <View style={styles.row}>

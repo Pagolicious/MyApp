@@ -111,7 +111,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { currentGroup, currentGroupId, setCurrentGroupId } = useGroup();
   const { activity } = route.params;
   // const navigation = useNavigation();
-  // const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   // const { userInGroup } = useGroupData()
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
@@ -255,37 +255,40 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
 
   const addSkillLevel = async () => {
-    if (!currentUser || !currentGroup) {
+    if (!currentUser || !selectedGroup) {
       console.log("not logged in or already in a group")
       return;
     }
 
-    const newSkill = {
-      sport: currentGroup.activity.toLowerCase(), // Add the sport name
-      skillLevel, // Add the skill level value
-    };
+    if (selectedGroup.activity !== "Custom") {
+      const newSkill = {
+        sport: selectedGroup.activity.toLowerCase(), // Add the sport name
+        skillLevel, // Add the skill level value
+      };
 
-    try {
-      await firestore()
-        .collection('users')
-        .doc(currentUser.uid)
-        .update({
-          skills: firestore.FieldValue.arrayUnion(newSkill), // Use Firestore's arrayUnion
-        });
+      try {
+        await firestore()
+          .collection('users')
+          .doc(currentUser.uid)
+          .update({
+            skills: firestore.FieldValue.arrayUnion(newSkill), // Use Firestore's arrayUnion
+          });
 
 
-      // setModalVisible(false);
-      setHasSkillLevel(true);
-    } catch (error) {
-      console.error('Error saving user data: ', error);
-      Alert.alert('Error', 'Could not save user data');
-      handleFirestoreError(error)
+        // setModalVisible(false);
+        setHasSkillLevel(true);
+      } catch (error) {
+        console.error('Error saving user data: ', error);
+        Alert.alert('Error', 'Could not save user data');
+        handleFirestoreError(error)
+      }
     }
+
   };
 
   const applyForGroup = async () => {
-    if (!currentGroup || !currentUser) {
-      console.log("not online or in a group already")
+    if (!currentUser) {
+      console.log("not online")
       return;
     }
 
@@ -299,10 +302,10 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
       const userParty = partyDoc.exists ? partyDoc.data() : null;
 
-      const skill =
-        userData?.skills?.find(
-          (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
-        ) || null;
+      // const skill =
+      //   userData?.skills?.find(
+      //     (s: any) => s.sport.toLowerCase() === selectedGroup?.activity?.toLowerCase()
+      //   ) || null;
 
       // 🔹 If user is a party leader, submit the whole party as ONE applicant
       if (userParty) {
@@ -310,7 +313,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           uid: userParty.leaderUid,
           firstName: userParty.leaderFirstName,
           lastName: userParty.leaderLastName,
-          skillLevel: skill?.skillLevel,
+          skillLevel: skillLevel,
           note: note, // Optional note
           role: "leader",
           members: userParty.members?.map((member: Member) => ({
@@ -326,17 +329,21 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           uid: currentUser.uid,
           firstName: userData?.firstName || "",
           lastName: userData?.lastName || "",
-          skillLevel: skill?.skillLevel,
+          skillLevel: skillLevel,
           note: note,
         };
       }
 
+      const sanitizedApplicantData = Object.fromEntries(
+        Object.entries(applicantData).filter(([_, v]) => v !== undefined)
+      );
+
       // 🔥 Save applicant data to Firestore
       await firestore()
         .collection('groups')
-        .doc(currentGroupId)
+        .doc(selectedGroup?.id)
         .update({
-          applicants: firestore.FieldValue.arrayUnion(applicantData),
+          applicants: firestore.FieldValue.arrayUnion(sanitizedApplicantData),
         });
 
       // ✅ Update local state
@@ -361,6 +368,13 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const checkUserSkillLevel = async (activity: string) => {
     if (!currentUser) {
+      return;
+    }
+    console.log("👀 Activity:", activity);
+
+    if (activity === "Custom") {
+      setSkillLevel(0);
+      setHasSkillLevel(true); // ✅ Treat custom groups as always eligible
       return;
     }
     // const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
@@ -393,7 +407,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   useEffect(() => {
     if (!currentUser) return;
 
-    if (skillLevel > 0) {
+    if (skillLevel > 0 || selectedGroup?.activity === "Custom") {
       Animated.timing(animationValue, {
         toValue: 1, // Fully expanded
         duration: 300,
@@ -426,10 +440,13 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
     // setApplyModalVisible(true);
+    console.log("👀 Activity:", item.activity);
+
+    setSelectedGroup(item)
 
     await checkUserSkillLevel(item.activity);
 
-    setCurrentGroupId(item?.id)
+    // setCurrentGroupId(item?.id)
 
     setHasSkillLevel((prevHasSkillLevel) => {
       setApplyModalVisible(true);
@@ -608,7 +625,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                       {/* Modal Content */}
                       <Text style={styles.modalTitleText}>Apply For Group</Text>
-                      {!hasSkillLevel && (
+                      {(!hasSkillLevel && selectedGroup?.activity !== "Custom") && (
                         <View style={styles.setLevelContainer}>
                           <Text style={styles.modalText}>
                             We need to know your skill level for this activity
