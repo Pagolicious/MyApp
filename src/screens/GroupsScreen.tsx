@@ -113,6 +113,9 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   // const navigation = useNavigation();
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   // const { userInGroup } = useGroupData()
+  const [userPickedSkillLevel, setUserPickedSkillLevel] = useState(false);
+  const needsToSetSkillLevel = !hasSkillLevel && !userPickedSkillLevel && selectedGroup?.activity !== "Custom";
+  const canShowGroupDetails = hasSkillLevel || userPickedSkillLevel || selectedGroup?.activity === "Custom";
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
 
@@ -366,63 +369,113 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const checkUserSkillLevel = async (activity: string) => {
+  // const checkUserSkillLevel = async (activity: string) => {
+  //   if (!currentUser) {
+  //     return;
+  //   }
+  //   // console.log("👀 Activity:", activity);
+
+  //   if (activity === "Custom") {
+  //     setSkillLevel(0);
+  //     setHasSkillLevel(true); // ✅ Treat custom groups as always eligible
+  //     return;
+  //   }
+  //   // const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
+  //   try {
+  //     if (userData && Array.isArray(userData.skills)) {
+
+  //       const skill = userData.skills.find(
+  //         (item: { sport: string; skillLevel: number }) => item.sport === activity.toLowerCase()
+  //       );
+
+  //       if (skill) {
+  //         setSkillLevel(skill.skillLevel); // Set the existing skill level
+  //         setHasSkillLevel(true); // User already has a skill level for this activity
+  //       } else {
+  //         setSkillLevel(0); // No skill found for this activity
+  //         setHasSkillLevel(false);
+  //       }
+  //     } else {
+  //       setSkillLevel(0); // No skills array found
+  //       setHasSkillLevel(false);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching user skill level: ', error);
+  //     Alert.alert('Error', 'Could not fetch user skill level');
+  //     handleFirestoreError(error)
+
+  //   }
+  // };
+
+  const checkUserSkillLevel = async (activity: string): Promise<boolean> => {
     if (!currentUser) {
-      return;
+      return false;
     }
-    console.log("👀 Activity:", activity);
 
     if (activity === "Custom") {
       setSkillLevel(0);
-      setHasSkillLevel(true); // ✅ Treat custom groups as always eligible
-      return;
+      setHasSkillLevel(true);
+      return true;
     }
-    // const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
+
     try {
       if (userData && Array.isArray(userData.skills)) {
-
         const skill = userData.skills.find(
           (item: { sport: string; skillLevel: number }) => item.sport === activity.toLowerCase()
         );
-
         if (skill) {
-          setSkillLevel(skill.skillLevel); // Set the existing skill level
-          setHasSkillLevel(true); // User already has a skill level for this activity
-        } else {
-          setSkillLevel(0); // No skill found for this activity
-          setHasSkillLevel(false);
+          setSkillLevel(skill.skillLevel);
+          setHasSkillLevel(true);
+          return true;
         }
-      } else {
-        setSkillLevel(0); // No skills array found
-        setHasSkillLevel(false);
       }
+      setSkillLevel(0);
+      setHasSkillLevel(false);
+      return false;
     } catch (error) {
       console.error('Error fetching user skill level: ', error);
       Alert.alert('Error', 'Could not fetch user skill level');
-      handleFirestoreError(error)
-
+      return false;
     }
   };
 
-  useEffect(() => {
-    if (!currentUser) return;
 
-    if (skillLevel > 0 || selectedGroup?.activity === "Custom") {
-      Animated.timing(animationValue, {
-        toValue: 1, // Fully expanded
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    } else {
-      Animated.timing(animationValue, {
-        toValue: 0, // Collapsed
-        duration: 100,
-        easing: Easing.in(Easing.ease),
+  // useEffect(() => {
+  //   if (!currentUser) return;
+  //   console.log(selectedGroup?.activity)
+  //   if (skillLevel > 0 || selectedGroup?.activity === "Custom") {
+  //     Animated.timing(animationValue, {
+  //       toValue: 1, // Fully expanded
+  //       duration: 300,
+  //       easing: Easing.out(Easing.ease),
+  //       useNativeDriver: false,
+  //     }).start();
+  //   } else {
+  //     Animated.timing(animationValue, {
+  //       toValue: 0, // Collapsed
+  //       duration: 100,
+  //       easing: Easing.in(Easing.ease),
+  //       useNativeDriver: false,
+  //     }).start();
+  //   }
+  // }, [skillLevel, currentUser, selectedGroup]); // React to skillLevel changes
+
+  useEffect(() => {
+    if (!currentUser || !selectedGroup) return;
+
+    // Only auto-collapse when switching groups (not skill level change!)
+    if (selectedGroup.activity !== "Custom" && skillLevel === 0) {
+      Animated.spring(animationValue, {
+        toValue: 0,
+        stiffness: 120,
+        damping: 14,
+        mass: 1,
         useNativeDriver: false,
       }).start();
     }
-  }, [skillLevel, currentUser]); // React to skillLevel changes
+  }, [currentUser, selectedGroup]); // ❗ Remove skillLevel from dependencies!
+
+
 
 
   // Interpolate animated value for opacity and height
@@ -439,21 +492,24 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log("User is already in a group");
       return;
     }
-    // setApplyModalVisible(true);
-    console.log("👀 Activity:", item.activity);
 
-    setSelectedGroup(item)
+    setSelectedGroup(item);
 
-    await checkUserSkillLevel(item.activity);
+    const userHasSkill = await checkUserSkillLevel(item.activity); // ⬅️ Make `checkUserSkillLevel` return boolean
 
-    // setCurrentGroupId(item?.id)
+    if (item.activity === "Custom" || userHasSkill) {
+      Animated.spring(animationValue, {
+        toValue: 1,
+        stiffness: 120,
+        damping: 14,
+        mass: 1,
+        useNativeDriver: false,
+      }).start();
+    }
 
-    setHasSkillLevel((prevHasSkillLevel) => {
-      setApplyModalVisible(true);
-      return prevHasSkillLevel;
-    });
-
+    setApplyModalVisible(true);
   };
+
 
 
 
@@ -611,72 +667,114 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                 animationType="fade"
                 transparent
                 visible={applyModalVisible}
-                onRequestClose={() => setApplyModalVisible(false)}>
-                <TouchableWithoutFeedback onPress={() => setApplyModalVisible(false)}>
-
+                onRequestClose={() => setApplyModalVisible(false)}
+              >
+                <TouchableWithoutFeedback
+                  onPress={() => {
+                    setApplyModalVisible(false);
+                    setUserPickedSkillLevel(false); // ✅ Reset on close
+                  }}
+                >
                   <View style={styles.modalOverlay}>
                     <View style={styles.modalView}>
-                      {/* Close Button in top-right corner */}
+                      {/* Close Button */}
                       <TouchableOpacity
                         style={styles.closeIcon}
-                        onPress={() => setApplyModalVisible(false)}>
+                        onPress={() => {
+                          setApplyModalVisible(false);
+                          setUserPickedSkillLevel(false);
+                          // animationValue.setValue(0);
+                        }}
+                      >
                         <Text style={styles.closeText}>✖</Text>
                       </TouchableOpacity>
 
-                      {/* Modal Content */}
+                      {/* Modal Title */}
                       <Text style={styles.modalTitleText}>Apply For Group</Text>
-                      {(!hasSkillLevel && selectedGroup?.activity !== "Custom") && (
-                        <View style={styles.setLevelContainer}>
-                          <Text style={styles.modalText}>
-                            We need to know your skill level for this activity
-                          </Text>
-                          <StarRating
-                            rating={skillLevel}
-                            onChange={setSkillLevel}
-                            enableHalfStar={false}
-                          />
-                          <Text style={styles.modalObervationText}>
-                            You can NOT change your skill level later
-                          </Text>
-                        </View>
-                      )}
-                      <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
 
-                        <Text style={styles.modalText}>Group Details:</Text>
-                        <View style={styles.modalDetailContainer}>
-                          <Text style={styles.modalDetailText}>
-                            {currentGroup?.details}
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={styles.modalText}>Your message to the group:</Text>
-                          <TextInput
-                            style={styles.input}
-                            placeholder="This is optional"
-                            value={note}
-                            onChangeText={setNote}
-                            multiline={true}
-                            numberOfLines={4}
-                            textAlignVertical="top"
-                          />
-                        </View>
-                        <TouchableOpacity
-                          style={styles.submitBtn}
-                          onPress={async () => {
-                            if (!hasSkillLevel) {
-                              addSkillLevel()
-                            }
-                            applyForGroup();
-                          }}>
-                          <Text style={styles.submitBtnText}>Submit</Text>
-                        </TouchableOpacity>
-                      </Animated.View>
+                      {/* ⭐ Star Rating always visible */}
+                      <View style={styles.setLevelContainer}>
+                        {(!hasSkillLevel && selectedGroup?.activity !== "Custom") && (
+                          <>
+                            <Text style={styles.modalText}>
+                              We need to know your skill level for this activity
+                            </Text>
 
+                            <StarRating
+                              rating={skillLevel}
+                              onChange={(newRating) => {
+                                setSkillLevel(newRating);
+                                if (newRating > 0) {
+                                  setTimeout(() => {
+                                    setUserPickedSkillLevel(true);
+                                    Animated.spring(animationValue, {
+                                      toValue: 1,
+                                      stiffness: 120,
+                                      damping: 14,
+                                      mass: 1,
+                                      useNativeDriver: false,
+                                    }).start();
+                                  }, 50);
+                                }
+                              }}
+                              enableHalfStar={false}
+                            />
+
+                            <Text style={styles.modalObervationText}>
+                              You can NOT change your skill level later
+                            </Text>
+                          </>
+                        )}
+
+
+                        {/* 🧩 Expanded Group Details */}
+                        {(canShowGroupDetails) && (
+                          <>
+                            <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
+
+                              <Text style={styles.modalText}>Group Details:</Text>
+
+                              <View style={styles.modalDetailContainer}>
+                                <Text style={styles.modalDetailText}>
+                                  {currentGroup?.details}
+                                </Text>
+                              </View>
+
+                              <View>
+                                <Text style={styles.modalText}>Your message to the group:</Text>
+                                <TextInput
+                                  style={styles.input}
+                                  placeholder="This is optional"
+                                  value={note}
+                                  onChangeText={setNote}
+                                  multiline={true}
+                                  numberOfLines={4}
+                                  textAlignVertical="top"
+                                />
+                              </View>
+
+                              <TouchableOpacity
+                                style={styles.submitBtn}
+                                onPress={async () => {
+                                  if (!hasSkillLevel) {
+                                    await addSkillLevel();
+                                  }
+                                  applyForGroup();
+                                }}
+                              >
+                                <Text style={styles.submitBtnText}>Submit</Text>
+                              </TouchableOpacity>
+
+                            </Animated.View>
+                          </>
+                        )}
+                      </View>
                     </View>
                   </View>
                 </TouchableWithoutFeedback>
               </Modal>
             )}
+
 
             {/* </View> */}
           </ImageBackground>

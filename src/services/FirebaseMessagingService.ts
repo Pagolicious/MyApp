@@ -44,7 +44,7 @@ import messaging from '@react-native-firebase/messaging';
 import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
-import { RootStackParamList } from '../App'; // Adjust the import as necessary
+import { RootStackParamList } from '../utils/types';
 
 interface RemoteMessageData {
   type: string;
