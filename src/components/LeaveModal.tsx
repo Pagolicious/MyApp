@@ -71,7 +71,7 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
   }
 
   const handleLeaveGroup = async () => {
-    if (!currentUser) return;
+    if (!currentUser || !currentGroupId || !userData) return;
 
     try {
 
@@ -81,8 +81,8 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
         .collection('groups')
         .doc(currentGroupId)
         .update({
-          memberUids: firestore.FieldValue.arrayRemove(currentUser?.uid),
-          members: currentGroup?.members.filter((member) => member.uid !== currentUser?.uid),
+          memberUids: firestore.FieldValue.arrayRemove(currentUser.uid),
+          members: currentGroup?.members.filter((member) => member.uid !== currentUser.uid),
         });
 
       await firestore()
@@ -92,6 +92,21 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
           isGroupMember: false,
           groupId: ""
         })
+
+      await firestore()
+        .collection('chats')
+        .doc(currentGroupId)
+        .collection('messages')
+        .add({
+          _id: `${Date.now()}-system`, // unique ID format
+          text: `${userData.firstName} has left the group.`,
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          user: {
+            _id: 'system',
+            name: 'System',
+          },
+          type: 'system',
+        });
 
       setLeaveModalVisible(false);
       // await checkUserInGroup();

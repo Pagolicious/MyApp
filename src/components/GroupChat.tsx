@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GiftedChat, IMessage, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, IMessage, Bubble, Message } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 
 //Components
@@ -78,6 +78,24 @@ const GroupChat = () => {
     return <CustomAvatar uid={_id} firstName={name} size={30} />;
   };
 
+  const renderMessage = (props: any) => {
+    const { currentMessage } = props;
+
+    if (currentMessage?.user?._id === 'system') {
+      return (
+        <View style={styles.systemMessageContainer}>
+          <Text style={styles.systemMessageText}>{currentMessage.text}</Text>
+        </View>
+      );
+    }
+
+    // ✅ For all others, render the default GiftedChat message
+    return <Message {...props} />;
+  };
+
+
+
+
 
 
   // Custom renderBubble to show username above the message bubble
@@ -113,6 +131,7 @@ const GroupChat = () => {
           // avatar: userData?.avatar, // Current user's avatar
         }}
         renderBubble={renderBubble}
+        renderMessage={renderMessage}
         bottomOffset={70} // Add space for a bottom tab bar or other UI element
         renderAvatar={renderAvatar}
       />
@@ -142,6 +161,16 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 15,
   },
+  systemMessageContainer: {
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  systemMessageText: {
+    fontStyle: 'italic',
+    color: 'gray',
+    fontSize: 14,
+  }
+
 });
 
 export default GroupChat;

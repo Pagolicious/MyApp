@@ -537,6 +537,21 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       if (newGroupId) {
         console.log("✅ User's groupId updated, navigating to MyGroupScreen...");
 
+        firestore()
+          .collection('chats')
+          .doc(newGroupId)
+          .collection('messages')
+          .add({
+            _id: `${Date.now()}-system`, // Unique ID
+            text: `${userData.firstName} has joined the group.`,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            user: {
+              _id: 'system',
+              name: 'System',
+            },
+            type: 'system',
+          });
+
         Toast.show({
           type: 'info',
           text1: 'You have been added to a group!',

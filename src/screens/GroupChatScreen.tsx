@@ -26,6 +26,7 @@ const GroupChatScreen = () => {
       )}
     </View>
   );
+
 };
 
 export default GroupChatScreen;

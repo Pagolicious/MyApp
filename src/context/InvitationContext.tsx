@@ -287,11 +287,28 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         await Promise.all(userUpdates);
 
+        await firestore()
+          .collection('chats')
+          .doc(groupInvitation.groupId)
+          .collection('messages')
+          .add({
+            _id: `${Date.now()}-system`,
+            text: `${userData?.firstName} has joined the group.`,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            user: {
+              _id: 'system',
+              name: 'System',
+            },
+            type: 'system',
+          });
+
         // setCurrentGroupId(groupData?.groupId)
         // setCurrentGroup({ id: groupData?.groupId, ...groupData });
 
         // console.log("YOOOOOOOOOOOOOOOOOOOO", groupData?.groupId)
         // await checkUserInGroup();
+
+
 
         navigate("GroupApp", { screen: 'MembersHomeScreen' })
 

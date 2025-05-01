@@ -352,12 +352,16 @@ const MyGroupScreen = () => {
                       style={styles.card}>
                       <View style={styles.column}>
                         <Text style={styles.cardText}>{item.firstName} (Leader)</Text>
-                        <Text style={styles.cardText}>
-                          {item.skillLevel ?? "N/A"}
-                        </Text>
-                        <View style={styles.cardStar}>
-                          <Icon2 name="star" size={23} color="black" />
-                        </View>
+                        {currentGroup?.activity !== "Custom" && (
+                          <View>
+                            <Text style={styles.cardText}>
+                              {item.skillLevel ?? "N/A"}
+                            </Text>
+                            <View style={styles.cardStar}>
+                              <Icon2 name="star" size={23} color="black" />
+                            </View>
+                          </View>
+                        )}
                       </View>
                       {/* Stacked Members Below */}
                       <View style={styles.memberContainer}>
@@ -382,14 +386,16 @@ const MyGroupScreen = () => {
                   style={styles.card}>
                   <View style={styles.column}>
                     <Text style={styles.cardText}>{item.firstName}</Text>
-                    <View style={styles.column}>
-                      <Text style={styles.cardText}>
-                        {item.skillLevel ?? "N/A"}
-                      </Text>
-                      <View style={styles.cardStar}>
-                        <Icon2 name="star" size={23} color="black" />
+                    {currentGroup?.activity !== "Custom" && (
+                      <View style={styles.column}>
+                        <Text style={styles.cardText}>
+                          {item.skillLevel ?? "N/A"}
+                        </Text>
+                        <View style={styles.cardStar}>
+                          <Icon2 name="star" size={23} color="black" />
+                        </View>
                       </View>
-                    </View>
+                    )}
                   </View>
                 </Pressable>
               );
