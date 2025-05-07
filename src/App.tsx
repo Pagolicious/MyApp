@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import messaging from '@react-native-firebase/messaging';
 import inAppMessaging from '@react-native-firebase/in-app-messaging';
+import Toast from 'react-native-toast-message';
 
 //Navigation
 import { NavigationContainer } from '@react-navigation/native';
@@ -28,7 +29,7 @@ import RequestScreen from './screens/RequestScreen';
 
 import FriendScreen from './screens/Profile/FriendScreen';
 import SearchPartyScreen from './screens/Profile/SearchPartyScreen';
-import MessageScreen from './screens/Profile/MessageScreen';
+import MessageScreen from './screens/Profile/ChatListScreen';
 import SettingScreen from './screens/Profile/SettingScreen';
 import AboutAppScreen from './screens/Profile/AboutAppScreen';
 import FriendRequestScreen from './screens/Profile/FriendRequestScreen';
@@ -136,7 +137,7 @@ function App(): React.JSX.Element {
                 <RootStackNavigator />
                 {/* <AppNavigator /> */}
               </NavigationContainer>
-
+              <Toast position="top" topOffset={50} />
             </ModalProvider>
           </InvitationProvider>
         </GroupProvider>
