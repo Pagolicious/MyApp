@@ -127,6 +127,28 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
           memberUids: firestore.FieldValue.arrayUnion(...allMembersToAdd.map(m => m.uid)),
         });
 
+        const chatRef = firestore().collection('chats').doc(groupInvitation.groupId);
+
+        const chatDoc = await chatRef.get();
+        if (chatDoc.exists) {
+          const newParticipants = allMembersToAdd.map(m => m.uid);
+          const newDetails = allMembersToAdd.reduce((acc, m) => {
+            acc[m.uid] = {
+              firstName: m.firstName,
+              lastName: m.lastName,
+            };
+            return acc;
+          }, {} as { [uid: string]: { firstName: string; lastName: string } });
+
+          await chatRef.update({
+            participants: firestore.FieldValue.arrayUnion(...newParticipants),
+            ...Object.keys(newDetails).reduce((fields, uid) => {
+              fields[`participantsDetails.${uid}`] = newDetails[uid];
+              return fields;
+            }, {} as Record<string, { firstName: string; lastName: string }>)
+          });
+        }
+
 
         const userUpdates = allMembersToAdd.map(async (member) => {
           return firestore().collection('users').doc(member.uid).update({

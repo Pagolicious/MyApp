@@ -17,7 +17,10 @@ import ProfileScreen from '../screens/ProfileScreen';
 // Icons
 import Icon1 from 'react-native-vector-icons/FontAwesome5';
 import Icon2 from 'react-native-vector-icons/FontAwesome6';
-import Icon3 from 'react-native-vector-icons/AntDesign';
+import Icon3 from 'react-native-vector-icons/Entypo';
+import Icon4 from 'react-native-vector-icons/AntDesign';
+import GroupChatScreen from '../screens/GroupChatScreen';
+import ChatListScreen from '../screens/ChatListScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -38,8 +41,11 @@ const PublicTabNavigator = () => {
           } else if (route.name === 'Find a Group') {
             IconComponent = Icon2;
             iconName = 'users-viewfinder';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'Chats') {
             IconComponent = Icon3;
+            iconName = 'chat';
+          } else if (route.name === 'Profile') {
+            IconComponent = Icon4;
             iconName = 'profile';
           }
 
@@ -60,8 +66,8 @@ const PublicTabNavigator = () => {
           {MyGroupStack} // ✅ Opens the Stack Navigator
         /> */}
       <Tab.Screen name="Home" component={FindOrStart} />
-
       <Tab.Screen name="Find a Group" component={FindGroup} options={{ title: 'Find' }} />
+      <Tab.Screen name="Chats" component={ChatListScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
       {/* <Tab.Screen name="Members Home" component={MembersHomeScreen} /> */}
 

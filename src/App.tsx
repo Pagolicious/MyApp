@@ -29,7 +29,7 @@ import RequestScreen from './screens/RequestScreen';
 
 import FriendScreen from './screens/Profile/FriendScreen';
 import SearchPartyScreen from './screens/Profile/SearchPartyScreen';
-import MessageScreen from './screens/Profile/ChatListScreen';
+import MessageScreen from './screens/ChatListScreen';
 import SettingScreen from './screens/Profile/SettingScreen';
 import AboutAppScreen from './screens/Profile/AboutAppScreen';
 import FriendRequestScreen from './screens/Profile/FriendRequestScreen';

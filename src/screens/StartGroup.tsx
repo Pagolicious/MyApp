@@ -200,6 +200,27 @@ const StartGroup = () => {
       memberUids: memberUids
     })
 
+    const participantsDetails = members.reduce((acc, member) => {
+      acc[member.uid] = {
+        firstName: member.firstName,
+        lastName: member.lastName,
+      };
+      return acc;
+    }, {} as { [uid: string]: { firstName: string; lastName: string } });
+
+    await firestore().collection('chats').doc(groupId).set({
+      isGroup: true,
+      activity,
+      participants: memberUids,
+      participantsDetails,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      lastMessage: {
+        text: '',
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      },
+    });
+
+
     // ✅ Update each party member to reflect their new group
     const memberUidsExceptLeader = memberUids.filter(uid => uid !== currentUser.uid);
 

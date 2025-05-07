@@ -21,11 +21,11 @@ import ProfileScreen from '../screens/ProfileScreen';
 import MembersHomeScreen from '../screens/MembersHomeScreen';
 import FriendScreen from '../screens/Profile/FriendScreen';
 import SearchPartyScreen from '../screens/Profile/SearchPartyScreen';
-import ChatListScreen from '../screens/Profile/ChatListScreen';
+import ChatListScreen from '../screens/ChatListScreen';
 import SettingScreen from '../screens/Profile/SettingScreen';
 import AboutAppScreen from '../screens/Profile/AboutAppScreen';
 import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
-import ChatRoomScreen from '../screens/Profile/ChatRoomScreen'
+import ChatRoomScreen from '../screens/ChatRoomScreen'
 
 //Stacks
 import FriendStack from './FriendStack';
@@ -47,6 +47,7 @@ const RootStackNavigator = () => {
       <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
       <Stack.Screen name="StartGroup" component={StartGroup} />
       <Stack.Screen name="NamePage" component={NamePage} />
+      <Stack.Screen name="GroupChatScreen" component={GroupChatScreen} />
 
       {/* 🚀 TAB NAVIGATOR (MAIN APP) */}
       {/* <Stack.Screen name="MainApp" component={GroupTabNavigator} /> */}

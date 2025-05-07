@@ -5,17 +5,17 @@ import React, { useEffect, useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
 
 //Contexts
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 //Components
-import CustomAvatar from '../../components/CustomAvatar';
+import CustomAvatar from '../components/CustomAvatar';
 
 
 //Services
-import { navigate } from '../../services/NavigationService';
+import { navigate } from '../services/NavigationService';
 
 //Types
-import { Friend } from '../../types/userTypes';
+import { Friend } from '../types/userTypes';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
@@ -58,14 +58,14 @@ const ChatListScreen = () => {
     return 'Direct Chat';
   };
 
-  const handleGoBackButton = () => {
-    if (!userData) return;
-    if (userData.isGroupLeader || userData.isGroupMember) {
-      navigate('GroupApp', { screen: 'Profile' });
-    } else {
-      navigate('PublicApp', { screen: 'Profile' });
-    }
-  };
+  // const handleGoBackButton = () => {
+  //   if (!userData) return;
+  //   if (userData.isGroupLeader || userData.isGroupMember) {
+  //     navigate('GroupApp', { screen: 'Profile' });
+  //   } else {
+  //     navigate('PublicApp', { screen: 'Profile' });
+  //   }
+  // };
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -208,7 +208,7 @@ const ChatListScreen = () => {
       onPress={() => {
         if (item.isGroup) {
           // navigate('GroupChatScreen', { chatId: item.id });
-          navigate('GroupApp', { screen: 'Group Chat' })
+          navigate('GroupChatScreen')
 
         } else {
           navigate('ChatRoomScreen', { chatId: item.id });
@@ -226,12 +226,12 @@ const ChatListScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBackButton}>
+        {/* <TouchableOpacity onPress={handleGoBackButton}>
           <Icon1 name="arrowleft" size={25} color="white" />
-        </TouchableOpacity>
-        <View style={styles.spacer} />
+        </TouchableOpacity> */}
+        {/* <View style={styles.spacer} /> */}
         <Text style={styles.headerText}>Chats</Text>
-        <View style={styles.spacer} />
+        {/* <View style={styles.spacer} /> */}
       </View>
 
       {loading ? (
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5f4c4c",
     padding: 15,
     alignItems: "center",
-    flexDirection: "row",
+    // flexDirection: "row",
   },
   headerText: {
     fontSize: 20,

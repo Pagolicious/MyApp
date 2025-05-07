@@ -164,6 +164,16 @@ const MembersHomeScreen = () => {
           groupId: ""
         })
 
+      // Also remove the user from the corresponding group chat
+      await firestore()
+        .collection('chats')
+        .doc(currentGroupId)
+        .update({
+          participants: firestore.FieldValue.arrayRemove(selectedUser.uid),
+          [`participantsDetails.${selectedUser.uid}`]: firestore.FieldValue.delete()
+        });
+
+
       // setLeaveModalVisible(false);
       // await checkUserInGroup();
 

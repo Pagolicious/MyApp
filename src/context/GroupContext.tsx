@@ -85,6 +85,16 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       await disbandGroupService(currentGroup, currentUser.uid);
+
+      const chatRef = firestore().collection('chats').doc(currentGroupId);
+      const messagesSnapshot = await chatRef.collection('messages').get();
+
+      const batch = firestore().batch();
+      messagesSnapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+
+      await chatRef.delete();
+
       setCurrentGroupId(undefined);
       setCurrentGroup(undefined);
       navigate('PublicApp', { screen: 'FindOrStart' });

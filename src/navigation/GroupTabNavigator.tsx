@@ -24,6 +24,7 @@ import Icon1 from 'react-native-vector-icons/FontAwesome';
 import Icon2 from 'react-native-vector-icons/Entypo';
 import Icon3 from 'react-native-vector-icons/AntDesign';
 import Icon4 from 'react-native-vector-icons/FontAwesome6';
+import ChatListScreen from '../screens/ChatListScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -62,7 +63,7 @@ const GroupTabNavigator = () => {
           } else if (route.name === 'Browse') {
             IconComponent = Icon4;
             iconName = 'users-viewfinder';
-          } else if (route.name === 'Group Chat') {
+          } else if (route.name === 'Chats') {
             IconComponent = Icon2;
             iconName = 'chat';
           } else if (route.name === 'Profile') {
@@ -89,7 +90,7 @@ const GroupTabNavigator = () => {
       <Tab.Screen name="My Group" component={MyGroupStack} />
 
       <Tab.Screen name="Browse" component={FindGroup} options={{ title: 'Find' }} />
-      <Tab.Screen name="Group Chat" component={GroupChatScreen} />
+      <Tab.Screen name="Chats" component={ChatListScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
       {/* <Tab.Screen name="Members Home" component={MembersHomeScreen} /> */}
 

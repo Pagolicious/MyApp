@@ -99,6 +99,15 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
       await firestore()
         .collection('chats')
         .doc(currentGroupId)
+        .update({
+          participants: firestore.FieldValue.arrayRemove(currentUser.uid),
+          [`participantsDetails.${currentUser.uid}`]: firestore.FieldValue.delete()
+        });
+
+
+      await firestore()
+        .collection('chats')
+        .doc(currentGroupId)
         .collection('messages')
         .add({
           _id: `${Date.now()}-system`, // unique ID format
