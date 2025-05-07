@@ -13,10 +13,14 @@ import { useGroup } from '../context/GroupContext';
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
-const GroupChat = () => {
+type ChatProps = {
+  chatId: string;
+};
+
+const Chat: React.FC<ChatProps> = ({ chatId }) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { currentUser, userData } = useAuth();
-  const { currentGroupId } = useGroup();
+  // const { currentGroupId } = useGroup();
 
   if (!currentUser) {
     return (
@@ -27,10 +31,10 @@ const GroupChat = () => {
   }
 
   useEffect(() => {
-    if (currentGroupId && currentUser) {
+    if (chatId && currentUser) {
       const unsubscribe = firestore()
         .collection('chats')
-        .doc(currentGroupId)
+        .doc(chatId)
         .collection('messages')
         .orderBy('createdAt', 'desc')
         .onSnapshot((snapshot) => {
@@ -54,7 +58,7 @@ const GroupChat = () => {
 
       return () => unsubscribe();
     }
-  }, [currentGroupId, currentUser]);
+  }, [chatId, currentUser]);
 
 
   // const onSend = useCallback(
@@ -79,7 +83,7 @@ const GroupChat = () => {
         createdAt: firestore.FieldValue.serverTimestamp(),
       };
 
-      const chatRef = firestore().collection('chats').doc(currentGroupId);
+      const chatRef = firestore().collection('chats').doc(chatId);
 
       try {
         await chatRef.collection('messages').add(message);
@@ -95,7 +99,7 @@ const GroupChat = () => {
         handleFirestoreError(error);
       }
     },
-    [currentGroupId]
+    [chatId]
   );
 
 
@@ -200,4 +204,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default GroupChat;
+export default Chat;

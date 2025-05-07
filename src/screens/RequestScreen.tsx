@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react'
 import firestore from '@react-native-firebase/firestore';
 
 //Navigation
-import { RootStackParamList } from '../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -28,11 +27,8 @@ import { useGroupData } from '../hooks/useGroupData';
 //Icons
 import Icon1 from 'react-native-vector-icons/Entypo';
 
-interface Friend {
-  uid: string;
-  firstName: string;
-  lastName: string;
-}
+//Types
+import { Friend } from '../types/userTypes';
 
 const RequestScreen = () => {
   const { currentUser } = useAuth()

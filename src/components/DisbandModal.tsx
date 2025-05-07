@@ -11,15 +11,18 @@ import { useGroup } from '../context/GroupContext'
 //Services
 import { navigate } from '../services/NavigationService';
 
-interface PartyGroup {
-  leaderFirstName: string;
-  leaderLastName: string;
-  leaderUid: string;
-  members: { uid: string; firstName: string; lastName: string }[];
-}
+//Types
+import { SearchParty } from '../types/groupTypes';
+
+// interface PartyGroup {
+//   leaderFirstName: string;
+//   leaderLastName: string;
+//   leaderUid: string;
+//   members: { uid: string; firstName: string; lastName: string }[];
+// }
 
 interface DisbandModalProps {
-  userParty?: PartyGroup | null;
+  userParty?: SearchParty | null;
 }
 
 const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {

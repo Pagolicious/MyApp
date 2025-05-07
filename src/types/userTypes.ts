@@ -2,6 +2,7 @@ export interface Friend {
   uid: string;
   firstName: string;
   lastName: string;
+  isOnline?: boolean;
 }
 
 export interface Skills {
@@ -10,6 +11,7 @@ export interface Skills {
 }
 
 export interface User {
+  uid: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -22,4 +24,8 @@ export interface User {
   groupId: string;
   skills: Skills[];
   friends?: Friend[];
+}
+
+export interface AuthUser {
+  uid: string
 }

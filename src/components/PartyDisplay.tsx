@@ -7,18 +7,21 @@ import CustomAvatar from './CustomAvatar'
 //Contexts
 import { useAuth } from '../context/AuthContext';
 
-interface SearchParty {
-  leaderUid: string;
-  leaderFirstName: string;
-  leaderLastName: string;
-  members: Member[];
-}
+//Types
+import { SearchParty, Member } from '../types/groupTypes';
 
-interface Member {
-  uid: string;
-  firstName: string;
-  lastName?: string;
-}
+// interface SearchParty {
+//   leaderUid: string;
+//   leaderFirstName: string;
+//   leaderLastName: string;
+//   members: Member[];
+// }
+
+// interface Member {
+//   uid: string;
+//   firstName: string;
+//   lastName?: string;
+// }
 
 const PartyDisplay = () => {
   const [userParty, setUserParty] = useState<SearchParty | null>(null);
@@ -66,6 +69,7 @@ const PartyDisplay = () => {
   avatars.unshift({
     uid: userParty?.leaderUid || '',
     firstName: userParty?.leaderFirstName || '',
+    lastName: userParty?.leaderLastName || '',
   });
 
   return (

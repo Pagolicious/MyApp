@@ -2,7 +2,7 @@ export interface Member {
   uid: string;
   firstName: string;
   lastName: string;
-  skillLevel: string | number;
+  skillLevel?: string | number;
   role?: string; // For InvitationContext
 }
 
@@ -10,8 +10,10 @@ export type Applicant = {
   uid: string;
   firstName: string;
   lastName: string;
-  skillLevel: string | number;
+  skillLevel?: string | number;
   note?: string;
+  role?: "leader" | "member";
+  members?: Omit<Applicant, "members" | "role">[];
 };
 
 export interface Group {
@@ -31,4 +33,11 @@ export interface Group {
   members: Member[];
   memberUids: string[];
   applicants: Applicant[];
+}
+
+export interface SearchParty {
+  leaderUid: string;
+  leaderFirstName: string;
+  leaderLastName: string;
+  members: Member[];
 }

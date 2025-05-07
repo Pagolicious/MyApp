@@ -45,11 +45,15 @@ import { navigate } from '../services/NavigationService';
 import Icon1 from 'react-native-vector-icons/AntDesign';
 // import Icon2 from 'react-native-vector-icons/Entypo';
 
-interface Member {
-  uid: string;
-  firstName: string;
-  lastName: string
-}
+//Types
+import { Member } from '../types/groupTypes';
+
+
+// interface Member {
+//   uid: string;
+//   firstName: string;
+//   lastName: string
+// }
 
 const StartGroup = () => {
   const navigation =

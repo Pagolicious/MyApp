@@ -39,58 +39,61 @@ import { inviteApplicant } from '../utils/inviteHelpers';
 import Icon1 from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/Entypo';
 
-type MyGroupScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'MyGroupScreen'
->;
+//Types
+import { Applicant, Member } from '../types/groupTypes';
 
-interface Group {
-  id: string;
-  activity: string;
-  location: string;
-  fromDate: string;
-  fromTime: string;
-  toTime: string;
-  createdBy: string;
-  details: string;
-  applicants: Applicant[];
-  members: Member[];
-}
+// type MyGroupScreenProps = NativeStackScreenProps<
+//   RootStackParamList,
+//   'MyGroupScreen'
+// >;
 
-interface Applicant {
-  uid: string;
-  firstName: string;
-  lastName?: string;
-  // skills: Skills[];
-  note?: string;
-  role?: "leader" | "member";
-  members?: Member[];
-}
+// interface Group {
+//   id: string;
+//   activity: string;
+//   location: string;
+//   fromDate: string;
+//   fromTime: string;
+//   toTime: string;
+//   createdBy: string;
+//   details: string;
+//   applicants: Applicant[];
+//   members: Member[];
+// }
 
-interface Skills {
-  sport: string;
-  skillLevel: number
-}
+// interface Applicant {
+//   uid: string;
+//   firstName: string;
+//   lastName?: string;
+//   // skills: Skills[];
+//   note?: string;
+//   role?: "leader" | "member";
+//   members?: Member[];
+// }
 
-interface Member {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  skillLevel?: string;
-}
+// interface Skills {
+//   sport: string;
+//   skillLevel: number
+// }
 
-interface Invitation {
-  id: string;
-  groupId: string;
-  sender: string;
-  receiver: string;
-  activity: string;
-  location: string;
-  fromDate: string;
-  fromTime: string;
-  toTime: string;
-  status: 'pending' | 'accepted' | 'declined';
-}
+// interface Member {
+//   uid: string;
+//   firstName: string;
+//   lastName: string;
+//   skillLevel?: string;
+// }
+
+// interface Invitation {
+//   id: string;
+//   groupId: string;
+//   sender: string;
+//   receiver: string;
+//   activity: string;
+//   location: string;
+//   fromDate: string;
+//   fromTime: string;
+//   toTime: string;
+//   status: 'pending' | 'accepted' | 'declined';
+// }
 
 const MyGroupScreen = () => {
   const { currentUser, userData } = useAuth();

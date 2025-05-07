@@ -21,10 +21,11 @@ import ProfileScreen from '../screens/ProfileScreen';
 import MembersHomeScreen from '../screens/MembersHomeScreen';
 import FriendScreen from '../screens/Profile/FriendScreen';
 import SearchPartyScreen from '../screens/Profile/SearchPartyScreen';
-import MessageScreen from '../screens/Profile/MessageScreen';
+import ChatListScreen from '../screens/Profile/ChatListScreen';
 import SettingScreen from '../screens/Profile/SettingScreen';
 import AboutAppScreen from '../screens/Profile/AboutAppScreen';
 import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
+import ChatRoomScreen from '../screens/Profile/ChatRoomScreen'
 
 //Stacks
 import FriendStack from './FriendStack';
@@ -56,7 +57,8 @@ const RootStackNavigator = () => {
         <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} /> */}
       <Stack.Screen name="Friends" component={FriendStack} />
       <Stack.Screen name="SearchPartyScreen" component={SearchPartyScreen} />
-      <Stack.Screen name="MessageScreen" component={MessageScreen} />
+      <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
+      <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
       <Stack.Screen name="SettingScreen" component={SettingScreen} />
       <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
     </Stack.Navigator>

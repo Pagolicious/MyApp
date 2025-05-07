@@ -29,12 +29,15 @@ import { inviteApplicant } from '../../utils/inviteHelpers'
 import Icon1 from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/Feather';
 
-interface Friend {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  isOnline: boolean;
-}
+//Types
+import { Friend } from '../../types/userTypes';
+
+// interface Friend {
+//   uid: string;
+//   firstName: string;
+//   lastName: string;
+//   isOnline: boolean;
+// }
 
 const FriendScreen = () => {
   const { currentUser, userData } = useAuth()

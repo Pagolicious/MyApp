@@ -30,14 +30,17 @@ import { navigate } from '../services/NavigationService';
 import Icon1 from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/Feather';
 
+//Types
+import { Friend } from '../types/userTypes';
+
 // type MembersHomeScreenProps = StackScreenProps<MyGroupStackParamList, 'MembersHomeScreen'>;
 
 
-interface Friend {
-  uid: string;
-  firstName: string;
-  lastName: string;
-}
+// interface Friend {
+//   uid: string;
+//   firstName: string;
+//   lastName: string;
+// }
 
 const MembersHomeScreen = () => {
   // const { members = [], owner } = useGroupData();
@@ -196,7 +199,7 @@ const MembersHomeScreen = () => {
       {/* <GroupNav /> */}
 
       {/* {currentUser && <GroupNav />} */}
-      <Toast />
+      {/* <Toast /> */}
 
       {loading ? (
         <View style={styles.loadingContainer}>

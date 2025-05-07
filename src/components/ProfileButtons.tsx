@@ -12,6 +12,7 @@ import { navigate } from '../services/NavigationService';
 import Icon1 from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon3 from 'react-native-vector-icons/FontAwesome5';
+import Icon4 from 'react-native-vector-icons/Ionicons';
 
 //Context
 import { useGroup } from '../context/GroupContext';
@@ -60,10 +61,10 @@ const ProfileButtons = () => {
           <Text style={styles.profileBtnText}>Search Party</Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigate("MessageScreen")}>
+      <TouchableOpacity onPress={() => navigate("ChatListScreen")}>
         <View style={[styles.btnBorder, styles.row]}>
-          <Icon3 name="envelope" size={30} color="black" />
-          <Text style={styles.profileBtnText}>Messages</Text>
+          <Icon4 name="chatbox-ellipses-outline" size={30} color="black" />
+          <Text style={styles.profileBtnText}>Chats</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigate("SettingScreen")}>

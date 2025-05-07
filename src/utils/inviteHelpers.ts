@@ -2,42 +2,44 @@ import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
 import handleFirestoreError from './firebaseErrorHandler';
 
-interface Group {
-  id: string;
-  activity: string;
-  location: string;
-  fromDate: string;
-  fromTime: string;
-  toTime: string;
-  createdBy: string;
-  memberLimit: number;
-  details: string;
-  applicants: Applicant[];
-  memberUids: string[];
-}
+//Types
+import { Group, Applicant, Member } from '../types/groupTypes';
+import { AuthUser } from '../types/userTypes';
 
-interface Applicant {
-  uid: string;
-  firstName: string;
-  lastName?: string;
-  // skills: Skills[];
-  note?: string;
-  role?: "leader" | "member";
-  members?: Member[];
-}
+// interface Group {
+//   id: string;
+//   activity: string;
+//   location: string;
+//   fromDate: string;
+//   fromTime: string;
+//   toTime: string;
+//   createdBy: string;
+//   memberLimit: number;
+//   details: string;
+//   applicants: Applicant[];
+//   memberUids: string[];
+// }
 
-interface Member {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  skillLevel?: string;
-}
-interface User {
-  uid: string
-}
+// interface Applicant {
+//   uid: string;
+//   firstName: string;
+//   lastName?: string;
+//   // skills: Skills[];
+//   note?: string;
+//   role?: "leader" | "member";
+//   members?: Member[];
+// }
+
+// interface Member {
+//   uid: string;
+//   firstName: string;
+//   lastName: string;
+//   skillLevel?: string;
+// }
+
 
 export const inviteApplicant = async (
-  currentUser: User,
+  currentUser: AuthUser,
   currentGroup: Group,
   currentGroupId: string,
   selectedApplicant: Applicant

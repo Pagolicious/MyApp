@@ -47,6 +47,10 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
+//Types
+import { Group, Applicant, Member } from '../types/groupTypes';
+
+
 
 // type RootStackParamList = {
 //   GroupsScreen: { activity: string };
@@ -60,41 +64,41 @@ type Props = {
   route: GroupsScreenRouteProp;
 };
 
-interface Group {
-  id: string;
-  activity: string;
-  title?: string;
-  location: string;
-  fromDate: string;
-  fromTime: string;
-  toTime: string;
-  createdBy: string;
-  memberLimit: number;
-  details: string;
-  applicants: Applicant[];
-  memberUids: string[];
-}
+// interface Group {
+//   id: string;
+//   activity: string;
+//   title?: string;
+//   location: string;
+//   fromDate: string;
+//   fromTime: string;
+//   toTime: string;
+//   createdBy: string;
+//   memberLimit: number;
+//   details: string;
+//   applicants: Applicant[];
+//   memberUids: string[];
+// }
 
-interface Applicant {
-  uid: string;
-  firstName: string;
-  lastName?: string;
-  skillLevel?: number; // ✅ Add this to match the Firestore data
-  note?: string;
-  role?: "leader" | "member";
-  members?: Omit<Applicant, "members" | "role">[];
-}
+// interface Applicant {
+//   uid: string;
+//   firstName: string;
+//   lastName?: string;
+//   skillLevel?: number; // ✅ Add this to match the Firestore data
+//   note?: string;
+//   role?: "leader" | "member";
+//   members?: Omit<Applicant, "members" | "role">[];
+// }
 
-interface Member {
-  uid: string;
-  firstName: string;
-  lastName?: string;
-}
+// interface Member {
+//   uid: string;
+//   firstName: string;
+//   lastName?: string;
+// }
 
-interface Skills {
-  sport: string;
-  skillLevel: number
-}
+// interface Skills {
+//   sport: string;
+//   skillLevel: number
+// }
 
 
 const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -201,9 +205,12 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             fromTime: data.fromTime || '',
             memberLimit: data.memberLimit || 1,
             toTime: data.toTime || '',
+            toDate: data.toDate || '',
+            skillvalue: data.skillvalue || 0,
             createdBy: data.createdBy || '',
             details: data.details || '',
             applicants: data.applicants || [],
+            members: data.members || [],
             memberUids: data.memberUids || [],
             isDelisted: data.isDelisted || false
           };

@@ -35,10 +35,10 @@ import { navigate } from '../services/NavigationService';
 //   'My Group': undefined; // This is the bottom tab name
 // };
 
-type MyGroupStackParamList = {
-  MyGroupScreen: undefined;
-  MembersHomeScreen: undefined;
-};
+// type MyGroupStackParamList = {
+//   MyGroupScreen: undefined;
+//   MembersHomeScreen: undefined;
+// };
 
 // type NavigationProps = CompositeNavigationProp<
 //   BottomTabNavigationProp<GroupTabParamList, 'My Group'>,

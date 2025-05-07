@@ -12,7 +12,8 @@ export type RootStackParamList = {
   MembersHomeScreen: undefined;
   FriendScreen: undefined;
   SearchPartyScreen: undefined;
-  MessageScreen: undefined;
+  ChatListScreen: undefined;
+  ChatRoomScreen: undefined;
   SettingScreen: undefined;
   AboutAppScreen: undefined;
   RequestScreen: undefined;

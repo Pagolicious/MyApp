@@ -1,244 +1,112 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Alert, Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-toast-message';
-
-//Navigation
 import { navigate } from '../services/NavigationService';
 
-//Components
-import TimedPopup from '../components/PartyInvitationPopup';
-
-//Context
 import { useAuth } from './AuthContext';
 import { useGroup } from './GroupContext';
 
-//Utils
+import TimedPopup from '../components/PartyInvitationPopup';
 import handleFirestoreError from '../utils/firebaseErrorHandler';
-import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
+import firestore from '@react-native-firebase/firestore';
 
-// interface Group {
-//   id: string;
-//   activity: string;
-//   location: string;
-//   fromDate: string;
-//   fromTime: string;
-//   toTime: string;
-//   groupId: string;
-//   createdBy: string;
-//   memberLimit: number;
-//   details: string;
-//   members: Member[];
-//   memberUids: string[];
-//   applicants: Applicant[];
+import {
+  listenToGroupInvitations,
+  listenToFriendRequests,
+  listenToPartyInvitations,
+  updateGroupInvitationStatus,
+  updatePartyInvitationStatus,
+} from '../services/invitationService';
 
-// }
-interface Member {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  // skillLevel: string;
-}
-
-interface GroupInvitation {
-  id: string;
-  groupId: string;
-  sender: string;
-  receiver: string;
-  activity: string;
-  location: string;
-  fromDate: string;
-  fromTime: string;
-  toTime: string;
-  members: Member[]
-  status: 'pending' | 'accepted' | 'declined';
-}
-
-interface FriendRequest {
-  sender: string,
-  receiver: string,
-  firstName: string,
-  lastName: string,
-  status: 'pending' | 'accepted' | 'declined';
-}
-
-interface PartyInvitation {
-  id: string;
-  sender: string,
-  receiver: string,
-  firstName: string,
-  lastName: string,
-  status: 'pending' | 'accepted' | 'declined';
-}
+import { Applicant } from '../types/groupTypes'
+import { FriendRequest, GroupInvitation, PartyInvitation } from '../types/invitationTypes';
+import { Member } from '../types/groupTypes';
 
 interface InvitationContextType {
   groupInvitation: GroupInvitation | null;
   friendRequests: FriendRequest[];
   partyInvitation: PartyInvitation | null;
-  respondToPartyInvitation: (invitationId: string, response: "accepted" | "declined") => Promise<void>;
+  respondToPartyInvitation: (id: string, response: 'accepted' | 'declined') => Promise<void>;
+  respondToGroupInvitation: (id: string, response: 'accepted' | 'declined') => Promise<void>;
   modalVisible: boolean;
-  respondToGroupInvitation: (invitationId: string, response: 'accepted' | 'declined') => Promise<void>;
   closeModal: () => void;
 }
-
-type Applicant = {
-  uid: string;
-  firstName: string;
-  lastName: string;
-  skillLevel: string | number;
-  note?: string;
-};
 
 const InvitationContext = createContext<InvitationContextType | null>(null);
 
 export const useInvitation = () => {
   const context = useContext(InvitationContext);
-  if (!context) {
-    throw new Error('useInvitation must be used within an InvitationProvider');
-  }
+  if (!context) throw new Error('useInvitation must be used within an InvitationProvider');
   return context;
 };
 
-
-
-export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { currentUser, userData } = useAuth();
+  const { setCurrentGroupId } = useGroup();
+
   const [groupInvitation, setGroupInvitation] = useState<GroupInvitation | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [partyInvitation, setPartyInvitation] = useState<PartyInvitation | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const { setCurrentGroupId, setCurrentGroup } = useGroup();
-
+  // 🔁 Listen to all invitation types
   useEffect(() => {
-    if (!currentUser) {
-      setGroupInvitation(null);
+    if (!currentUser) return;
+
+    const unsubGroup = listenToGroupInvitations(currentUser.uid, (inv) => {
+      setGroupInvitation(inv);
+      setModalVisible(!!inv);
+    });
+
+    const unsubFriends = listenToFriendRequests(currentUser.uid, (requests) => {
+      setFriendRequests(requests);
+      if (requests.length > 0) {
+        Toast.show({
+          type: 'info',
+          text1: 'New Friend Request! 🎉',
+          text2: `You got a request from ${requests[0].firstName}`,
+          onPress: () => navigate('FriendRequestScreen'),
+        });
+      }
+    });
+
+    const unsubParty = listenToPartyInvitations(currentUser.uid, (invite) => {
+      setPartyInvitation(invite);
+    });
+
+    return () => {
+      unsubGroup();
+      unsubFriends();
+      unsubParty();
+    };
+  }, [currentUser]);
+
+  // ✅ Accept / Decline Group Invitation
+  const respondToGroupInvitation = async (invitationId: string, response: 'accepted' | 'declined') => {
+    if (!currentUser || !groupInvitation) return;
+
+    if (!groupInvitation?.groupId) {
+      console.error("No groupId on groupInvitation");
       return;
     }
 
-    const unsubscribe = firestore()
-      .collection('groupInvitations')
-      .where('receiver', '==', currentUser.uid)
-      .where('status', '==', 'pending')
-      .onSnapshot(
-        (querySnapshot) => {
-          if (!querySnapshot.empty) {
-            querySnapshot.forEach((doc) => {
-              const data = doc.data() as Omit<GroupInvitation, 'id'>;
-              setGroupInvitation({ id: doc.id, ...data });
-              setModalVisible(true);
-            });
-          } else {
-            setGroupInvitation(null);
-          }
-        },
-        (error) => {
-          handleFirestoreError(error);
-        }
-      );
 
-    return () => unsubscribe();
-  }, [currentUser]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-
-    // Firestore Listener for Friend Requests
-    const unsubscribe = firestore()
-      .collection('friendRequests')
-      .where('receiver', '==', currentUser.uid)
-      .where('status', '==', 'pending')
-      .onSnapshot(snapshot => {
-        const requests: FriendRequest[] = [];
-
-        snapshot.docChanges().forEach(change => {
-          if (change.type === 'added') {
-            const request = change.doc.data() as FriendRequest;
-            requests.push(request);
-
-            // Show a toast notification for the received request
-            Toast.show({
-              type: 'info',
-              text1: 'New Friend Request! 🎉',
-              text2: `You got a request from ${request.firstName}`,
-              onPress: () => navigate("FriendRequestScreen")
-            });
-          }
-        });
-
-        setFriendRequests(requests);
-      });
-
-    return () => unsubscribe(); // Cleanup when unmounting
-  }, [currentUser]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const unsubscribe = firestore()
-      .collection("searchPartyInvitation")
-      .where("receiver", "==", currentUser.uid)
-      .where("status", "==", "pending")
-      .onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-          if (change.type === "added") {
-            const newInvitation = { id: change.doc.id, ...change.doc.data() } as PartyInvitation;
-            console.log("New invitation received:", newInvitation); // Debugging log
-            setPartyInvitation(newInvitation);
-          }
-        });
-      });
-
-    return () => unsubscribe(); // Cleanup listener on unmount
-  }, [currentUser]);
-
-
-  const respondToGroupInvitation = async (invitationId: string, response: 'accepted' | 'declined'): Promise<void> => {
     try {
-      await firestore().collection('groupInvitations').doc(invitationId).update({
-        status: response,
-      });
-    } catch (error) {
-      handleFirestoreError(error);
-    }
+      await updateGroupInvitationStatus(invitationId, response);
 
-
-    if (!currentUser) return;
-    if (!groupInvitation) {
-      console.log('No group invitation has been sent')
-      return
-    }
-
-    // Get group reference
-    try {
       const groupRef = firestore().collection('groups').doc(groupInvitation.groupId);
       const groupDoc = await groupRef.get();
       const groupData = groupDoc.data();
 
-
-
       if (response === 'accepted') {
-
-        setModalVisible(false);
-        setCurrentGroupId(groupInvitation.groupId)
-        // Fetch current user data
-        const userDoc = await firestore()
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
-        const currentUserData = userDoc.data()
-
-        if (!currentUserData) {
-          Alert.alert('Error', 'Unable to retrieve user data.');
-          return;
-        }
+        const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+        const userData = userDoc.data();
 
         const memberToAdd = {
           uid: currentUser.uid,
-          firstName: currentUserData.firstName || 'Unknown',
-          lastName: currentUserData.lastName || 'Unknown',
-          skillLevel: currentUserData.skillLevel || 0,
+          firstName: userData?.firstName || 'Unknown',
+          lastName: userData?.lastName || 'Unknown',
+          skillLevel: userData?.skillLevel || 0,
         };
 
         // Get all members from `groupInvitation` (excluding currentUser)
@@ -253,15 +121,26 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const allMembersToAdd = [memberToAdd, ...invitedMembers];
 
         // Add members to the group in Firestore
+        const groupRef = firestore().collection('groups').doc(groupInvitation.groupId);
         await groupRef.update({
           members: firestore.FieldValue.arrayUnion(...allMembersToAdd),
           memberUids: firestore.FieldValue.arrayUnion(...allMembersToAdd.map(m => m.uid)),
         });
 
-        // ✅ Check if group is full and auto-delist
+
+        const userUpdates = allMembersToAdd.map(async (member) => {
+          return firestore().collection('users').doc(member.uid).update({
+            isGroupMember: true,
+            isPartyMember: false,
+            isPartyLeader: false,
+            groupId: groupInvitation?.groupId,
+          });
+        });
+
+        await Promise.all(userUpdates);
+
         const updatedGroupDoc = await groupRef.get();
         const updatedGroupData = updatedGroupDoc.data();
-
         const currentMembers = updatedGroupData?.members ?? [];
         const memberLimit = updatedGroupData?.memberLimit ?? 1;
 
@@ -271,50 +150,23 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           });
         }
 
+        // await firestore()
+        //   .collection('chats')
+        //   .doc(groupInvitation.groupId)
+        //   .collection('messages')
+        //   .add({
+        //     _id: `${Date.now()}-system`,
+        //     text: `${userData?.firstName} has joined the group.`,
+        //     createdAt: firestore.FieldValue.serverTimestamp(),
+        //     user: { _id: 'system', name: 'System' },
+        //     type: 'system',
+        //   });
 
-        // if (!groupDoc.exists) {
-        //   Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
-        //   return;
-        // }
-
-        // Update Firestore for each user in parallel
-        const userUpdates = allMembersToAdd.map(async (member) => {
-          return firestore().collection('users').doc(member.uid).update({
-            isGroupMember: true,
-            groupId: groupInvitation?.groupId,
-          });
-        });
-
-        await Promise.all(userUpdates);
-
-        await firestore()
-          .collection('chats')
-          .doc(groupInvitation.groupId)
-          .collection('messages')
-          .add({
-            _id: `${Date.now()}-system`,
-            text: `${userData?.firstName} has joined the group.`,
-            createdAt: firestore.FieldValue.serverTimestamp(),
-            user: {
-              _id: 'system',
-              name: 'System',
-            },
-            type: 'system',
-          });
-
-        // setCurrentGroupId(groupData?.groupId)
-        // setCurrentGroup({ id: groupData?.groupId, ...groupData });
-
-        // console.log("YOOOOOOOOOOOOOOOOOOOO", groupData?.groupId)
-        // await checkUserInGroup();
-
-
-
-        navigate("GroupApp", { screen: 'MembersHomeScreen' })
-
-      } else {
-        setModalVisible(false);
+        setCurrentGroupId(groupInvitation.groupId);
+        navigate('GroupApp', { screen: 'MembersHomeScreen' });
       }
+
+      setModalVisible(false);
 
       if (groupData?.applicants) {
         const applicantToRemove = groupData.applicants.find(
@@ -335,66 +187,42 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (error) {
       handleFirestoreError(error);
     }
-
   };
 
-  const respondToPartyInvitation = async (invitationId: string, response: "accepted" | "declined") => {
+  // ✅ Accept / Decline Party Invitation
+  const respondToPartyInvitation = async (invitationId: string, response: 'accepted' | 'declined') => {
     if (!partyInvitation || !currentUser) return;
 
     try {
-      await firestore()
-        .collection("searchPartyInvitation")
-        .doc(invitationId)
-        .update({ status: response });
+      await updatePartyInvitationStatus(invitationId, response);
 
-      if (response === "accepted") {
-        const searchPartiesRef = firestore().collection("searchParties");
-        // const partyId = firestore().collection('searchParties').doc().id;
-        const partyId = partyInvitation.sender; // Use sender ID as party ID
-
-        const partyDoc = await searchPartiesRef.doc(partyId).get();
-
-        if (!userData) {
-          console.error("User data not found!");
-          return;
-        }
-
+      if (response === 'accepted' && userData) {
         const newMember = {
           uid: currentUser.uid,
-          firstName: userData.firstName || "Unknown",
-          lastName: userData.lastName || "Unknown",
+          firstName: userData.firstName || 'Unknown',
+          lastName: userData.lastName || 'Unknown',
         };
 
-        if (!partyDoc.exists) {
-          // If no party group exists, create one with the sender as the party leader
-          await searchPartiesRef.doc(partyId).set({
+        const partyRef = firestore().collection('searchParties').doc(partyInvitation.sender);
+        const partyDoc = await partyRef.get();
+
+        if (partyDoc.exists) {
+          await partyRef.update({
+            members: firestore.FieldValue.arrayUnion(newMember),
+          });
+        } else {
+          await partyRef.set({
             leaderUid: partyInvitation.sender,
             leaderFirstName: partyInvitation.firstName,
             leaderLastName: partyInvitation.lastName,
-            members: [newMember], // Add first member
-          });
-        } else {
-          // If party exists, add the new member to the list
-          await searchPartiesRef.doc(partyId).update({
-            members: firestore.FieldValue.arrayUnion(newMember),
+            members: [newMember],
           });
         }
 
-        try {
-          await firestore()
-            .collection('users')
-            .doc(currentUser.uid)
-            .update({ isPartyMember: true })
+        await firestore().collection('users').doc(currentUser.uid).update({ isPartyMember: true });
+        await firestore().collection('users').doc(partyInvitation.sender).update({ isPartyLeader: true });
 
-          await firestore()
-            .collection('users')
-            .doc(partyInvitation.sender)
-            .update({ isPartyLeader: true })
-        } catch (error) {
-          console.log("Can't update user isPartyMember or isPartyLeader", error)
-        }
-
-        navigate("SearchPartyScreen");
+        navigate('SearchPartyScreen');
       }
 
       setPartyInvitation(null);
@@ -403,25 +231,29 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const closeModal = () => {
-    setModalVisible(false);
-  };
+  const closeModal = () => setModalVisible(false);
 
   return (
-    <InvitationContext.Provider value={{ groupInvitation, friendRequests, partyInvitation, respondToPartyInvitation, modalVisible, respondToGroupInvitation, closeModal }}>
+    <InvitationContext.Provider
+      value={{
+        groupInvitation,
+        friendRequests,
+        partyInvitation,
+        respondToPartyInvitation,
+        respondToGroupInvitation,
+        modalVisible,
+        closeModal,
+      }}
+    >
       {children}
-      <Toast />
       {partyInvitation && (
-        <>
-          {console.log("Displaying TimedPopup for:", partyInvitation)}
-          <TimedPopup
-            firstName={partyInvitation.firstName}
-            onAccept={() => respondToPartyInvitation(partyInvitation.id, "accepted")}
-            onDecline={() => respondToPartyInvitation(partyInvitation.id, "declined")}
-          />
-        </>
+        <TimedPopup
+          firstName={partyInvitation.firstName}
+          onAccept={() => respondToPartyInvitation(partyInvitation.id, 'accepted')}
+          onDecline={() => respondToPartyInvitation(partyInvitation.id, 'declined')}
+        />
       )}
-      {modalVisible && (
+      {modalVisible && groupInvitation && (
         <Modal
           transparent
           animationType="fade"
@@ -431,35 +263,29 @@ export const InvitationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           <View style={styles.modalOverlay}>
             <View style={styles.modalView}>
               <Text style={styles.modalTitle}>Group Invitation</Text>
-              <Text style={styles.modalText}>
-                You have been invited to join:
-              </Text>
+              <Text style={styles.modalText}>You have been invited to join:</Text>
               <View style={styles.column}>
-                {/* Card Content: Activity & Location */}
                 <View style={styles.cardContentActivity}>
-                  <Text style={styles.cardText}>{groupInvitation?.activity}</Text>
-                  <Text style={styles.cardText}>{groupInvitation?.location}</Text>
+                  <Text style={styles.cardText}>{groupInvitation.activity}</Text>
+                  <Text style={styles.cardText}>{groupInvitation.location}</Text>
                 </View>
-
-                {/* Card Content: Date & Time */}
                 <View style={styles.cardContentDate}>
-                  <Text style={styles.cardText}>{groupInvitation?.fromDate}</Text>
+                  <Text style={styles.cardText}>{groupInvitation.fromDate}</Text>
                   <Text style={styles.cardText}>
-                    {groupInvitation?.fromTime} - {groupInvitation?.toTime}
+                    {groupInvitation.fromTime} - {groupInvitation.toTime}
                   </Text>
                 </View>
               </View>
-
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.actionButton}
-                  onPress={() => respondToGroupInvitation(groupInvitation?.id || '', 'accepted')}
+                  onPress={() => respondToGroupInvitation(groupInvitation.id, 'accepted')}
                 >
                   <Text style={styles.buttonText}>Accept</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.declineButton]}
-                  onPress={() => respondToGroupInvitation(groupInvitation?.id || '', 'declined')}
+                  onPress={() => respondToGroupInvitation(groupInvitation.id, 'declined')}
                 >
                   <Text style={styles.buttonText}>Decline</Text>
                 </TouchableOpacity>
@@ -491,14 +317,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: 'black',
-
   },
   modalText: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
     color: 'black',
-
   },
   modalActions: {
     flexDirection: 'row',
@@ -522,27 +346,18 @@ const styles = StyleSheet.create({
   },
   column: {
     flexDirection: 'row',
-    // alignItems: "center"
     marginBottom: 15,
-    // marginHorizontal: 50,
-    // justifyContent: "space-between",
-    // width: "100%"
-
   },
   cardContentActivity: {
     flex: 1,
-    alignItems: "center",
-    // marginRight: 80
-
+    alignItems: 'center',
   },
   cardContentDate: {
     flex: 1,
-    alignItems: "center"
-
+    alignItems: 'center',
   },
   cardText: {
     fontSize: 16,
-    // fontWeight: 'bold',
     color: 'black',
   },
 });
