@@ -15,13 +15,19 @@ import { useAuth } from '../context/AuthContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+//Types
+import { ParticipantDetails } from '../types/chatTypes';
+
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
 const ChatroomScreen = () => {
   const { currentUser, userData } = useAuth()
   const route = useRoute();
-  const { chatId } = route.params as { chatId: string };
+  const { chatId, participantsDetails } = route.params as {
+    chatId: string;
+    participantsDetails?: ParticipantDetails;
+  };
 
   const handleGoBackButton = () => {
     if (!userData) return;
@@ -47,7 +53,7 @@ const ChatroomScreen = () => {
       ) : (
         <>
           <View style={styles.chatContainer}>
-            <Chat chatId={chatId} />
+            <Chat chatId={chatId} participantsDetails={participantsDetails} />
           </View>
           <View style={styles.footerContainer}>
             {/* <FooterGroupNav /> */}

@@ -1,5 +1,9 @@
-import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Switch, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
 import React, { useState, useEffect, useReducer } from 'react';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+// import SwitchToggle from "react-native-switch-toggle";
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -13,6 +17,8 @@ import GroupMemberNav from '../components/GroupMemberNav';
 import FooterNav from '../components/FooterNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import MyButton from '../components/MyButton';
+import SearchableDropdown from '../components/SearchableDropdown';
+import CustomToggle from '../components/CustomToggle';
 
 //Assets
 import sportsList from "../assets/JsonFiles/sportsList.json"
@@ -35,6 +41,23 @@ const FindGroup = () => {
   // const [userHasGroup, setUserHasGroup] = useState(false);
   const { currentGroup } = useGroup()
   const { currentUser, userData } = useAuth()
+  const [fromDate, setFromDate] = useState(new Date());
+  const [showFromDatepicker, setShowFromDatepicker] = useState(false);
+  const [fromTime, setFromTime] = useState(() => {
+    const defaultTime = new Date();
+    defaultTime.setHours(0, 0, 0);
+    return defaultTime;
+  });
+  const [showFromTimepicker, setShowFromTimepicker] = useState(false);
+  const [useDateFilter, setUseDateFilter] = useState(false);
+  const [useTimeFilter, setUseTimeFilter] = useState(false);
+  const [useMemberFilter, setUseMemberFilter] = useState(false);
+  const [groupSize, setGroupSize] = useState(2);
+
+
+
+
+  // const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
   // const navigation =
   //   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -45,36 +68,112 @@ const FindGroup = () => {
   //   }
   // })
 
-  const handleSearch = (text: string) => {
-    setActivity(text);
+  // const handleSearch = (text: string) => {
+  //   setActivity(text);
 
-    if (text === '') {
-      setFilteredSports(sportsList); // Show all options if search is empty
-      setShowDropdown(false); // Hide dropdown
-    } else {
-      const filtered = sportsList.filter((sport) =>
-        sport.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredSports(filtered);
-      setShowDropdown(true);
-    }
-  };
+  //   if (text === '') {
+  //     setFilteredSports(sportsList); // Show all options if search is empty
+  //     setShowDropdown(false); // Hide dropdown
+  //   } else {
+  //     const filtered = sportsList.filter((sport) =>
+  //       sport.toLowerCase().includes(text.toLowerCase())
+  //     );
+  //     setFilteredSports(filtered);
+  //     setShowDropdown(true);
+  //   }
+  // };
 
-  const handleSelect = (sport: string) => {
-    // setActivity(sport);
-    setActivity(sport); // Update the search bar with the selected sport
-    setShowDropdown(false); // Hide dropdown
-  };
+  // const handleSelect = (sport: string) => {
+  //   // setActivity(sport);
+  //   setActivity(sport); // Update the search bar with the selected sport
+  //   setShowDropdown(false); // Hide dropdown
+  // };
 
   const SearchGroup = async () => {
     try {
-      navigate('GroupsScreen', { activity: activity });
+      const params: { activity: string; date?: string; time?: string; groupSize?: number } = {
+        activity: activity,
+      };
+
+      if (useDateFilter) {
+        params.date = fromDate.toISOString(); // or formatDate(fromDate)
+      }
+
+      if (useTimeFilter) {
+        params.time = fromTime.toISOString(); // or formatTime(fromTime)
+      }
+
+      if (useMemberFilter) {
+        params.groupSize = groupSize;
+      }
+
+      navigate('GroupsScreen', params);
     } catch (error) {
       const errorMessage =
         (error as { message?: string }).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
     }
   };
+
+  const onChangeFromDate = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date | undefined,
+  ) => {
+    const currentDate = selectedDate || fromDate;
+    setShowFromDatepicker(Platform.OS === 'ios');
+    setFromDate(currentDate);
+
+    // Check if the selected date is different from the default
+    const today = new Date();
+    if (
+      currentDate.getFullYear() !== today.getFullYear() ||
+      currentDate.getMonth() !== today.getMonth() ||
+      currentDate.getDate() !== today.getDate()
+    ) {
+      setUseDateFilter(true);
+    }
+  };
+
+  const onChangeFromTime = (
+    event: DateTimePickerEvent,
+    selectedTime?: Date | undefined,
+  ) => {
+    const currentTime = selectedTime || fromTime;
+    setShowFromTimepicker(Platform.OS === 'ios');
+    setFromTime(currentTime);
+
+    if (currentTime.getHours() !== 0 || currentTime.getMinutes() !== 0) {
+      setUseTimeFilter(true);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      // timeZone: 'Europe/Stockholm'
+    };
+    return date.toLocaleDateString('sv-SE', options);
+  };
+
+  const formatTime = (time: Date) => {
+    const options: Intl.DateTimeFormatOptions = {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    };
+    return time.toLocaleTimeString('sv-SE', options);
+  };
+
+  const increment = () => {
+    setGroupSize(prev => Math.min(prev + 1, 50)); // Max limit 50
+    setUseMemberFilter(true)
+  }
+  const decrement = () => {
+    setGroupSize(prev => Math.max(prev - 1, 2)); // Min limit 2
+    setUseMemberFilter(true)
+  }
 
   return (
     <KeyboardAvoidingView
@@ -91,11 +190,10 @@ const FindGroup = () => {
         source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
         style={styles.backgroundImage} // Style for the background image
       >
-        <View style={styles.bodyContainer}>
+        {/* <View style={styles.bodyContainer}>
           <Text style={styles.bodyTitle}>Activity</Text>
           <TextInput
             style={styles.input}
-            // placeholder={activity === 'Any' ? 'Search for a sport' : activity} // Show selected activity as placeholder
             value={activity}
             onChangeText={handleSearch}
             onFocus={() => setShowDropdown(true)} // Show dropdown when focused
@@ -117,7 +215,15 @@ const FindGroup = () => {
             />
 
           )}
-          {/* <Text style={styles.selectedText}>Selected Sport: {activity}</Text> */}
+        </View> */}
+        <View style={styles.bodyContainer}>
+          <Text style={styles.bodyTitle}>Activity</Text>
+          <SearchableDropdown
+            value={activity}
+            onChange={(val) => setActivity(val)}
+            options={sportsList}
+            placeholder="Search for a sport..."
+          />
         </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyTitle}>Location</Text>
@@ -128,6 +234,98 @@ const FindGroup = () => {
             onChangeText={setLocation}
           />
         </View>
+        <View style={[
+          styles.bodyContainer,
+          !useDateFilter && { backgroundColor: '#d3d3d3' }
+        ]}>
+          <View style={styles.row}>
+            <View style={styles.dateContainer}>
+              <Text style={styles.bodyLabel}>Date</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowFromDatepicker(true)}>
+                <Text style={styles.dateTimeText}>{formatDate(fromDate)}</Text>
+              </TouchableOpacity>
+              {showFromDatepicker && (
+                <DateTimePicker
+                  value={fromDate}
+                  mode="date"
+                  display="default"
+                  onChange={onChangeFromDate}
+                />
+              )}
+            </View>
+            <View style={styles.toggleContainer}>
+              <CustomToggle
+                label="Date"
+                value={useDateFilter}
+                onToggle={(val: boolean) => setUseDateFilter(val)}
+              />
+            </View>
+          </View>
+        </View>
+        <View style={[
+          styles.bodyContainer,
+          !useTimeFilter && { backgroundColor: '#d3d3d3' }
+        ]}>
+          <View style={styles.row}>
+            <View style={styles.timeContainer}>
+              <Text style={styles.bodyLabel}>Time</Text>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowFromTimepicker(true)}>
+                <Text style={styles.dateTimeText}>{formatTime(fromTime)}</Text>
+              </TouchableOpacity>
+              {showFromTimepicker && (
+                <DateTimePicker
+                  value={fromTime}
+                  mode="time"
+                  is24Hour={true}
+                  display="default"
+                  onChange={onChangeFromTime}
+                />
+              )}
+            </View>
+            <View style={styles.toggleContainer}>
+              <CustomToggle
+                label="Time"
+                value={useTimeFilter}
+                onToggle={(val: boolean) => setUseTimeFilter(val)}
+              />
+            </View>
+          </View>
+        </View>
+        <View style={[
+          styles.bodyContainer,
+          !useMemberFilter && { backgroundColor: '#d3d3d3' }
+        ]}>
+          <View style={styles.row}>
+            <View style={styles.timeContainer}>
+              <Text style={styles.bodyLabel}>Group Size</Text>
+              <View style={styles.row}>
+                <View style={styles.stepperContainer}>
+                  <TouchableOpacity style={styles.stepperButton} onPress={decrement}>
+                    <Text style={styles.stepperButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.memberLimitValue}>{groupSize}</Text>
+                  <TouchableOpacity style={styles.stepperButton} onPress={increment}>
+                    <Text style={styles.stepperButtonText}>+</Text>
+                  </TouchableOpacity>
+                  {/* </View> */}
+                </View>
+
+              </View>
+            </View>
+            <View style={styles.toggleContainer}>
+              <CustomToggle
+                label="Time"
+                value={useMemberFilter}
+                onToggle={(val: boolean) => setUseMemberFilter(val)}
+              />
+            </View>
+          </View>
+        </View>
+
         <View style={styles.buttonContainer}>
           <MyButton title={'Find a Group'} onPress={SearchGroup} />
         </View>
@@ -203,7 +401,66 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 10,
     marginVertical: 10
-  }
+  },
+  bodyLabel: {
+    marginTop: 15,
+    paddingLeft: 20,
+    fontSize: 17,
+    color: 'grey',
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  dateContainer: {
+    flex: 2,
+    // borderRightWidth: 1,
+    borderColor: 'grey',
+  },
+  timeContainer: {
+    flex: 2,
+    // justifyContent: 'flex-end',
+  },
+  toggleContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: "center"
+  },
+  dateButton: {
+    fontSize: 25,
+    paddingBottom: 10,
+  },
+  timeButton: {
+    fontSize: 25,
+    paddingBottom: 10,
+  },
+  dateTimeText: {
+    paddingLeft: 20,
+    fontSize: 25,
+    color: 'black',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 12,
+  },
+  stepperButton: {
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#36454F',
+    borderRadius: 5,
+    marginLeft: 8
+
+  },
+  stepperButtonText: {
+    fontSize: 20,
+    color: "white"
+
+  },
+  memberLimitValue: {
+    fontSize: 24, marginHorizontal: 20
+  },
 });
 
 export default FindGroup;

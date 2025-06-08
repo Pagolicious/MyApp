@@ -5,7 +5,12 @@ export type RootStackParamList = {
   FindOrStart: undefined;
   FindGroup: undefined;
   StartGroup: undefined;
-  GroupsScreen: { activity: string };
+  GroupsScreen: {
+    activity: string;
+    date?: string;
+    time?: string;
+    groupSize?: number;
+  };
   MyGroupScreen: undefined;
   GroupChatScreen: undefined;
   ProfileScreen: undefined;

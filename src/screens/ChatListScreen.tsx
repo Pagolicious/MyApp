@@ -16,47 +16,59 @@ import { navigate } from '../services/NavigationService';
 
 //Types
 import { Friend } from '../types/userTypes';
+import { ChatItem } from '../types/chatTypes';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
-type ParticipantDetails = {
-  [uid: string]: {
-    firstName: string;
-    lastName: string;
-  };
-};
+// type ParticipantDetails = {
+//   [uid: string]: {
+//     firstName: string;
+//     lastName: string;
+//   };
+// };
 
-type ChatItem = {
-  id: string;
-  isGroup: boolean;
-  activity?: string;
-  chatName?: string;
-  participants: string[];
-  participantsDetails: ParticipantDetails;
-  lastMessage?: {
-    text: string;
-    createdAt: any; // or use FirebaseFirestoreTypes.Timestamp
-  };
-};
+// type ChatItem = {
+//   id: string;
+//   isGroup: boolean;
+//   activity?: string;
+//   chatName?: string;
+//   participants: string[];
+//   participantsDetails: ParticipantDetails;
+//   lastMessage?: {
+//     text: string;
+//     createdAt: any; // or use FirebaseFirestoreTypes.Timestamp
+//   };
+// };
 
 
 const ChatListScreen = () => {
   const { currentUser, userData } = useAuth();
-  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [groupedChats, setGroupedChats] = useState<{
+    groupChats: ChatItem[];
+    directChats: ChatItem[];
+  }>({ groupChats: [], directChats: [] });
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<Friend[]>([]);
 
-  const getOtherParticipantName = (item: ChatItem): string => {
+
+  const getOtherParticipantInfo = (item: ChatItem) => {
     const otherId = item.participants.find(uid => uid !== currentUser?.uid);
-    const otherUser = (item as ChatItem).participantsDetails?.[otherId || ''];
+    const otherUser = item.participantsDetails?.[otherId || ''];
 
-    if (otherUser?.firstName) {
-      return `${otherUser.firstName} ${otherUser.lastName}`;
-    }
-
-    return 'Direct Chat';
+    return {
+      uid: otherId,
+      firstName: otherUser?.firstName || 'Unknown',
+      lastName: otherUser?.lastName || '',
+    };
   };
+
+
+  const getOtherParticipantName = (item: ChatItem): string => {
+    const info = getOtherParticipantInfo(item);
+    return `${info.firstName} ${info.lastName}`.trim();
+  };
+
 
   // const handleGoBackButton = () => {
   //   if (!userData) return;
@@ -76,7 +88,7 @@ const ChatListScreen = () => {
       .orderBy('lastMessage.createdAt', 'desc')
       .onSnapshot(snapshot => {
         if (!snapshot || snapshot.empty) {
-          setChats([]);
+          setGroupedChats({ groupChats: [], directChats: [] });
           setLoading(false);
           return;
         }
@@ -94,11 +106,14 @@ const ChatListScreen = () => {
           };
         });
 
-        setChats(chatsData);
+        const groupChats = chatsData.filter(chat => chat.isGroup);
+        const directChats = chatsData.filter(chat => !chat.isGroup);
+
+        setGroupedChats({ groupChats, directChats });
         setLoading(false);
       }, error => {
         console.error('Firestore error:', error);
-        setChats([]);
+        setGroupedChats({ groupChats: [], directChats: [] });
         setLoading(false);
       });
 
@@ -208,18 +223,33 @@ const ChatListScreen = () => {
       onPress={() => {
         if (item.isGroup) {
           // navigate('GroupChatScreen', { chatId: item.id });
-          navigate('GroupChatScreen')
+          navigate('GroupChatScreen', { chatId: item.id, participantsDetails: item.participantsDetails })
 
         } else {
-          navigate('ChatRoomScreen', { chatId: item.id });
+          navigate('ChatRoomScreen', { chatId: item.id, participantsDetails: item.participantsDetails });
         }
       }}>
-      <Text style={styles.chatTitle}>
-        {item.isGroup ? item.chatName || `Group Chat - ${item.activity}` : getOtherParticipantName(item)}
-      </Text>
-      <Text style={styles.chatSubtitle} numberOfLines={1}>
-        {item.lastMessage?.text || 'No messages yet'}
-      </Text>
+      <View style={styles.avatarContainer}>
+        {!item.isGroup && (() => {
+          const info = getOtherParticipantInfo(item);
+          return (
+            <CustomAvatar
+              uid={info.uid || 'default-uid'}
+              firstName={info.firstName}
+              size={45}
+            />
+          );
+        })()}
+      </View>
+      <View style={styles.textContainer}>
+        <Text style={styles.chatTitle}>
+          {item.isGroup ? item.chatName || `Group Chat - ${item.activity}` : getOtherParticipantName(item)}
+        </Text>
+        <Text style={styles.chatSubtitle} numberOfLines={1}>
+          {item.lastMessage?.text || 'No messages yet'}
+        </Text>
+      </View>
+
     </TouchableOpacity>
   );
 
@@ -236,19 +266,30 @@ const ChatListScreen = () => {
 
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
-      ) : chats.length === 0 ? (
+      ) : groupedChats.groupChats.length === 0 && groupedChats.directChats.length === 0 ? (
         <Text style={styles.emptyText}>You have no messages yet.</Text>
       ) : (
         <View>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, marginTop: 20, marginLeft: 15 }}>Group Chats</Text>
+          {groupedChats.groupChats.length > 0 && (
+            <Text style={styles.titleText}>Group Chats</Text>
+          )}
           <FlatList
-            data={chats}
+            data={groupedChats.groupChats}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={{ padding: 10 }}
+          />
+          {groupedChats.directChats.length > 0 && (
+            <Text style={styles.titleText}>Chats</Text>
+          )}
+          <FlatList
+            data={groupedChats.directChats}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             contentContainerStyle={{ padding: 10 }}
           />
           <View style={{ padding: 10 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, marginLeft: 5 }}>Start a New Chat</Text>
+            <Text style={styles.titleTextNewChat}>Start a New Chat</Text>
             {friends.map(friend => (
               <View key={friend.uid} style={styles.friendCard}>
                 <View style={styles.friendInfo}>
@@ -298,7 +339,21 @@ const styles = StyleSheet.create({
   spacer: {
     flex: 1,
   },
+  titleText: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginTop: 20,
+    marginLeft: 15
+  },
+  titleTextNewChat: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 10,
+    marginLeft: 5
+  },
   chatItem: {
+    flex: 1,
+    flexDirection: "row",
     backgroundColor: "#fff",
     padding: 15,
     marginBottom: 8,
@@ -307,6 +362,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
+  },
+  avatarContainer: {
+    // marginHorizontal: 1,
+    // paddingHorizontal: 1
+  },
+  textContainer: {
+    marginHorizontal: 15,
+    // paddingHorizontal: 8
   },
   chatTitle: {
     fontWeight: "bold",

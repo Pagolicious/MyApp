@@ -64,41 +64,16 @@ type Props = {
   route: GroupsScreenRouteProp;
 };
 
-// interface Group {
-//   id: string;
-//   activity: string;
-//   title?: string;
-//   location: string;
-//   fromDate: string;
-//   fromTime: string;
-//   toTime: string;
-//   createdBy: string;
-//   memberLimit: number;
-//   details: string;
-//   applicants: Applicant[];
-//   memberUids: string[];
-// }
+const parseGroupTime = (fromDate: string, fromTime: string): Date => {
+  const date = new Date(fromDate); // already full ISO date
+  const [hour, minute] = fromTime.split(':').map(Number);
+  date.setHours(hour);
+  date.setMinutes(minute);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+  return date;
+};
 
-// interface Applicant {
-//   uid: string;
-//   firstName: string;
-//   lastName?: string;
-//   skillLevel?: number; // ✅ Add this to match the Firestore data
-//   note?: string;
-//   role?: "leader" | "member";
-//   members?: Omit<Applicant, "members" | "role">[];
-// }
-
-// interface Member {
-//   uid: string;
-//   firstName: string;
-//   lastName?: string;
-// }
-
-// interface Skills {
-//   sport: string;
-//   skillLevel: number
-// }
 
 
 const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -113,7 +88,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
   const { currentGroup, currentGroupId, setCurrentGroupId } = useGroup();
-  const { activity } = route.params;
+  const { activity, date, time, groupSize } = route.params;
   // const navigation = useNavigation();
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   // const { userInGroup } = useGroupData()
@@ -122,68 +97,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const canShowGroupDetails = hasSkillLevel || userPickedSkillLevel || selectedGroup?.activity === "Custom";
 
   const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
-
-  // Define mapping of activity names to image paths
-  // const activityImages: { [key: string]: any } = {
-  //   tennis: require('../assets/SportImages/tennis.jpg'),
-  // soccer: require('./assets/SportImages/soccer.png'),
-  // basketball: require('./assets/SportImages/basketball.png'),
-  // Add other activities and their respective images here
-  // };
-
-  // useEffect(() => {
-  //   if (!currentUser) {
-  //     // console.warn('User not authenticated.');
-  //     return;
-  //   }
-  //   const fetchGroups = async () => {
-  //     setLoading(true);
-
-  //     try {
-  //       const groupCollection = await firestore().collection('groups').get();
-  //       const groupList: Group[] = groupCollection.docs.map(doc => {
-  //         const data = doc.data();
-  //         return {
-  //           id: doc.id,
-  //           activity: data.activity || '',
-  //           location: data.location || '',
-  //           fromDate: data.fromDate || '',
-  //           fromTime: data.fromTime || '',
-  //           memberLimit: data.memberLimit || 1,
-  //           toTime: data.toTime || '',
-  //           createdBy: data.createdBy || '',
-  //           details: data.details || '',
-  //           applicants: data.applicants || [],
-  //           memberUids: data.memberUids || [],
-
-  //         };
-  //       });
-
-  //       if (currentUser) {
-  //         setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
-  //       }
-
-  //       // Filter groups based on `activity` parameter
-  //       const filteredGroups =
-  //         activity === 'Any'
-  //           ? groupList // Fetch all groups if activity is 'any'
-  //           : groupList.filter(group => group.activity.toLowerCase() === activity.toLowerCase());
-
-  //       // Update state with filtered groups
-  //       setGroups(filteredGroups);
-
-  //     } catch (error) {
-  //       const errorMessage =
-  //         (error as { message?: string }).message || 'An unknown error occurred';
-  //       Alert.alert(errorMessage);
-  //       handleFirestoreError(error)
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchGroups();
-  // }, [activity]);
-
 
   useEffect(() => {
     if (!currentUser) {
@@ -216,17 +129,79 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           };
         })
           .filter(group => !group.isDelisted);
-        // Filter groups based on `activity` parameter
-        const filteredGroups =
-          activity === 'Any'
-            ? groupList
-            : groupList.filter(group => group.activity.toLowerCase() === activity.toLowerCase());
 
-        // if (currentUser) {
-        //   setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
-        // }
-        // Update state with the real-time data
-        setGroups(filteredGroups);
+        let filteredGroups = groupList;
+
+        // Filter groups based on `activity` parameter
+        if (activity !== 'Any') {
+          filteredGroups = filteredGroups.filter(group =>
+            group.activity.toLowerCase() === activity.toLowerCase()
+          );
+        }
+
+        if (date) {
+          try {
+            const parsedDate = new Date(date);
+            if (isNaN(parsedDate.getTime())) {
+              throw new Error('Invalid date format');
+            }
+            const formattedTargetDate = parsedDate.toISOString().split('T')[0];
+            filteredGroups = filteredGroups.filter(group => {
+              const groupDate = new Date(group.fromDate).toISOString().split('T')[0];
+              return groupDate === formattedTargetDate;
+            });
+          } catch (err) {
+            console.warn('Invalid date format:', date);
+          }
+        }
+
+        if (groupSize) {
+          const parsedGroupSize = typeof groupSize === 'string' ? parseInt(groupSize, 10) : groupSize;
+          if (!isNaN(parsedGroupSize)) {
+            filteredGroups = filteredGroups.filter(group => group.memberLimit === parsedGroupSize);
+          }
+        }
+
+
+
+        if (time) {
+          const centerTime = new Date(time);
+          const centerHour = centerTime.getHours();
+          const centerMin = centerTime.getMinutes();
+
+          const exactMatches: Group[] = [];
+          const looseMatches: Group[] = [];
+
+          filteredGroups.forEach(group => {
+            const groupTime = parseGroupTime(group.fromDate, group.fromTime);
+            const groupHour = groupTime.getHours();
+            const groupMin = groupTime.getMinutes();
+
+            const groupTotalMinutes = groupHour * 60 + groupMin;
+            const centerTotalMinutes = centerHour * 60 + centerMin;
+
+            const diff = Math.abs(groupTotalMinutes - centerTotalMinutes);
+
+            if (diff <= 15) {
+              exactMatches.push(group);
+            } else if (diff <= 120) {
+              looseMatches.push(group);
+            }
+          });
+
+          if (exactMatches.length >= 3) {
+            setGroups(exactMatches);
+          } else {
+            setGroups([...exactMatches, ...looseMatches]);
+          }
+        }
+        else {
+          // If time is not provided, set the filtered groups directly
+          setGroups(filteredGroups);
+        }
+
+
+        // setGroups(filteredGroups);
       }, error => {
         console.error('Error listening to Firestore groups:', error);
         Alert.alert('Error', 'Could not fetch groups in real time.');
@@ -234,34 +209,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
     // Cleanup the listener when the component unmounts or dependencies change
     return () => unsubscribe();
-  }, [activity, currentUser]);
-
-  // useEffect(() => {
-  //   if (!groups.length) return;
-
-  //   // Keep track of unsubscribers for cleanup
-  //   const unsubscribers = groups.map(group =>
-  //     firestore()
-  //       .collection('groups')
-  //       .doc(group.id)
-  //       .onSnapshot(docSnapshot => {
-  //         const updatedApplicants = docSnapshot.data()?.applicants || [];
-
-  //         setGroups(prevGroups =>
-  //           prevGroups.map(g =>
-  //             g.id === group.id
-  //               ? { ...g, applicants: updatedApplicants }
-  //               : g
-  //           )
-  //         );
-  //       })
-  //   );
-
-  //   // Cleanup listeners on unmount
-  //   return () => {
-  //     unsubscribers.forEach(unsubscribe => unsubscribe());
-  //   };
-  // }, [groups]);
+  }, [activity, date, time, groupSize, currentUser]);
 
 
   const addSkillLevel = async () => {
@@ -376,44 +324,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  // const checkUserSkillLevel = async (activity: string) => {
-  //   if (!currentUser) {
-  //     return;
-  //   }
-  //   // console.log("👀 Activity:", activity);
-
-  //   if (activity === "Custom") {
-  //     setSkillLevel(0);
-  //     setHasSkillLevel(true); // ✅ Treat custom groups as always eligible
-  //     return;
-  //   }
-  //   // const skillLevelKey = `${activity.toLowerCase()}_skillLevel`;
-  //   try {
-  //     if (userData && Array.isArray(userData.skills)) {
-
-  //       const skill = userData.skills.find(
-  //         (item: { sport: string; skillLevel: number }) => item.sport === activity.toLowerCase()
-  //       );
-
-  //       if (skill) {
-  //         setSkillLevel(skill.skillLevel); // Set the existing skill level
-  //         setHasSkillLevel(true); // User already has a skill level for this activity
-  //       } else {
-  //         setSkillLevel(0); // No skill found for this activity
-  //         setHasSkillLevel(false);
-  //       }
-  //     } else {
-  //       setSkillLevel(0); // No skills array found
-  //       setHasSkillLevel(false);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching user skill level: ', error);
-  //     Alert.alert('Error', 'Could not fetch user skill level');
-  //     handleFirestoreError(error)
-
-  //   }
-  // };
-
   const checkUserSkillLevel = async (activity: string): Promise<boolean> => {
     if (!currentUser) {
       return false;
@@ -445,27 +355,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       return false;
     }
   };
-
-
-  // useEffect(() => {
-  //   if (!currentUser) return;
-  //   console.log(selectedGroup?.activity)
-  //   if (skillLevel > 0 || selectedGroup?.activity === "Custom") {
-  //     Animated.timing(animationValue, {
-  //       toValue: 1, // Fully expanded
-  //       duration: 300,
-  //       easing: Easing.out(Easing.ease),
-  //       useNativeDriver: false,
-  //     }).start();
-  //   } else {
-  //     Animated.timing(animationValue, {
-  //       toValue: 0, // Collapsed
-  //       duration: 100,
-  //       easing: Easing.in(Easing.ease),
-  //       useNativeDriver: false,
-  //     }).start();
-  //   }
-  // }, [skillLevel, currentUser, selectedGroup]); // React to skillLevel changes
 
   useEffect(() => {
     if (!currentUser || !selectedGroup) return;
@@ -600,7 +489,14 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                         {/* Card Content: Date & Time */}
                         <View style={styles.cardContentDate}>
-                          <Text style={styles.cardText}>{item.fromDate}</Text>
+                          <Text style={styles.cardText}>
+                            {new Date(item.fromDate).toLocaleDateString("sv-SE", {
+                              // weekday: 'short',
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </Text>
                           <Text style={styles.cardText}>
                             {item.fromTime} - {item.toTime}
                           </Text>
@@ -608,7 +504,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
                         {/* Card Content: People */}
                         <View style={styles.cardContentPeople}>
-                          <Text style={styles.cardTextPeople}>{item.memberUids.length}/{item.memberLimit + 1}</Text>
+                          <Text style={styles.cardTextPeople}>{item.memberUids.length}/{item.memberLimit}</Text>
                         </View>
                       </View>
                       {/* </View> */}
@@ -625,50 +521,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
               />
             </View>
 
-            {/* Modal Component */}
-            {/* {currentUser && !hasSkillLevel && (
-              <Modal
-                animationType="fade"
-                transparent
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}>
-                <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalView}>
-                      <TouchableOpacity
-                        style={styles.closeIcon}
-                        onPress={() => setModalVisible(false)}>
-                        <Text style={styles.closeText}>✖</Text>
-                      </TouchableOpacity>
-
-                      <Text style={styles.modalTitleText}>Skill level</Text>
-                      <Text style={styles.modalText}>
-                        We need to know your skill level for this activity
-                      </Text>
-                      <StarRating
-                        rating={skillLevel}
-                        onChange={setSkillLevel}
-                        enableHalfStar={false}
-                      />
-                      <Animated.View
-                        style={[styles.modalExtendedContent, animatedStyle]}>
-                        <Text style={styles.modalObervationText}>
-                          You can NOT change your skill level later
-                        </Text>
-                        <TouchableOpacity
-                          style={styles.submitBtn}
-                          onPress={async () => {
-                            addSkillLevel();
-                          }}>
-                          <Text style={styles.submitBtnText}>Submit</Text>
-                        </TouchableOpacity>
-                      </Animated.View>
-                    </View>
-                  </View>
-                </TouchableWithoutFeedback>
-              </Modal>
-            )} */}
             {currentUser && (
               <Modal
                 animationType="fade"

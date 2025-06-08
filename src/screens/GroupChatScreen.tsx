@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import React, { useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, } from 'react-native';
+import React, { useEffect, } from 'react';
+import { useRoute } from '@react-navigation/native';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -15,12 +16,19 @@ import { useGroup } from '../context/GroupContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+//Types
+import { ParticipantDetails } from '../types/chatTypes';
+
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
 const GroupChatScreen = () => {
   const { currentUser, userData } = useAuth()
-  // const { currentGroup, currentGroupId } = useGroup()
+  const route = useRoute();
+  const { chatId, participantsDetails } = route.params as {
+    chatId: string;
+    participantsDetails?: ParticipantDetails;
+  };
 
   const handleGoBackButton = () => {
     if (!userData) return;
@@ -93,7 +101,7 @@ const GroupChatScreen = () => {
       ) : (
         <>
           <View style={styles.chatContainer}>
-            <GroupChat />
+            <GroupChat chatId={chatId} participantsDetails={participantsDetails} />
           </View>
           <View style={styles.footerContainer}>
             {/* <FooterGroupNav /> */}

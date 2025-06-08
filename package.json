@@ -33,8 +33,9 @@
     "react-native": "^0.76.0",
     "react-native-gesture-handler": "^2.20.0",
     "react-native-get-random-values": "^1.11.0",
-    "react-native-gifted-chat": "^2.6.4",
+    "react-native-gifted-chat": "^2.8.1",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
+    "react-native-keyboard-controller": "^1.17.3",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-push-notification": "^8.1.1",
     "react-native-reanimated": "^3.16.6",
@@ -43,6 +44,7 @@
     "react-native-star-rating-widget": "^1.9.2",
     "react-native-svg": "^15.8.0",
     "react-native-swipe-button": "^0.0.4",
+    "react-native-switch-toggle": "^2.2.1",
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
     "rimraf": "^6.0.1"

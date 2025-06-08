@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { GiftedChat, IMessage, Bubble, Message } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 
@@ -13,10 +13,22 @@ import { useGroup } from '../context/GroupContext';
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
-const GroupChat = () => {
+type ChatProps = {
+  chatId: string;
+  participantsDetails?: {
+    [uid: string]: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+};
+
+const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { currentUser, userData } = useAuth();
   const { currentGroupId } = useGroup();
+  const [isTypingUsers, setIsTypingUsers] = useState<string[]>([]);
+
 
   if (!currentUser) {
     return (
@@ -56,6 +68,24 @@ const GroupChat = () => {
     }
   }, [currentGroupId, currentUser]);
 
+  useEffect(() => {
+    if (!currentGroupId) return;
+
+    const typingRef = firestore()
+      .collection('chats')
+      .doc(currentGroupId)
+      .collection('typing');
+
+    const unsubscribe = typingRef.onSnapshot(snapshot => {
+      const typing = snapshot.docs
+        .filter(doc => doc.data().isTyping && doc.id !== currentUser.uid)
+        .map(doc => doc.id);
+      setIsTypingUsers(typing);
+    });
+
+    return () => unsubscribe();
+  }, [currentGroupId, currentUser?.uid]);
+
 
   // const onSend = useCallback(
   //   async (newMessages: IMessage[] = []) => {
@@ -91,6 +121,13 @@ const GroupChat = () => {
             createdAt: firestore.FieldValue.serverTimestamp(),
           }
         });
+        await firestore()
+          .collection('chats')
+          .doc(currentGroupId)
+          .collection('typing')
+          .doc(currentUser.uid)
+          .set({ isTyping: false });
+
       } catch (error) {
         handleFirestoreError(error);
       }
@@ -147,7 +184,11 @@ const GroupChat = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70} // adjust as needed
+    >
 
       <GiftedChat
         messages={messages}
@@ -159,10 +200,41 @@ const GroupChat = () => {
         }}
         renderBubble={renderBubble}
         renderMessage={renderMessage}
-        bottomOffset={70} // Add space for a bottom tab bar or other UI element
+        // bottomOffset={70} // Add space for a bottom tab bar or other UI element
         renderAvatar={renderAvatar}
+        onInputTextChanged={async (text) => {
+          const typingRef = firestore()
+            .collection('chats')
+            .doc(currentGroupId)
+            .collection('typing')
+            .doc(currentUser.uid);
+
+          await typingRef.set({ isTyping: text.length > 0 });
+        }}
+        renderFooter={() => {
+          if (isTypingUsers.length === 0) return null;
+
+          const typingNames = isTypingUsers
+            .map(uid => participantsDetails?.[uid]?.firstName)
+            .filter(Boolean); // remove undefined/null
+
+          const typingText =
+            typingNames.length === 1
+              ? `${typingNames[0]} is typing...`
+              : `${typingNames.join(', ')} are typing...`;
+
+          return (
+            <Text style={{ marginLeft: 10, marginBottom: 5, color: 'gray' }}>
+              {typingText}
+            </Text>
+          );
+        }}
+
+
+
+
       />
-    </View>
+    </KeyboardAvoidingView>
 
   );
 };

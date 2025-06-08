@@ -85,13 +85,13 @@ const StartGroup = () => {
   const [details, setDetails] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const { setCurrentGroupId, currentGroup, currentGroupId } = useGroup();
-  const [memberLimit, setMemberLimit] = useState(1);
+  const [memberLimit, setMemberLimit] = useState(2);
   // const [showDropdown, setShowDropdown] = useState(false);
   // const [filteredSports, setFilteredSports] = useState(sportsList);
 
 
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
-  const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 1)); // Min limit 1
+  const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 2)); // Min limit 2
 
   useEffect(() => {
     if (userData?.isGroupLeader && currentGroup) {
@@ -186,9 +186,9 @@ const StartGroup = () => {
       activity: activity,
       location: location,
       title: title,
-      fromDate: fromDate.toISOString().split('T')[0],
+      fromDate: fromDate.toISOString(),
       fromTime: formatTime(fromTime),
-      toDate: toDate.toISOString().split('T')[0],
+      toDate: toDate.toISOString(),
       toTime: formatTime(toTime),
       skillvalue: skillvalue,
       memberLimit: memberLimit,
@@ -254,9 +254,9 @@ const StartGroup = () => {
         activity: activity,
         location: location,
         title: title,
-        fromDate: fromDate.toISOString().split('T')[0],
+        fromDate: fromDate.toISOString(),
         fromTime: formatTime(fromTime),
-        toDate: toDate.toISOString().split('T')[0],
+        toDate: toDate.toISOString(),
         toTime: formatTime(toTime),
         skillvalue: skillvalue,
         memberLimit: memberLimit,

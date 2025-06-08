@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { GiftedChat, IMessage, Bubble, Message } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 
@@ -15,12 +15,30 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 type ChatProps = {
   chatId: string;
+  participantsDetails?: {
+    [uid: string]: {
+      firstName: string;
+      lastName: string;
+    };
+  };
 };
 
-const Chat: React.FC<ChatProps> = ({ chatId }) => {
+
+const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { currentUser, userData } = useAuth();
-  // const { currentGroupId } = useGroup();
+  const [isTyping, setIsTyping] = useState(false);
+
+  const getOtherUser = () => {
+    if (!participantsDetails || !currentUser) return null;
+    const otherUid = Object.keys(participantsDetails).find(uid => uid !== currentUser.uid);
+    if (!otherUid) return null;
+    return { uid: otherUid, ...participantsDetails[otherUid] };
+  };
+
+  const otherUser = getOtherUser();
+  const otherUserName = otherUser?.firstName || 'Someone';
+
 
   if (!currentUser) {
     return (
@@ -51,6 +69,7 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
                 name: data.user?.name || 'Unknown',
                 avatar: data.user?.avatar || undefined,
               },
+              readBy: data.readBy || []
             };
           });
           setMessages(firebaseMessages);
@@ -60,6 +79,48 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
     }
   }, [chatId, currentUser]);
 
+  useEffect(() => {
+    if (!chatId || !currentUser?.uid) return;
+
+    const markMessagesAsRead = async () => {
+      const snapshot = await firestore()
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .where('readBy', 'not-in', [currentUser.uid])
+        .get();
+
+      const batch = firestore().batch();
+      snapshot.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          readBy: firestore.FieldValue.arrayUnion(currentUser.uid)
+        });
+      });
+
+      await batch.commit();
+    };
+
+    markMessagesAsRead();
+  }, [chatId, currentUser?.uid]);
+
+
+  useEffect(() => {
+    const otherUser = getOtherUser();
+    if (!otherUser) return;
+
+    const typingRef = firestore()
+      .collection('chats')
+      .doc(chatId)
+      .collection('typing')
+      .doc(otherUser.uid);
+
+    const unsubscribe = typingRef.onSnapshot(doc => {
+      const data = doc.data();
+      setIsTyping(data?.isTyping || false);
+    });
+
+    return () => unsubscribe();
+  }, [chatId, currentUser.uid]);
 
   // const onSend = useCallback(
   //   async (newMessages: IMessage[] = []) => {
@@ -81,9 +142,15 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
       const message = {
         ...newMessages[0],
         createdAt: firestore.FieldValue.serverTimestamp(),
+        readBy: [currentUser.uid],
       };
 
       const chatRef = firestore().collection('chats').doc(chatId);
+      const typingRef = firestore()
+        .collection('chats')
+        .doc(chatId)
+        .collection('typing')
+        .doc(currentUser.uid);
 
       try {
         await chatRef.collection('messages').add(message);
@@ -95,6 +162,8 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
             createdAt: firestore.FieldValue.serverTimestamp(),
           }
         });
+        await typingRef.set({ isTyping: false });
+
       } catch (error) {
         handleFirestoreError(error);
       }
@@ -134,6 +203,8 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
     const { currentMessage } = props;
     const isOtherUser = currentMessage?.user?._id !== currentUser.uid;
 
+    const readBy = currentMessage?.readBy || [];
+
     return (
       <View>
         {isOtherUser && currentMessage?.user?.name && (
@@ -146,13 +217,19 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
               : undefined,
             right: styles.currentUserBubble, // Bubble style for current user
           }} />
+        {currentMessage.user._id === currentUser.uid && readBy.length > 1 && (
+          <Text style={styles.readStatus}>Read</Text>
+        )}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70} // adjust as needed
+    >
       <GiftedChat
         messages={messages}
         onSend={(messages) => onSend(messages)}
@@ -163,10 +240,26 @@ const Chat: React.FC<ChatProps> = ({ chatId }) => {
         }}
         renderBubble={renderBubble}
         renderMessage={renderMessage}
-        bottomOffset={70} // Add space for a bottom tab bar or other UI element
+        // bottomOffset={70} // Add space for a bottom tab bar or other UI element
         renderAvatar={renderAvatar}
+        onInputTextChanged={async (text) => {
+          const typingRef = firestore()
+            .collection('chats')
+            .doc(chatId)
+            .collection('typing')
+            .doc(currentUser.uid);
+
+          await typingRef.set({ isTyping: text.length > 0 });
+        }}
+        renderFooter={() =>
+          isTyping ? (
+            <Text style={{ marginLeft: 10, marginBottom: 5, color: 'gray' }}>
+              {otherUserName} is typing...
+            </Text>
+          ) : null
+        }
       />
-    </View>
+    </KeyboardAvoidingView>
 
   );
 };
@@ -200,7 +293,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: 'gray',
     fontSize: 14,
-  }
+  },
+  readStatus: {
+    fontSize: 11,
+    color: 'gray',
+    textAlign: 'right',
+    marginRight: 10,
+    marginTop: 2,
+  },
+
 
 });
 
