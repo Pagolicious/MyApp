@@ -10,13 +10,17 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
-  FlatList
+  FlatList,
+  Modal,
+  Pressable
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
+// import SegmentedControlTab from 'react-native-segmented-control-tab';
+
 // import { Picker } from '@react-native-picker/picker';
 
 //Navigation
@@ -27,6 +31,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 //Components
 import MyButton from '../components/MyButton';
 import SearchableDropdown from '../components/SearchableDropdown';
+import MoreOptionsModal from '../components/MoreOptionModal';
 
 //Assets
 import sportsList from "../assets/JsonFiles/sportsList.json"
@@ -55,6 +60,10 @@ import { Member } from '../types/groupTypes';
 //   lastName: string
 // }
 
+// const GenderOptions = ['All', 'Women only', 'Men only'];
+// const VisibilityOption = ['Public', 'Private'];
+
+
 const StartGroup = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -81,11 +90,20 @@ const StartGroup = () => {
     return defaultTime;
   });
   const [showToTimepicker, setShowToTimepicker] = useState(false);
-  const [skillvalue, setSkillvalue] = useState(0);
+  const [skillvalue, setSkillvalue] = useState(1);
   const [details, setDetails] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const { setCurrentGroupId, currentGroup, currentGroupId } = useGroup();
   const [memberLimit, setMemberLimit] = useState(2);
+  const [moreModalVisible, setMoreModalVisible] = useState(false);
+  const [selectedGender, setSelectedGender] = useState('All');
+  const [selectedVisibility, setSelectedVisibility] = useState('Public');
+  const [minAge, setMinAge] = useState(18);
+  const [maxAge, setMaxAge] = useState(70);
+  const [isFriendsOnly, setIsFriendsOnly] = useState(false);
+  const [isAutoAccept, setIsAutoAccept] = useState(false);
+  const [isVerifiedOnly, setIsVerifiedOnly] = useState(true);
+
   // const [showDropdown, setShowDropdown] = useState(false);
   // const [filteredSports, setFilteredSports] = useState(sportsList);
 
@@ -108,9 +126,16 @@ const StartGroup = () => {
       setFromTime(parseTime(currentGroup.fromTime));
       setToDate(new Date(currentGroup.toDate || Date.now()));
       setToTime(parseTime(currentGroup.toTime));
-      setSkillvalue(currentGroup.skillvalue || 0);
+      setSkillvalue(currentGroup.skillvalue || 1);
       setDetails(currentGroup.details || '');
-      setMemberLimit(currentGroup.memberLimit || 1);
+      setMemberLimit(currentGroup.memberLimit || 2);
+      setSelectedGender(currentGroup.gender || "All");
+      setSelectedVisibility(currentGroup.visibility || "Public");
+      setMinAge(currentGroup.minAge || 18);
+      setMaxAge(currentGroup.maxAge || 70);
+      setIsFriendsOnly(currentGroup.isFriendsOnly || false);
+      setIsAutoAccept(currentGroup.isAutoAccept || false);
+      setIsVerifiedOnly(currentGroup.isVerifiedOnly || true);
     }
   }, [userData, currentGroup]);
 
@@ -196,6 +221,13 @@ const StartGroup = () => {
       createdBy: currentUser.uid,
       groupId: groupId,
       isDelisted: false,
+      gender: selectedGender,
+      visibility: selectedVisibility,
+      minAge: minAge,
+      maxAge: maxAge,
+      isFriendsOnly: isFriendsOnly,
+      isAutoAccept: isAutoAccept,
+      isVerifiedOnly: isVerifiedOnly,
       members: members,
       memberUids: memberUids
     })
@@ -262,7 +294,14 @@ const StartGroup = () => {
         memberLimit: memberLimit,
         details: details,
         applicants: [],
-        isDelisted: false
+        isDelisted: false,
+        gender: selectedGender,
+        visibility: selectedVisibility,
+        minAge: minAge,
+        maxAge: maxAge,
+        isFriendsOnly: isFriendsOnly,
+        isAutoAccept: isAutoAccept,
+        isVerifiedOnly: isVerifiedOnly
       })
     } catch (error) {
       console.log("Coudn't edit group", error)
@@ -351,6 +390,10 @@ const StartGroup = () => {
   const skillInfo = () => {
     Alert.alert('Button Pressed!');
   };
+
+  // const handleIndexChange = (index: number) => {
+  //   setSelectedGender(index);
+  // };
 
   // const dismissKeyboard = () => {
   //   Keyboard.dismiss();
@@ -515,14 +558,14 @@ const StartGroup = () => {
             </View>
             <Slider
               style={{ width: "100%", height: 50 }}
-              minimumValue={0}
+              minimumValue={1}
               maximumValue={5}
               step={1}
               value={skillvalue}
               onValueChange={setSkillvalue}
-              minimumTrackTintColor="red"
+              minimumTrackTintColor="#007FFF"
               maximumTrackTintColor="#000000"
-              thumbTintColor="red"
+              thumbTintColor="#007FFF"
             />
             {/* </View> */}
 
@@ -563,7 +606,7 @@ const StartGroup = () => {
       </ScrollView>
       {!isKeyboardVisible && (
         <View style={styles.footerContainer}>
-          <TouchableOpacity style={styles.moreOptionBtn} onPress={() => console.log("More")}>
+          <TouchableOpacity style={styles.moreOptionBtn} onPress={() => setMoreModalVisible(true)}>
             <Text style={styles.moreOptionText}>More</Text>
           </TouchableOpacity>
 
@@ -578,8 +621,92 @@ const StartGroup = () => {
           )}
         </View>
       )}
+      {/* <Modal
+        animationType="fade"
+        transparent
+        visible={moreModalVisible}
+        onRequestClose={() => setMoreModalVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setMoreModalVisible(false);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+              <TouchableOpacity
+                style={styles.closeIcon}
+                onPress={() => {
+                  setMoreModalVisible(false);
+                }}
+              >
+                <Text style={styles.closeText}>✖</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitleText}>More Filters</Text>
+              <Text style={styles.bodyLabel}>Gender</Text>
+              <View style={styles.segmentContainer}>
+                {GenderOptions.map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => setSelectedGender(option)}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                    style={[
+                      styles.segment,
+                      selectedGender === option && styles.segmentSelected
+                    ]}
+                  >
+                    <Text style={selectedGender === option ? styles.textSelected : styles.text}>
+                      {option}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={styles.bodyLabel}>Group visibility</Text>
+              <View style={styles.segmentContainer}>
+                {VisibilityOption.map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => setSelectedVisibility(option)}
+                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
+                    style={[
+                      styles.segment,
+                      selectedVisibility === option && styles.segmentSelected
+                    ]}
+                  >
+                    <Text style={selectedVisibility === option ? styles.textSelected : styles.text}>
+                      {option}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal> */}
+      <MoreOptionsModal
+        visible={moreModalVisible}
+        onClose={() => setMoreModalVisible(false)}
+        selectedGender={selectedGender}
+        setSelectedGender={setSelectedGender}
+        selectedVisibility={selectedVisibility}
+        setSelectedVisibility={setSelectedVisibility}
+        minAge={minAge}
+        maxAge={maxAge}
+        setMinAge={setMinAge}
+        setMaxAge={setMaxAge}
+        isFriendsOnly={isFriendsOnly}
+        setIsFriendsOnly={setIsFriendsOnly}
+        isAutoAccept={isAutoAccept}
+        setIsAutoAccept={setIsAutoAccept}
+        isVerifiedOnly={isVerifiedOnly}
+        setIsVerifiedOnly={setIsVerifiedOnly}
+      />
+
+
 
     </KeyboardAvoidingView>
+
+
 
   );
 };
@@ -786,6 +913,57 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 16,
   },
+  // modalOverlay: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  // },
+  // modalView: {
+  //   width: 350,
+  //   padding: 20,
+  //   backgroundColor: 'white',
+  //   borderRadius: 20,
+  //   alignItems: 'center',
+  // },
+  // closeIcon: {
+  //   position: 'absolute',
+  //   top: 5,
+  //   right: 15,
+  //   padding: 5,
+  // },
+  // closeText: {
+  //   fontSize: 24,
+  //   color: '#888',
+  // },
+  // modalTitleText: {
+  //   fontSize: 24,
+  //   fontWeight: 'bold',
+  //   color: 'black',
+  // },
+  // segmentContainer: {
+  //   flexDirection: 'row',
+  //   backgroundColor: '#eee',
+  //   borderRadius: 8,
+  //   overflow: 'hidden',
+  //   marginTop: 10
+  // },
+  // segment: {
+  //   flex: 1,
+  //   padding: 10,
+  //   alignItems: 'center',
+  //   paddingVertical: 14,
+  // },
+  // segmentSelected: {
+  //   backgroundColor: '#007AFF',
+  // },
+  // text: {
+  //   color: '#000',
+  // },
+  // textSelected: {
+  //   color: '#fff',
+  //   fontWeight: 'bold',
+  // },
 });
 
 export default StartGroup;

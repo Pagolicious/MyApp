@@ -30,6 +30,13 @@ export interface Group {
   memberLimit: number;
   details: string;
   isDelisted: boolean;
+  gender: string,
+  visibility: string,
+  minAge: number,
+  maxAge: number,
+  isFriendsOnly: boolean,
+  isAutoAccept: boolean,
+  isVerifiedOnly: boolean,
   members: Member[];
   memberUids: string[];
   applicants: Applicant[];

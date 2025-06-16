@@ -316,7 +316,9 @@ const MyGroupScreen = () => {
         visibilityTime: 4000,
       });
     }
+  }
 
+  const handleInviteFriend = () => {
 
   }
 
@@ -334,6 +336,9 @@ const MyGroupScreen = () => {
         style={styles.backgroundImage} // Style for the background image
 
       >
+        {currentGroup?.visibility === "Private" && (
+          <View style={styles.overlay} />
+        )}
         {currentGroup?.isDelisted && (
           <View style={styles.overlay} />
         )}
@@ -409,6 +414,35 @@ const MyGroupScreen = () => {
           />
         </View>
 
+        {userData?.isGroupLeader && currentGroup?.visibility === "Private" && (
+          <View style={styles.privateGroupContainer}>
+            <Text style={styles.privateGroupTitleText}>This group is set to private.</Text>
+            <Text style={styles.activateGroupText}>
+              The group is currently private, and only invited members can join.
+            </Text>
+            <Text style={styles.privateGroupText}>
+              To continue, you can either "Invite" players from your friends
+              list or go to "Edit" to change its visibility settings.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.inviteGroupButton}
+              onPress={() => handleInviteFriend()}
+              activeOpacity={0.7} // Slight opacity on press
+            >
+              <Text style={styles.activateButtonText}>Invite</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.editDelistedGroupButton}
+              onPress={() => navigate("StartGroup")}
+              activeOpacity={0.7} // Slight opacity on press
+            >
+              <Text style={styles.activateButtonText}>Edit</Text>
+              <Icon1 name="edit" size={25} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {userData?.isGroupLeader && currentGroup?.isDelisted && (
           <View style={styles.activateGroupContainer}>
             <Text style={styles.activateGroupTitleText}>This group is currently
@@ -418,7 +452,7 @@ const MyGroupScreen = () => {
             </Text>
             <Text style={styles.activateGroupText}>
               If you're looking for more members, tap "Activate".
-              Want to allow more people? Go to "Edit Group" and increase the
+              Want to allow more people? Go to "Edit" and increase the
               member limit.
             </Text>
 
@@ -438,8 +472,8 @@ const MyGroupScreen = () => {
               <Icon1 name="edit" size={25} color="white" />
             </TouchableOpacity>
           </View>
-
         )}
+
         {userData?.isGroupMember && currentGroup?.isDelisted && (
           <View style={styles.activateGroupMemberContainer}>
             <Text style={styles.activateGroupTitleText}>This group is currently
@@ -451,7 +485,7 @@ const MyGroupScreen = () => {
           </View>
         )}
 
-        {userData?.isGroupLeader && !currentGroup?.isDelisted && (
+        {userData?.isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
           <TouchableOpacity
             style={styles.editGroupButton}
             onPress={() => navigate("StartGroup")}
@@ -460,7 +494,7 @@ const MyGroupScreen = () => {
             <Icon1 name="edit" size={40} color="white" />
           </TouchableOpacity>
         )}
-        {userData?.isGroupLeader && !currentGroup?.isDelisted && (
+        {userData?.isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
           <TouchableOpacity
             style={styles.closeGroupButton}
             onPress={() => handleDelistGroup()}
@@ -853,6 +887,64 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   activateGroupText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+  privateGroupContainer: {
+    zIndex: 5, // 🔝 Make sure it's above the overlay's zIndex: 1
+    position: 'absolute', // Important to make zIndex work properly
+    top: '20%', // position it visually center-ish (adjust as needed)
+    alignSelf: 'center',
+    // justifyContent: 'center',
+    // alignItems: 'center',
+    padding: 20,
+    paddingTop: 25,
+    width: 330,
+    height: 300,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 15,
+    elevation: 10, // shadow on Android
+    shadowColor: '#000', // iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  inviteGroupButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    alignSelf: 'center',
+    backgroundColor: '#0f5e9c',
+    paddingVertical: 15,
+    paddingHorizontal: 37,
+    borderRadius: 30,
+    elevation: 5,
+    flexDirection: 'row', // 🔥 put text and icon side-by-side
+    alignItems: 'center', // vertically align them
+    justifyContent: 'center',
+    gap: 10, // optional spacing between text and icon (React Native 0.71+)
+  },
+  privateButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  privateGroupTitleText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#007FFF',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    lineHeight: 22,
+  },
+  privateGroupText: {
     fontSize: 16,
     textAlign: 'center',
     color: '#333',

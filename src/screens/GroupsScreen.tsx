@@ -125,10 +125,19 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             applicants: data.applicants || [],
             members: data.members || [],
             memberUids: data.memberUids || [],
-            isDelisted: data.isDelisted || false
+            isDelisted: data.isDelisted || false,
+            gender: data.gender || 'All',
+            visibility: data.visibility || 'Public',
+            minAge: data.minAge || 18,
+            maxAge: data.maxAge || 70,
+            isFriendsOnly: data.isFriendsOnly || false,
+            isAutoAccept: data.isAutoAccept || false,
+            isVerifiedOnly: data.isVerifiedOnly || false,
           };
+
         })
-          .filter(group => !group.isDelisted);
+
+          .filter(group => !(group.isDelisted || group.visibility === 'Private'));
 
         let filteredGroups = groupList;
 
