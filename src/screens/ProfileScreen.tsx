@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import React from 'react';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Components
 import GroupMemberNav from '../components/GroupMemberNav';
@@ -22,7 +23,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
 
-      <View style={styles.topSection}>
+      {/* <View style={styles.topSection}>
         <View style={styles.avatar}>
           <CustomAvatar
             uid={currentUser?.uid || 'default-uid'}
@@ -34,7 +35,7 @@ const ProfileScreen = () => {
           <Text style={styles.profileNameText}>{userData?.firstName} {userData?.lastName}</Text>
           <Text style={styles.profileEmailText}>{userData?.email}</Text>
         </View>
-      </View>
+      </View> */}
       <ProfileButtons />
       {/* {(userData?.isGroupLeader || userData?.isGroupMember) && <FooterGroupNav />} */}
       {/* {(!userData?.isGroupLeader && !userData?.isGroupMember) && <FooterNav />} */}
@@ -42,7 +43,6 @@ const ProfileScreen = () => {
   );
 };
 
-export default ProfileScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -50,22 +50,24 @@ const styles = StyleSheet.create({
   },
   topSection: {
     flex: 2,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatar: {
-    marginBottom: 15,
+    marginBottom: verticalScale(15),
   },
   profileNameText: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: moderateScale(24),
+    fontWeight: 'bold',
   },
   profileEmailText: {
-    fontSize: 18,
-    marginTop: 5,
+    fontSize: moderateScale(18),
+    marginTop: verticalScale(5),
   },
   userInformation: {
-    alignItems: "center",
+    alignItems: 'center',
   },
-
 });
+
+
+export default ProfileScreen;

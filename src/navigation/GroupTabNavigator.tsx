@@ -13,6 +13,8 @@ import FindGroup from '../screens/FindGroup';
 import GroupChatScreen from '../screens/GroupChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import MembersHomeScreen from '../screens/MembersHomeScreen';
+import ChatListScreen from '../screens/ChatListScreen';
+
 // import MyGroupStackNavigator from '../navigation/MyGroupStackNavigator'; // ✅ Use Stack Navigator
 
 //Contexts
@@ -22,9 +24,8 @@ import { useAuth } from '../context/AuthContext';
 // Icons
 import Icon1 from 'react-native-vector-icons/FontAwesome';
 import Icon2 from 'react-native-vector-icons/Entypo';
-import Icon3 from 'react-native-vector-icons/AntDesign';
+import Icon3 from 'react-native-vector-icons/Feather';
 import Icon4 from 'react-native-vector-icons/FontAwesome6';
-import ChatListScreen from '../screens/ChatListScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -66,9 +67,9 @@ const GroupTabNavigator = () => {
           } else if (route.name === 'Chats') {
             IconComponent = Icon2;
             iconName = 'chat';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'More') {
             IconComponent = Icon3;
-            iconName = 'profile';
+            iconName = 'more-horizontal';
           }
 
           return (
@@ -91,7 +92,7 @@ const GroupTabNavigator = () => {
 
       <Tab.Screen name="Browse" component={FindGroup} options={{ title: 'Find' }} />
       <Tab.Screen name="Chats" component={ChatListScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="More" component={ProfileScreen} />
       {/* <Tab.Screen name="Members Home" component={MembersHomeScreen} /> */}
 
     </Tab.Navigator>

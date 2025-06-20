@@ -13,6 +13,9 @@ import {
 import Slider from '@react-native-community/slider';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import CustomToggle from '../components/CustomToggle';
+import { Dimensions } from 'react-native';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+
 
 interface Props {
   visible: boolean;
@@ -35,6 +38,7 @@ interface Props {
 
 const GenderOptions = ['All', 'Women only', 'Men only'];
 const VisibilityOption = ['Public', 'Private'];
+const screenWidth = Dimensions.get('window').width;
 
 const MoreOptionsModal: React.FC<Props> = ({
   visible,
@@ -122,31 +126,33 @@ const MoreOptionsModal: React.FC<Props> = ({
                 ))}
               </View>
 
-              <View style={{ width: '100%', paddingHorizontal: 10, paddingVertical: 15 }}>
+              <View style={styles.sliderContainer}>
                 <View style={styles.rangeText}>
-                  <Text style={[styles.ageValue, { width: 60, textAlign: 'left' }]}>
+                  <Text style={[styles.ageValue, styles.sliderLeftText]}>
                     {minAge} yrs
                   </Text>
                   <Text style={styles.ageLabel}>Age</Text>
-                  <Text style={[styles.ageValue, { width: 60, textAlign: 'right' }]}>
+                  <Text style={[styles.ageValue, styles.sliderRightText]}>
                     {maxAge === 70 ? '70+ yrs' : `${maxAge} yrs`}
                   </Text>
                 </View>
 
-                <MultiSlider
-                  values={[minAge, maxAge]}
-                  min={18}
-                  max={70}
-                  step={1}
-                  onValuesChange={(values) => {
-                    setMinAge(values[0]);
-                    setMaxAge(values[1]);
-                  }}
-
-                  selectedStyle={{ backgroundColor: '#007AFF' }}
-                  markerStyle={{ backgroundColor: '#007AFF' }}
-                />
+                <View style={styles.sliderWrapper}>
+                  <MultiSlider
+                    values={[minAge, maxAge]}
+                    min={18}
+                    max={70}
+                    step={1}
+                    onValuesChange={(values) => {
+                      setMinAge(values[0]);
+                      setMaxAge(values[1]);
+                    }}
+                    selectedStyle={{ backgroundColor: '#007AFF' }}
+                    markerStyle={{ backgroundColor: '#007AFF' }}
+                  />
+                </View>
               </View>
+
               <View style={styles.toggleContainer}>
 
                 <View style={styles.toggleRow}>
@@ -192,71 +198,95 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: 350,
-    padding: 20,
+    width: Math.min(screenWidth * 0.9, scale(350)),
+    padding: scale(20),
     backgroundColor: 'white',
-    borderRadius: 20,
+    borderRadius: scale(20),
     alignItems: 'center',
   },
   closeIcon: {
     position: 'absolute',
-    top: 5,
-    right: 15,
-    padding: 5,
+    top: verticalScale(5),
+    right: scale(15),
+    padding: scale(5),
   },
   closeText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     color: '#888',
   },
   modalTitleText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     fontWeight: 'bold',
     color: 'black',
   },
   bodyLabel: {
-    marginTop: 15,
-    paddingLeft: 10,
-    fontSize: 17,
+    marginTop: verticalScale(15),
+    paddingLeft: scale(10),
+    fontSize: moderateScale(17),
     color: 'grey',
     alignSelf: 'flex-start',
   },
+  sliderWrapper: {
+    alignItems: 'center',
+    width: "100%"
+  },
+
+  sliderContainer: {
+    width: '100%',
+    paddingHorizontal: scale(10),
+    paddingVertical: verticalScale(15),
+  },
+
+  sliderLeftText: {
+    width: scale(60),
+    textAlign: 'left',
+  },
+
+  sliderRightText: {
+    width: scale(60),
+    textAlign: 'right',
+  },
+
   segmentContainer: {
     flexDirection: 'row',
     backgroundColor: '#eee',
-    borderRadius: 8,
+    borderRadius: scale(8),
     overflow: 'hidden',
-    marginTop: 10,
+    marginTop: verticalScale(10),
   },
   segment: {
     flex: 1,
-    padding: 10,
+    // padding: scale(10),
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: verticalScale(14),
   },
   segmentSelected: {
     backgroundColor: '#007AFF',
   },
   text: {
     color: '#000',
+    fontSize: moderateScale(12)
   },
   textSelected: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: moderateScale(12)
+
   },
   toggleContainer: {
-    marginTop: -15
+    marginTop: verticalScale(-15),
   },
   rangeText: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: verticalScale(10),
   },
   ageLabel: {
-    fontSize: 17,
+    fontSize: moderateScale(17),
     color: 'grey',
   },
   ageValue: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     color: 'black',
   },
   toggleRow: {
@@ -264,11 +294,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginTop: 10,
-    paddingHorizontal: 5,
+    marginTop: verticalScale(10),
+    paddingHorizontal: scale(5),
   },
-
-
 });
+
 
 export default MoreOptionsModal;

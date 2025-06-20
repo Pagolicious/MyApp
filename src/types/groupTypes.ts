@@ -26,7 +26,7 @@ export interface Group {
   toTime: string;
   toDate: string;
   skillvalue?: number;
-  createdBy: string;
+  createdBy: CreatedBy;
   memberLimit: number;
   details: string;
   isDelisted: boolean;
@@ -47,4 +47,10 @@ export interface SearchParty {
   leaderFirstName: string;
   leaderLastName: string;
   members: Member[];
+}
+
+export interface CreatedBy {
+  uid: string;
+  firstName: string;
+  lastName: string;
 }

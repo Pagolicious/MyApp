@@ -15,6 +15,9 @@ import {
 import React, { useState, useEffect, useRef } from 'react';
 import { TextInput } from 'react-native-gesture-handler';
 import { BlurView } from '@react-native-community/blur';
+import { Dimensions } from 'react-native';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+
 
 //Navigation
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -30,6 +33,7 @@ import GroupMemberNav from '../components/GroupMemberNav';
 import FooterNav from '../components/FooterNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import PartyDisplay from '../components/PartyDisplay';
+import GroupCard from '../components/GroupCard'
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -74,6 +78,7 @@ const parseGroupTime = (fromDate: string, fromTime: string): Date => {
   return date;
 };
 
+const screenWidth = Dimensions.get('window').width;
 
 
 const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -120,7 +125,11 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             toTime: data.toTime || '',
             toDate: data.toDate || '',
             skillvalue: data.skillvalue || 0,
-            createdBy: data.createdBy || '',
+            createdBy: data.createdBy || {
+              uid: data.createdBy,
+              firstName: '',
+              lastName: ''
+            },
             details: data.details || '',
             applicants: data.applicants || [],
             members: data.members || [],
@@ -388,7 +397,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     opacity: animationValue,
     height: animationValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 450], // Adjust height as needed
+      outputRange: [0, 250], // Adjust height as needed
     }),
   };
 
@@ -461,19 +470,17 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             style={styles.backgroundImage} // Style for the background image
           >
 
-            <View style={styles.flatListContainer}>
+            {/* <View style={styles.flatListContainer}>
               <FlatList
                 data={groups || []}
                 keyExtractor={item => item.id.toString()}
                 renderItem={({ item }) => {
-                  // const activityImage = activityImages[item.activity.toLowerCase()] || require('../assets/SportImages/tennis.jpg');
 
                   const isApplicant = item.applicants.some(
                     applicant => applicant.uid === currentUser?.uid
                   );
                   const isMember = item.memberUids.includes(currentUser?.uid);
-                  const isOwner = item.createdBy === currentUser.uid
-                  // <View>
+                  const isOwner = item.createdBy.uid === currentUser.uid
                   return (
 
                     <Pressable onPress={() => handleCardPress(item)}
@@ -483,10 +490,8 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                         { backgroundColor: isApplicant || isMember || isOwner ? '#50C878' : '#6A9AB0' }, // Dynamic color
                       ]}>
 
-                      {/* <View > */}
                       <View style={styles.column}>
 
-                        {/* Card Content: Activity & Location */}
                         <View style={styles.cardContentActivity}>
                           {item.activity === "Custom" ? (
                             <Text style={styles.cardText}>{item.title}</Text>
@@ -496,7 +501,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                           <Text style={styles.cardText}>{item.location}</Text>
                         </View>
 
-                        {/* Card Content: Date & Time */}
                         <View style={styles.cardContentDate}>
                           <Text style={styles.cardText}>
                             {new Date(item.fromDate).toLocaleDateString("sv-SE", {
@@ -511,25 +515,35 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                           </Text>
                         </View>
 
-                        {/* Card Content: People */}
                         <View style={styles.cardContentPeople}>
                           <Text style={styles.cardTextPeople}>{item.memberUids.length}/{item.memberLimit}</Text>
                         </View>
                       </View>
-                      {/* </View> */}
-                      {/* </View> */}
-                      {/* </ImageBackground> */}
-                      {/* <View style={styles.line} /> */}
+
                     </Pressable>
-                    // </View>
                   )
                 }}
                 ListEmptyComponent={
                   <Text style={styles.noGroupsText}>No groups available</Text>
                 }
               />
-            </View>
+            </View> */}
+            <FlatList
+              data={groups}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <GroupCard group={item} currentUserId={currentUser?.uid || ''}
+                  onPressApply={() => handleCardPress(item)} // ⬅️ this handles skill check + modal
+                />
+              )}
+              ListEmptyComponent={
+                <Text style={styles.noGroupsText}>No groups available</Text>
+              }
+            />
 
+            {/* <GroupCard title="More Info">
+              <Text>Hello</Text>
+            </GroupCard> */}
             {currentUser && (
               <Modal
                 animationType="fade"
@@ -561,6 +575,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                       <Text style={styles.modalTitleText}>Apply For Group</Text>
 
                       {/* ⭐ Star Rating always visible */}
+
                       <View style={styles.setLevelContainer}>
                         {(!hasSkillLevel && selectedGroup?.activity !== "Custom") && (
                           <>
@@ -600,38 +615,44 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                           <>
                             <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
 
-                              <Text style={styles.modalText}>Group Details:</Text>
+                              <View style={styles.modalContent}>
 
-                              <View style={styles.modalDetailContainer}>
-                                <Text style={styles.modalDetailText}>
-                                  {currentGroup?.details}
-                                </Text>
-                              </View>
 
-                              <View>
+                                {/* <Text style={styles.modalText}>Group Details:</Text>
+
+                                <View style={styles.modalDetailContainer}>
+                                  <Text style={styles.modalDetailText}>
+                                    {currentGroup?.details}
+                                  </Text>
+                                </View> */}
+
                                 <Text style={styles.modalText}>Your message to the group:</Text>
                                 <TextInput
                                   style={styles.input}
                                   placeholder="This is optional"
+                                  placeholderTextColor="#999"
                                   value={note}
                                   onChangeText={setNote}
                                   multiline={true}
                                   numberOfLines={4}
                                   textAlignVertical="top"
                                 />
+
                               </View>
 
-                              <TouchableOpacity
-                                style={styles.submitBtn}
-                                onPress={async () => {
-                                  if (!hasSkillLevel) {
-                                    await addSkillLevel();
-                                  }
-                                  applyForGroup();
-                                }}
-                              >
-                                <Text style={styles.submitBtnText}>Submit</Text>
-                              </TouchableOpacity>
+                              <View style={styles.modalFooter}>
+                                <TouchableOpacity
+                                  style={styles.submitBtn}
+                                  onPress={async () => {
+                                    if (!hasSkillLevel) {
+                                      await addSkillLevel();
+                                    }
+                                    applyForGroup();
+                                  }}
+                                >
+                                  <Text style={styles.submitBtnText}>Submit</Text>
+                                </TouchableOpacity>
+                              </View>
 
                             </Animated.View>
                           </>
@@ -657,79 +678,55 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // borderWidth: 5
   },
-  // contentContainer: {
-  //   flex: 1, // Ensures the content takes up all available space
-  //   paddingBottom: 10, // Optional: Adds spacing at the bottom if needed
-  //   borderWidth: 5,
-  //   // height: 400
-  // },
   header: {
-    height: 65,
+    height: verticalScale(65),
     backgroundColor: '#5f4c4c',
-    paddingHorizontal: 15,
-    // justifyContent: "space-between",
+    paddingHorizontal: scale(15),
     alignItems: 'center',
-    flexDirection: "row",
-    justifyContent: "space-between", // Ensures PartyDisplay stays in position
-
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   headerText: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: 'white',
-    position: 'absolute', // Keeps it centered
-    left: "50%",
-    transform: [{ translateX: -20 }], // Adjust based on text width
+    position: 'absolute',
+    left: '50%',
+    transform: [{ translateX: -scale(20) }],
   },
   partyContainer: {
-    // flexGrow: 1, // Allow PartyDisplay to use available space
-    // alignItems: "flex-end", // Align PartyDisplay to the right
-    // paddingRight: 10, // Ensure spacing from edge
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden", // Prevents overflow
-    // borderWidth: 2, // Keep for debugging
-    // borderColor: "red",
-    width: 160, // Ensure enough space for avatars
-    height: 40, // Match avatar size
-    position: "relative", // Important for absolute children
-
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: scale(160),
+    height: verticalScale(40),
+    position: 'relative',
   },
   backgroundImage: {
     flex: 1,
     resizeMode: 'cover',
   },
   flatListContainer: {
-    marginTop: 10
+    marginTop: verticalScale(10),
   },
   card: {
     backgroundColor: '#6A9AB0',
-    padding: 15,
-    // width: "95%",
-    // alignSelf: "center",
-    marginTop: 10,
-    marginHorizontal: 10,
-    borderRadius: 15,
+    padding: scale(15),
+    marginTop: verticalScale(10),
+    marginHorizontal: scale(10),
+    borderRadius: moderateScale(15),
     overflow: 'hidden',
-
-
-    // Shadow for iOS
-    shadowColor: '#000', // Shadow color
-    shadowOffset: { width: 0, height: 2 }, // Shadow position
-    shadowOpacity: 0.25, // Shadow transparency
-    shadowRadius: 3.84, // Shadow blur radius
-
-    // Shadow for Android
-    elevation: 5, // Elevation for Android shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: verticalScale(2) },
+    shadowOpacity: 0.25,
+    shadowRadius: moderateScale(3.84),
+    elevation: 5,
   },
-  // extendedCard: {
-  //   height: 300
-  // },
   column: {
     flexDirection: 'row',
   },
@@ -743,20 +740,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: 'bold',
     color: 'black',
   },
   cardTextPeople: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
-    color: "black"
+    color: 'black',
   },
-  // line: {
-  //   height: 1,
-  //   width: '100%',
-  //   backgroundColor: 'black',
-  // },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -764,81 +756,92 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: 350,
-    padding: 20,
+    width: Math.min(scale(300), screenWidth * 0.9),
+    padding: scale(20),
     backgroundColor: 'white',
-    borderRadius: 20,
+    borderRadius: moderateScale(20),
     alignItems: 'center',
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 4,
-    // elevation: 5,
-    // position: 'relative', // Needed for positioning the close button
+
+  },
+  modalContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+
+  modalFooter: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: verticalScale(10),
   },
   setLevelContainer: {
     alignItems: 'center',
   },
   modalDetailContainer: {
-    width: 300,
-    height: 120,
-    borderRadius: 5,
+    width: scale(260),
+    height: verticalScale(100),
+    borderRadius: moderateScale(5),
     backgroundColor: '#F9F6EE',
     borderWidth: 1,
     borderColor: 'grey',
   },
   input: {
-    height: 120,
-    width: 300,
+    height: verticalScale(100),
+    width: scale(260),
     borderColor: 'gray',
     borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
+    padding: scale(10),
+    borderRadius: moderateScale(5),
     backgroundColor: 'white',
-    fontSize: 16,
+    fontSize: moderateScale(16),
   },
   modalDetailText: {
-    padding: 10,
+    padding: scale(10),
     color: 'black',
   },
   closeIcon: {
     position: 'absolute',
-    top: 5,
-    right: 15,
-    padding: 5,
+    top: scale(5),
+    right: scale(15),
+    padding: scale(5),
   },
   closeText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     color: '#888',
   },
   modalTitleText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     fontWeight: 'bold',
     color: 'black',
   },
   modalText: {
-    marginTop: 20,
-    fontSize: 18,
-    // fontWeight: 'bold',
+    marginTop: verticalScale(20),
+    fontSize: moderateScale(18),
     color: 'black',
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
   },
   modalExtendedContent: {
-    alignItems: 'center',
+    // flex: 1,
+    // alignItems: 'center',
+    // flexDirection: 'column',
+    // justifyContent: 'space-between', // ✅ Push footer to bottom
+    // maxHeight: verticalScale(550), // ✅ optional limit
+    // width: '100%',
+    // justifyContent: 'space-between',
   },
   modalObervationText: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: 'red',
     fontWeight: 'bold',
-    marginVertical: 10,
+    marginVertical: verticalScale(10),
   },
   submitBtn: {
     backgroundColor: 'green',
-    padding: 10,
-    width: 100,
+    padding: moderateScale(10),
+    width: scale(100),
     alignItems: 'center',
-    borderRadius: 5,
-    marginTop: 15,
+    borderRadius: moderateScale(5),
+    marginTop: verticalScale(15),
   },
   submitBtnText: {
     color: 'white',
@@ -846,27 +849,11 @@ const styles = StyleSheet.create({
   },
   noGroupsText: {
     flex: 1,
-    textAlign: "center",
-    marginTop: 200,
-    fontSize: 24
+    textAlign: 'center',
+    marginTop: verticalScale(200),
+    fontSize: moderateScale(24),
   },
-
-  // contentOverlay: {
-  //   flex: 1,
-  //   backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent overlay for readability
-  //   borderRadius: 10,
-  //   padding: 15,
-  //   justifyContent: 'center',
-  // },
-  // overlay: {
-  //   ...StyleSheet.absoluteFillObject, // Fills the entire ImageBackground
-  //   backgroundColor: 'rgba(0, 0, 0, 0.4)', // Adjust transparency here
-  //   borderRadius: 10, // Match the image's border radius
-  // },
-  // blurView: {
-  //   ...StyleSheet.absoluteFillObject, // Fills the entire ImageBackground
-  //   borderRadius: 10, // Match the image's border radius
-  // },
 });
+
 
 export default GroupsScreen;

@@ -60,6 +60,7 @@ const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeho
         <TextInput
           value={value}
           placeholder={placeholder || 'Search...'}
+          placeholderTextColor="#999"
           style={[styles.input, { color: 'black' }]}
           editable={false}
           pointerEvents="none"
@@ -80,6 +81,8 @@ const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeho
                   value={searchText}
                   onChangeText={handleSearch}
                   placeholder={placeholder || 'Search...'}
+                  placeholderTextColor="#999"
+
                 />
 
                 <FlatList

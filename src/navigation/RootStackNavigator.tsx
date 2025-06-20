@@ -21,6 +21,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import MembersHomeScreen from '../screens/MembersHomeScreen';
 import FriendScreen from '../screens/Profile/FriendScreen';
 import SearchPartyScreen from '../screens/Profile/SearchPartyScreen';
+import ProfilePageScreen from '../screens/Profile/ProfilePageScreen';
 import ChatListScreen from '../screens/ChatListScreen';
 import SettingScreen from '../screens/Profile/SettingScreen';
 import AboutAppScreen from '../screens/Profile/AboutAppScreen';
@@ -62,6 +63,8 @@ const RootStackNavigator = () => {
       <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
       <Stack.Screen name="SettingScreen" component={SettingScreen} />
       <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
+      <Stack.Screen name="ProfilePageScreen" component={ProfilePageScreen} />
+
     </Stack.Navigator>
   );
 };

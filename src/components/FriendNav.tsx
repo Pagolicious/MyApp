@@ -94,7 +94,7 @@ const FriendNav = () => {
         routes: [
           {
             name: 'GroupApp' as keyof RootStackParamList, // ✅ Ensures GroupApp is recognized
-            params: { screen: 'Profile' }, // ✅ Ensure 'ProfileScreen' exists in RootStackParamList
+            params: { screen: 'More' }, // ✅ Ensure 'ProfileScreen' exists in RootStackParamList
           } as unknown as never,
         ],
       });
@@ -104,7 +104,7 @@ const FriendNav = () => {
         routes: [
           {
             name: 'PublicApp' as keyof RootStackParamList, // ✅ Ensures GroupApp is recognized
-            params: { screen: 'Profile' }, // ✅ Ensure 'ProfileScreen' exists in RootStackParamList
+            params: { screen: 'More' }, // ✅ Ensure 'ProfileScreen' exists in RootStackParamList
           } as unknown as never,
         ],
       });

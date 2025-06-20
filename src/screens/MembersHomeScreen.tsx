@@ -266,7 +266,7 @@ const MembersHomeScreen = () => {
                     }}>
                       <Icon2 name="more-vertical" size={25} color="black" />
                     </TouchableOpacity>
-                  ) : currentUser.uid === currentGroup?.createdBy ? (
+                  ) : currentUser.uid === currentGroup?.createdBy.uid ? (
                     <DisbandModal />
                   ) : (
                     <LeaveModal />

@@ -3,6 +3,9 @@ import messaging from '@react-native-firebase/messaging';
 import inAppMessaging from '@react-native-firebase/in-app-messaging';
 import Toast from 'react-native-toast-message';
 
+// import { NewAppScreen } from '@react-native/new-app-screen';
+// import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+
 //Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -87,6 +90,16 @@ import useOnlineStatus from './hooks/useOnlineStatus';
 //     </NavigationContainer>
 //   );
 // };
+
+
+
+
+
+
+// <View style={styles.container}>
+//   <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+//   <NewAppScreen templateFileName="App.tsx" />
+// </View>
 
 
 function App(): React.JSX.Element {

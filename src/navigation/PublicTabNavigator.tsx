@@ -18,7 +18,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import Icon1 from 'react-native-vector-icons/FontAwesome5';
 import Icon2 from 'react-native-vector-icons/FontAwesome6';
 import Icon3 from 'react-native-vector-icons/Entypo';
-import Icon4 from 'react-native-vector-icons/AntDesign';
+import Icon4 from 'react-native-vector-icons/Feather';
 import GroupChatScreen from '../screens/GroupChatScreen';
 import ChatListScreen from '../screens/ChatListScreen';
 
@@ -44,9 +44,9 @@ const PublicTabNavigator = () => {
           } else if (route.name === 'Chats') {
             IconComponent = Icon3;
             iconName = 'chat';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'More') {
             IconComponent = Icon4;
-            iconName = 'profile';
+            iconName = 'more-horizontal';
           }
 
           return (
@@ -68,7 +68,7 @@ const PublicTabNavigator = () => {
       <Tab.Screen name="Home" component={FindOrStart} />
       <Tab.Screen name="Find a Group" component={FindGroup} options={{ title: 'Find' }} />
       <Tab.Screen name="Chats" component={ChatListScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="More" component={ProfileScreen} />
       {/* <Tab.Screen name="Members Home" component={MembersHomeScreen} /> */}
 
     </Tab.Navigator>

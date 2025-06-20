@@ -88,9 +88,9 @@ const SearchPartyScreen = () => {
     if (!userData) return;
 
     if (userData.isGroupLeader || userData.isGroupMember) {
-      navigate('GroupApp', { screen: 'Profile' })
+      navigate('GroupApp', { screen: 'More' })
     } else {
-      navigate('PublicApp', { screen: 'Profile' })
+      navigate('PublicApp', { screen: 'More' })
     }
   }
 

@@ -4,6 +4,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 // import SwitchToggle from "react-native-switch-toggle";
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -106,7 +107,7 @@ const FindGroup = () => {
       if (useMemberFilter) {
         params.groupSize = groupSize;
       }
-
+      console.log("Search...")
       navigate('GroupsScreen', params);
     } catch (error) {
       const errorMessage =
@@ -222,7 +223,6 @@ const FindGroup = () => {
             value={activity}
             onChange={(val) => setActivity(val)}
             options={sportsList}
-            placeholder="Search for a sport..."
           />
         </View>
         <View style={styles.bodyContainer}>
@@ -343,69 +343,65 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 65,
+    height: verticalScale(65),
     backgroundColor: '#5f4c4c',
-    padding: 15,
+    padding: moderateScale(15),
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerText: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: 'white',
   },
   bodyContainer: {
     borderBottomWidth: 1,
     borderColor: 'grey',
-
   },
   bodyTitle: {
-    marginTop: 15,
-    paddingLeft: 20,
-    fontSize: 17,
+    marginTop: verticalScale(15),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(17),
     color: 'grey',
   },
   input: {
     borderBottomColor: 'gray',
-    paddingLeft: 20,
-    fontSize: 25,
+    paddingLeft: scale(20),
+    fontSize: moderateScale(25),
   },
   activityContainer: {
     borderBottomWidth: 1,
     borderColor: 'grey',
   },
   dropdown: {
-    marginTop: 5,
-    maxHeight: 220, // Limit height of dropdown for scrolling
-    // borderWidth: 1,
-    // borderColor: 'gray',
-    // borderRadius: 5,
+    marginTop: verticalScale(5),
+    maxHeight: verticalScale(220),
     backgroundColor: 'white',
   },
   dropdownItem: {
-    padding: 10,
+    padding: moderateScale(10),
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
   },
   selectedText: {
-    marginTop: 10,
-    fontSize: 16,
+    marginTop: verticalScale(10),
+    fontSize: moderateScale(16),
   },
   backgroundImage: {
     flex: 1,
-    resizeMode: "cover"
+    resizeMode: 'cover',
   },
   buttonContainer: {
-    paddingHorizontal: 10,
-    marginVertical: 10
+    paddingHorizontal: scale(10),
+    marginVertical: verticalScale(10),
   },
   bodyLabel: {
-    marginTop: 15,
-    paddingLeft: 20,
-    fontSize: 17,
+    marginTop: verticalScale(15),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(17),
     color: 'grey',
   },
   row: {
@@ -413,54 +409,52 @@ const styles = StyleSheet.create({
   },
   dateContainer: {
     flex: 2,
-    // borderRightWidth: 1,
     borderColor: 'grey',
   },
   timeContainer: {
     flex: 2,
-    // justifyContent: 'flex-end',
   },
   toggleContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: "center"
+    alignItems: 'center',
   },
   dateButton: {
-    fontSize: 25,
-    paddingBottom: 10,
+    fontSize: moderateScale(25),
+    paddingBottom: verticalScale(10),
   },
   timeButton: {
-    fontSize: 25,
-    paddingBottom: 10,
+    fontSize: moderateScale(25),
+    paddingBottom: verticalScale(10),
   },
   dateTimeText: {
-    paddingLeft: 20,
-    fontSize: 25,
+    paddingLeft: scale(20),
+    fontSize: moderateScale(25),
     color: 'black',
   },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 12,
+    margin: moderateScale(12),
   },
   stepperButton: {
-    width: 30,
-    height: 30,
+    width: scale(30),
+    height: scale(30),
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#36454F',
-    borderRadius: 5,
-    marginLeft: 8
-
+    borderRadius: moderateScale(5),
+    marginLeft: scale(8),
   },
   stepperButtonText: {
-    fontSize: 20,
-    color: "white"
-
+    fontSize: moderateScale(20),
+    color: 'white',
   },
   memberLimitValue: {
-    fontSize: 24, marginHorizontal: 20
+    fontSize: moderateScale(24),
+    marginHorizontal: scale(20),
   },
 });
+
 
 export default FindGroup;

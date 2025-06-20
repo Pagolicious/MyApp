@@ -22,6 +22,8 @@ import Slider from '@react-native-community/slider';
 // import SegmentedControlTab from 'react-native-segmented-control-tab';
 
 // import { Picker } from '@react-native-picker/picker';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -166,6 +168,8 @@ const StartGroup = () => {
       return;
     }
 
+    if (!userData) return
+
     if (userData?.isGroupLeader) {
       return
     }
@@ -218,7 +222,11 @@ const StartGroup = () => {
       skillvalue: skillvalue,
       memberLimit: memberLimit,
       details: details,
-      createdBy: currentUser.uid,
+      createdBy: {
+        uid: currentUser.uid,
+        firstName: userData.firstName,
+        lastName: userData.lastName
+      },
       groupId: groupId,
       isDelisted: false,
       gender: selectedGender,
@@ -556,17 +564,20 @@ const StartGroup = () => {
                 <Text style={styles.infoButtonText}>?</Text>
               </TouchableOpacity>
             </View>
-            <Slider
-              style={{ width: "100%", height: 50 }}
-              minimumValue={1}
-              maximumValue={5}
-              step={1}
-              value={skillvalue}
-              onValueChange={setSkillvalue}
-              minimumTrackTintColor="#007FFF"
-              maximumTrackTintColor="#000000"
-              thumbTintColor="#007FFF"
-            />
+            <View style={styles.sliderContainer}>
+              <Slider
+                style={{ width: "100%", height: verticalScale(50) }}
+                minimumValue={1}
+                maximumValue={5}
+                step={1}
+                value={skillvalue}
+                onValueChange={setSkillvalue}
+                minimumTrackTintColor="#007FFF"
+                maximumTrackTintColor="#000000"
+                thumbTintColor="#007FFF"
+              />
+            </View>
+
             {/* </View> */}
 
             {/* </View> */}
@@ -716,19 +727,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 65,
+    height: verticalScale(65),
     backgroundColor: '#5f4c4c',
-    padding: 15,
+    padding: scale(15),
     // justifyContent: "space-between",
     alignItems: 'center',
     flexDirection: "row",
   },
   headerText: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: 'white',
     // marginLeft: 'auto',
-    marginRight: 20,
+    marginRight: scale(20),
   },
   spacer: {
     flex: 1,
@@ -738,20 +749,20 @@ const styles = StyleSheet.create({
     borderColor: 'grey',
   },
   bodyLabel: {
-    marginTop: 15,
-    paddingLeft: 20,
-    fontSize: 17,
+    marginTop: verticalScale(15),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(17),
     color: 'grey',
   },
   input: {
-    height: 50,
-    paddingLeft: 20,
-    fontSize: 25,
+    height: verticalScale(50),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(25),
   },
   areaInput: {
-    height: 100,
-    paddingLeft: 20,
-    fontSize: 20,
+    height: verticalScale(100),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(20),
     textAlignVertical: 'top',
   },
   activityContainer: {
@@ -771,49 +782,52 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   dateButton: {
-    fontSize: 25,
-    paddingBottom: 10,
+    fontSize: moderateScale(25),
+    paddingBottom: verticalScale(10),
   },
   timeButton: {
-    fontSize: 25,
-    paddingBottom: 10,
+    fontSize: moderateScale(25),
+    paddingBottom: verticalScale(10),
   },
   dateTimeText: {
-    paddingLeft: 20,
-    fontSize: 25,
+    paddingLeft: scale(20),
+    fontSize: moderateScale(25),
     color: 'black',
   },
   valueContainer: {
     position: 'absolute',
     top: '30%',
-    padding: 10,
+    padding: moderateScale(10),
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 5,
   },
   bodySkillTitle: {
     justifyContent: 'space-between',
     flexDirection: 'row',
-    paddingRight: 20,
+    paddingRight: scale(20),
   },
   infoButton: {
     backgroundColor: 'grey',
-    marginTop: 15,
-    width: 30,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    marginTop: verticalScale(15),
+    width: scale(30),
+    paddingVertical: verticalScale(5),
+    paddingHorizontal: scale(5),
     alignItems: 'center',
     borderRadius: 5,
   },
   infoButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: 'bold',
   },
   bodyValueTitle: {
-    marginTop: 15,
-    paddingRight: 20,
-    fontSize: 17,
+    marginTop: verticalScale(15),
+    paddingRight: scale(20),
+    fontSize: moderateScale(17),
     color: 'black',
+  },
+  sliderContainer: {
+    marginHorizontal: scale(10)
   },
   // skillLevelContainer: {
   // flex: 1,
@@ -829,29 +843,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
 
     // borderWidth: 1,
-    margin: 20,
-    marginLeft: 100
+    margin: moderateScale(20),
+    marginLeft: scale(70)
   },
   stepperButton: {
-    width: 30,
-    height: 30,
+    width: scale(30),
+    height: verticalScale(30),
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ccc',
     borderRadius: 5
   },
   stepperButtonText: {
-    fontSize: 20
+    fontSize: moderateScale(20)
   },
   memberLimitValue: {
-    fontSize: 24, marginHorizontal: 20
+    fontSize: moderateScale(24),
+    marginHorizontal: scale(20)
   },
   footerContainer: {
     // flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     // margin: 10,
-    padding: 15,
+    padding: moderateScale(15),
     // backgroundColor: '#5f4c4c',
     position: 'absolute',
     bottom: 0,
@@ -868,50 +883,50 @@ const styles = StyleSheet.create({
   moreOptionBtn: {
     flex: 1,
     // width: 100,
-    height: 60,
+    height: verticalScale(50),
     backgroundColor: 'grey',
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    marginHorizontal: 5,
+    marginHorizontal: scale(5),
 
   },
   moreOptionText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     color: "white",
     fontWeight: "bold",
   },
   startGroupBtn: {
     flex: 3,
     // width: 280,
-    height: 60,
+    height: verticalScale(50),
     backgroundColor: '#4CBB17',
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    marginHorizontal: 5,
+    marginHorizontal: scale(5,)
 
   },
   startGroupText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     color: "black",
     fontWeight: "bold",
   },
   dropdown: {
-    marginTop: 5,
-    maxHeight: 220, // Limit height of dropdown for scrolling
+    marginTop: verticalScale(5),
+    maxHeight: verticalScale(220), // Limit height of dropdown for scrolling
     // borderWidth: 1,
     // borderColor: 'gray',
     // borderRadius: 5,
     backgroundColor: 'white',
   },
   dropdownItem: {
-    padding: 10,
+    padding: moderateScale(10),
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
   },
   // modalOverlay: {
   //   flex: 1,
