@@ -32,13 +32,6 @@ import Icon2 from 'react-native-vector-icons/Feather';
 //Types
 import { Friend } from '../../types/userTypes';
 
-// interface Friend {
-//   uid: string;
-//   firstName: string;
-//   lastName: string;
-//   isOnline: boolean;
-// }
-
 const FriendScreen = () => {
   const { currentUser, userData } = useAuth()
   const { currentGroup, currentGroupId } = useGroup()
@@ -105,7 +98,7 @@ const FriendScreen = () => {
 
   useEffect(() => {
     if (currentUser) {
-      setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
+      setUserHasGroup(currentGroup?.createdBy.uid === currentUser.uid);
     }
   }, [currentUser, currentGroup]);
 

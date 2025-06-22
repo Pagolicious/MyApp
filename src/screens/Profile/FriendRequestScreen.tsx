@@ -39,7 +39,7 @@ const FriendRequestScreen = () => {
 
   useEffect(() => {
     if (currentUser) {
-      setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
+      setUserHasGroup(currentGroup?.createdBy.uid === currentUser.uid);
     }
   }, [currentUser, currentGroup]);
 

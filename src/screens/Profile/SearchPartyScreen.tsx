@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, Modal, TouchableWithoutFeedback, Pressable } from 'react-native'
 import React, { useEffect, useState } from 'react'
 
+//Navigation
+import { useNavigation } from '@react-navigation/native';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -46,6 +48,7 @@ const SearchPartyScreen = () => {
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [selectedLeader, setSelectedLeader] = useState<SearchParty | null>(null);
+  const navigation = useNavigation();
 
 
   useEffect(() => {
@@ -84,15 +87,21 @@ const SearchPartyScreen = () => {
 
   }
 
-  const handleGoBackButton = () => {
-    if (!userData) return;
+  // const handleGoBackButton = () => {
+  //   if (!userData) return;
 
-    if (userData.isGroupLeader || userData.isGroupMember) {
-      navigate('GroupApp', { screen: 'More' })
-    } else {
-      navigate('PublicApp', { screen: 'More' })
+  //   if (userData.isGroupLeader || userData.isGroupMember) {
+  //     navigate('GroupApp', { screen: 'More' })
+  //   } else {
+  //     navigate('PublicApp', { screen: 'More' })
+  //   }
+  // }
+
+  const handleGoBackButton = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
     }
-  }
+  };
 
   return (
     <View style={styles.container}>

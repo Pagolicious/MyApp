@@ -166,7 +166,7 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
         const currentMembers = updatedGroupData?.members ?? [];
         const memberLimit = updatedGroupData?.memberLimit ?? 1;
 
-        if (currentMembers.length > memberLimit) {
+        if (currentMembers.length >= memberLimit) {
           await groupRef.update({
             isDelisted: true,
           });

@@ -124,6 +124,7 @@ const StartGroup = () => {
 
       setActivity(currentGroup.activity || '');
       setLocation(currentGroup.location || '');
+      setTitle(currentGroup.title || '');
       setFromDate(new Date(currentGroup.fromDate || Date.now()));
       setFromTime(parseTime(currentGroup.fromTime));
       setToDate(new Date(currentGroup.toDate || Date.now()));

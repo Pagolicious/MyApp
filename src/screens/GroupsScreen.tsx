@@ -342,6 +342,38 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const cancelApplication = async (groupId: string) => {
+    if (!currentUser) return;
+
+    try {
+      // 🔥 Remove user from applicants array in Firestore
+      await firestore()
+        .collection('groups')
+        .doc(groupId)
+        .update({
+          applicants: firestore.FieldValue.arrayRemove(
+            groups.find(g => g.id === groupId)?.applicants.find(a => a.uid === currentUser.uid)
+          ),
+        });
+
+      // ✅ Update local state
+      setGroups(prev =>
+        prev.map(group =>
+          group.id === groupId
+            ? {
+              ...group,
+              applicants: group.applicants.filter(app => app.uid !== currentUser.uid),
+            }
+            : group
+        )
+      );
+    } catch (error) {
+      console.error("Error cancelling application:", error);
+      Alert.alert("Error", "Could not cancel application.");
+    }
+  };
+
+
   const checkUserSkillLevel = async (activity: string): Promise<boolean> => {
     if (!currentUser) {
       return false;
@@ -534,6 +566,8 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
               renderItem={({ item }) => (
                 <GroupCard group={item} currentUserId={currentUser?.uid || ''}
                   onPressApply={() => handleCardPress(item)} // ⬅️ this handles skill check + modal
+                  onCancelApply={() => cancelApplication(item.id)}
+
                 />
               )}
               ListEmptyComponent={

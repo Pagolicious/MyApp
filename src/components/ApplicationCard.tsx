@@ -7,7 +7,7 @@ import {
   Pressable,
   TouchableOpacity
 } from 'react-native';
-import { Group } from '../types/groupTypes'; // update path if needed
+import { Applicant, Group } from '../types/groupTypes'; // update path if needed
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { navigate } from '../services/NavigationService';
 import Toast from 'react-native-toast-message';
@@ -24,26 +24,21 @@ import Icon4 from 'react-native-vector-icons/Fontisto';
 
 
 interface Props {
-  group: Group;
+  applicant: Applicant;
   currentUserId: string;
-  onPressApply: () => void;
-  onCancelApply: () => void;
+  currentGroup?: Group;
+  onPressInvite: () => void;
+  onPressDecline: () => void;
 }
 
-const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCancelApply }) => {
+const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGroup, onPressInvite, onPressDecline }) => {
   const { currentUser, userData } = useAuth()
-  const { disbandGroup } = useGroup()
   const [expanded, setExpanded] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
 
   const animation = useRef(new Animated.Value(0)).current;
   const submitOpacity = useRef(new Animated.Value(0)).current;
-
-  const isApplicant = group.applicants.some(a => a.uid === currentUserId);
-  const isMember = group.memberUids.includes(currentUserId);
-  const isOwner = group.createdBy.uid === currentUserId;
-
 
   const toggleExpand = () => {
     const newState = !expanded;
@@ -82,56 +77,11 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
   };
 
 
-
-
-  const onPressButton = () => {
-    if (!currentUser || !userData) return
-
-    if (userData.isGroupLeader && isOwner) {
-      try {
-        disbandGroup();
-      } catch {
-        console.log('Error', 'Can not disband group');
-      }
-    } else if (isApplicant) {
-      onCancelApply()
-    } else if (userData.isPartyMember) {
-      Toast.show({
-        type: 'info',
-        text1: 'Not Allowed',
-        text2: 'As a party member, only your leader can submit applications.',
-      });
-    } else if (userData.isGroupLeader || userData.isGroupMember) {
-      Toast.show({
-        type: 'info',
-        text1: 'Already in a Group',
-        text2: 'You can’t apply to a new group while in another one.',
-      });
-    } else {
-      onPressApply()
-    }
-
-  }
-
-  const handleMaps = () => {
-
-  }
-
   const viewProfile = (userId: string) => {
     // You could navigate or link to profile
     navigate('ProfilePageScreen', { userId: userId })
     // Example: navigation.navigate('UserProfile', { userId });
   };
-
-
-  // const toggleExpand = () => {
-  //   setExpanded(prev => !prev);
-  //   Animated.timing(animation, {
-  //     toValue: expanded ? 0 : 1,
-  //     duration: 300,
-  //     useNativeDriver: false,
-  //   }).start();
-  // };
 
   const animatedHeight = animation.interpolate({
     inputRange: [0, 1],
@@ -147,32 +97,32 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
         {
           transform: [{ scale: pressed ? 0.96 : 1 }],
           backgroundColor: pressed ? '#ddd' : '#fff',
-          borderColor: isMember || isOwner
-            ? '#FFA500'   // 🟠 Orange for applicants
-            : isApplicant
-              ? '#50C878'   // ✅ Green for members/owners
-              : '#6A9AB0',  // 🔵 Blue for others
+          borderColor: '#6A9AB0',
           // opacity: pressed ? 0.8 : 1
         },
       ]}
     >
-      <View style={styles.row}>
-        <View style={styles.column}>
-          <Text style={styles.cardText}>{group.activity === 'Custom' ? group.title : group.activity}</Text>
-          <Text style={styles.cardText}>{group.location}</Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={styles.cardText}>
-            {new Date(group.fromDate).toLocaleDateString('sv-SE', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-          </Text>
-          <Text style={styles.cardText}>{group.fromTime} - {group.toTime}</Text>
-        </View>
-        <View style={styles.people}>
-          <Text style={styles.cardTextPeople}>{group.memberUids.length}/{group.memberLimit}</Text>
+      <View style={styles.cardContent}>
+        {applicant.role === "leader" && (applicant.members?.length ?? 0) > 0 ? (
+          <Text style={styles.cardText}>{applicant.firstName} + {applicant.members?.length}</Text>
+        ) : (
+          <Text style={styles.cardText}>{applicant.firstName}</Text>
+        )}
+        <View style={styles.rightContent}>
+
+          {currentGroup?.activity !== "Custom" && (
+            <View style={styles.row}>
+              <Text style={styles.cardText}>
+                {applicant.skillLevel ?? "N/A"}
+              </Text>
+              <View style={styles.cardStar}>
+                <Icon2 name="star" size={18} color="black" />
+              </View>
+            </View>
+          )}
+          <View style={styles.timerContainer}>
+            <Text style={styles.cardText}>14:26</Text>
+          </View>
         </View>
       </View>
 
@@ -186,63 +136,72 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
           style={styles.extendedContent}
         >
           <View style={styles.contentRow}>
-            <Icon3 name="location-on" size={25} color="black" />
-            <Text style={styles.location}>{group.location}, adress...</Text>
-            <TouchableOpacity
-              onPress={() => handleMaps()}
-              style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}
-            >
-              <Icon1 name="location-outline" size={16} color="#007AFF" />
-              <Text style={{ color: '#007AFF', marginLeft: 4, fontSize: 14 }}>
-                View on Map
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.contentRow}>
             <View style={styles.clockIconContainer}>
               <Icon4 name="clock" size={20} color="black" />
             </View>
-            <Text style={styles.members}>{group.fromTime} - {group.toTime}, {new Date(group.fromDate).toLocaleDateString('sv-SE', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}</Text>
+            <Text>   14:26</Text>
           </View>
-          <View style={styles.contentRow}>
-            <View style={styles.peopleIconContainer}>
-              <Icon2 name="people" size={22} color="black" />
+          {applicant.role === "leader" && (applicant.members?.length ?? 0) > 0 && (
+            <View style={styles.contentRow}>
+              <View style={styles.peopleIconContainer}>
+                <Icon2 name="people" size={22} color="black" />
+              </View>
+              <View>
+                <Text style={styles.members}>• {applicant.firstName} (Leader)</Text>
+                {applicant.members?.map((member, index) => (
+                  <Text key={member.uid || index} style={styles.members}>
+                    • {member.firstName}
+                  </Text>
+                ))}
+              </View>
             </View>
-            <Text style={styles.members}>{group.memberUids.length} of {group.memberLimit} people joined</Text>
-          </View>
+          )}
           <View style={styles.contentRow}>
             <Icon1 name="information-circle-outline" size={25} color="black" />
-            <Text style={styles.details}>{group.details}</Text>
-          </View>
-          <View style={styles.creatorRow}>
-            <Text style={styles.creatorText}>Created by: </Text>
-            <Text style={styles.creatorName}>
-              {group.createdBy.firstName}
-              {group.createdBy.lastName ? `.${group.createdBy.lastName.charAt(0)}` : ''}
+            <Text style={[styles.note, { flex: 1, flexWrap: 'wrap' }]}>
+              {applicant.note}
             </Text>
           </View>
           <View style={styles.creatorRow}>
-            <TouchableOpacity onPress={() => viewProfile(group.createdBy.uid)}>
+            <Text style={styles.creatorText}>Applied by: </Text>
+            <Text style={styles.creatorName}>
+              {applicant.firstName}
+              {applicant.lastName ? `.${applicant.lastName.charAt(0)}` : ''}
+            </Text>
+          </View>
+          <View style={styles.creatorRow}>
+            <TouchableOpacity onPress={() => viewProfile(applicant.uid)}>
               <Text style={styles.profileButton}>View Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
         {showSubmit && (
-          <TouchableOpacity
-            onPress={onPressButton}
-            style={[
-              styles.submitButton,
-              { backgroundColor: isApplicant || isOwner || isMember ? '#C41E3A' : '#007AFF' }
-            ]}
-          >
-            <Text style={styles.submitButtonText}>
-              {isApplicant ? 'Cancel' : isOwner ? 'Disband' : isMember ? 'Leave' : 'Apply'}
-            </Text>
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity
+              onPress={onPressInvite}
+              style={[
+                styles.inviteButton,
+                { backgroundColor: '#007AFF' }
+              ]}
+            >
+              <Text style={styles.buttonText}>
+                Invite
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPressDecline}
+              style={[
+                styles.declineButton,
+                { backgroundColor: '#C41E3A' }
+              ]}
+            >
+              <Text style={styles.buttonText}>
+                Decline
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+
         )}
       </Animated.View>
     </Pressable >
@@ -273,8 +232,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-  column: {
+  cardContent: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    // borderWidth: 1
+  },
+  rightContent: {
+    flexDirection: 'row'
+  },
+  timerContainer: {
+    marginLeft: 15
   },
   people: {
     justifyContent: 'center',
@@ -285,6 +254,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
+  cardStar: {
+    alignSelf: 'center',
+    marginLeft: 4
+  },
   cardTextPeople: {
     fontSize: moderateScale(17),
     fontWeight: 'bold',
@@ -292,30 +265,24 @@ const styles = StyleSheet.create({
   contentRow: {
     flexDirection: "row",
     // alignItems: "center",
-    paddingTop: verticalScale(10),
+    paddingTop: verticalScale(8),
     // alignContent: "center",
     // justifyContent: "center",
     // borderWidth: 1
   },
-  location: {
-    color: '#333',
-    marginHorizontal: scale(5),
-    paddingTop: verticalScale(2)
-  },
   members: {
     color: '#333',
     marginHorizontal: scale(8),
-    paddingTop: verticalScale(2)
+    paddingTop: verticalScale(1)
 
   },
-  details: {
+  note: {
     color: '#333',
     marginHorizontal: scale(5),
     paddingTop: verticalScale(2)
-
   },
   clockIconContainer: {
-    marginLeft: scale(3),
+    marginLeft: scale(3)
   },
   peopleIconContainer: {
     marginLeft: scale(3)
@@ -344,18 +311,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  submitButton: {
+  inviteButton: {
     position: 'absolute',
     bottom: verticalScale(5),
     right: scale(5),
     // backgroundColor: '#007AFF',
     paddingVertical: verticalScale(8),
-    paddingHorizontal: scale(16),
+    paddingHorizontal: scale(18),
     borderRadius: 6,
     elevation: 3,
   },
-
-  submitButtonText: {
+  declineButton: {
+    position: 'absolute',
+    bottom: verticalScale(5),
+    right: scale(85),
+    // backgroundColor: '#007AFF',
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(13),
+    borderRadius: 6,
+    elevation: 3,
+  },
+  buttonText: {
     color: 'white',
     fontWeight: 'bold',
   }
@@ -364,4 +340,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default GroupCard;
+export default ApplicationCard;

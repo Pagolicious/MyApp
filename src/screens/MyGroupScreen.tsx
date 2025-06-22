@@ -22,6 +22,7 @@ import { navigate } from '../services/NavigationService';
 import GroupNav from '../components/GroupNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import CustomSlider from '../components/CustomSlider';
+import ApplicationCard from '../components/ApplicationCard';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -97,7 +98,7 @@ import { Applicant, Member } from '../types/groupTypes';
 
 const MyGroupScreen = () => {
   const { currentUser, userData } = useAuth();
-  const [applicants, setApplicants] = useState<any[]>([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
@@ -298,9 +299,9 @@ const MyGroupScreen = () => {
     if (!currentGroup) return
 
     const currentMembers = currentGroup?.members ?? [];
+    console.log(currentMembers.length, currentGroup?.memberLimit)
 
-
-    if (currentMembers.length <= currentGroup?.memberLimit) {
+    if (currentMembers.length < currentGroup?.memberLimit) {
       try {
         await firestore().collection('groups').doc(currentGroupId).update({
           isDelisted: false
@@ -343,17 +344,15 @@ const MyGroupScreen = () => {
           <View style={styles.overlay} />
         )}
         <View style={styles.flatListContainer}>
-          <FlatList
+          {/* <FlatList
             data={applicants.filter((applicant) => applicant !== null)} // Prevents null errors
             keyExtractor={(item) => item.uid} // Unique key for each item
             renderItem={({ item }) => {
               if (!item || !item.uid) return null; // Skip invalid applicants
 
-              if (item.role === "leader" && item.members?.length > 0) {
-                // 🔥 Render party leader with stacked members
+              if (item.role === "leader" && (item.members?.length ?? 0) > 0) {
                 return (
                   <View>
-                    {/* Party Leader Card */}
                     <Pressable
                       onPress={() => handleCardPress(item)}
                       android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
@@ -371,7 +370,6 @@ const MyGroupScreen = () => {
                           </View>
                         )}
                       </View>
-                      {/* Stacked Members Below */}
                       <View style={styles.memberContainer}>
                         {item.members.map((member: Member) => (
                           <View
@@ -386,7 +384,6 @@ const MyGroupScreen = () => {
                 );
               }
 
-              // 🔥 Render Individual Applicants
               return (
                 <Pressable
                   onPress={() => handleCardPress(item)}
@@ -408,6 +405,23 @@ const MyGroupScreen = () => {
                 </Pressable>
               );
             }}
+            ListEmptyComponent={
+              <Text style={styles.noApplicantsText}>No applicants available</Text>
+            }
+          /> */}
+          <FlatList
+            data={applicants.filter((applicant) => applicant !== null)}
+            keyExtractor={item => item.uid}
+            renderItem={({ item }) => (
+              <ApplicationCard
+                applicant={item}
+                currentUserId={currentUser?.uid || ''}
+                currentGroup={currentGroup}
+                onPressInvite={() => handleInvite(item)}
+                onPressDecline={() => declineApplicant(item)}
+
+              />
+            )}
             ListEmptyComponent={
               <Text style={styles.noApplicantsText}>No applicants available</Text>
             }

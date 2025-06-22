@@ -23,7 +23,7 @@ export type RootStackParamList = {
   AboutAppScreen: undefined;
   RequestScreen: undefined;
   FriendRequestScreen: undefined;
-  ProfilePageScreen: undefined;
+  ProfilePageScreen: { userId: string };
 
 
   GroupApp: { screen: keyof RootStackParamList } | undefined;

@@ -1,8 +1,15 @@
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, ImageBackground, ScrollView, } from 'react-native';
-import React, { useRef, useEffect, } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { PieChart } from 'react-native-chart-kit';
+
+//Navigation
 import { Dimensions } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+
+//Firebase
+import firestore from '@react-native-firebase/firestore';
 
 //Components
 import CustomAvatar from '../../components/CustomAvatar';
@@ -23,15 +30,45 @@ import FA6Icon from 'react-native-vector-icons/FontAwesome6';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 // import MDIcon from 'react-native-vector-icons/MaterialDesignIcons';
 
+//Types
+import { User } from '../../types/userTypes';
+
+
 const ProfilePageScreen = () => {
-  const { currentUser, userData } = useAuth()
+  const { currentUser } = useAuth()
+  const route = useRoute();
+  const [profileUserData, setProfileUserData] = useState<User | null>(null);
+  const navigation = useNavigation();
+  const { userId } = route.params as { userId?: string };
+  const finalUserId = userId || currentUser?.uid;
   const flatListRef = useRef<FlatList<any>>(null);
   const ITEM_WIDTH = 110; // adjust if you update your card width
+
+
   const scrollToMiddle = () => {
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({ offset: ITEM_WIDTH * sportsPlayed.length, animated: false });
     }
   };
+
+
+  const fetchUser = async () => {
+    if (!finalUserId) return;
+
+    const doc = await firestore().collection('users').doc(finalUserId).get();
+    if (doc.exists) {
+      const user = doc.data();
+      if (user) {
+        setProfileUserData(user as User);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, [finalUserId]);
+
+
 
   useEffect(() => {
     scrollToMiddle();
@@ -95,14 +132,6 @@ const ProfilePageScreen = () => {
   ];
 
 
-
-
-  // const total = userStats.shows + userStats.noShows;
-  // const showPercent = total > 0 ? Math.round((userStats.shows / total) * 100) : 0;
-  // const noShowPercent = total > 0 ? 100 - showPercent : 0;
-
-
-
   const getSportIcon = (sport: string, size = 40, color = '#50C878') => {
     switch (sport.toLowerCase()) {
       case 'football':
@@ -123,17 +152,11 @@ const ProfilePageScreen = () => {
     }
   };
 
-
-
   const handleGoBackButton = () => {
-    if (!userData) return;
-
-    if (userData.isGroupLeader || userData.isGroupMember) {
-      navigate('GroupApp', { screen: 'More' })
-    } else {
-      navigate('PublicApp', { screen: 'More' })
+    if (navigation.canGoBack()) {
+      navigation.goBack();
     }
-  }
+  };
 
   return (
     <ScrollView style={{ flex: 1 }}>
@@ -151,13 +174,13 @@ const ProfilePageScreen = () => {
       <View style={styles.topSection}>
         <View style={styles.avatar}>
           <CustomAvatar
-            uid={currentUser?.uid || 'default-uid'}
-            firstName={userData?.firstName || 'Unknown'}
+            uid={finalUserId || 'default-uid'}
+            firstName={profileUserData?.firstName || 'Unknown'}
             size={moderateScale(160)}
           />
         </View>
         <View style={styles.userInformation}>
-          <Text style={styles.profileNameText}>{userData?.firstName} {userData?.lastName}</Text>
+          <Text style={styles.profileNameText}>{profileUserData?.firstName} {profileUserData?.lastName}</Text>
           <Text style={styles.profileAgeLocationText}>35 years old, Göteborg</Text>
           {/* <Text style={styles.profileLocationText}>Göteborg</Text> */}
 
