@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Switch, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Switch, Platform, KeyboardAvoidingView, ImageBackground, ScrollView } from 'react-native';
 import React, { useState, useEffect, useReducer } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 // import SwitchToggle from "react-native-switch-toggle";
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import Tooltip from 'react-native-walkthrough-tooltip';
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -31,6 +32,9 @@ import { useAuth } from '../context/AuthContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+//Icons
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 // type FindGroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
 
 const FindGroup = () => {
@@ -54,6 +58,7 @@ const FindGroup = () => {
   const [useTimeFilter, setUseTimeFilter] = useState(false);
   const [useMemberFilter, setUseMemberFilter] = useState(false);
   const [groupSize, setGroupSize] = useState(2);
+  const [tooltipVisible, setTooltopVisible] = useState(false);
 
 
 
@@ -181,16 +186,20 @@ const FindGroup = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Find a Group</Text>
-      </View>
-      {/* {userHasGroup ? <GroupNav /> : null}
-      {userInGroup ? <GroupMemberNav /> : null} */}
-      <ImageBackground
-        source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
-        style={styles.backgroundImage} // Style for the background image
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: verticalScale(10) }}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
       >
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Find a Group</Text>
+        </View>
+        {/* {userHasGroup ? <GroupNav /> : null}
+      {userInGroup ? <GroupMemberNav /> : null} */}
+        {/* <ImageBackground
+          source={require('../assets/BackgroundImages/whiteBackground.jpg')}
+          style={styles.backgroundImage}
+        > */}
         {/* <View style={styles.bodyContainer}>
           <Text style={styles.bodyTitle}>Activity</Text>
           <TextInput
@@ -300,7 +309,7 @@ const FindGroup = () => {
           !useMemberFilter && { backgroundColor: '#d3d3d3' }
         ]}>
           <View style={styles.row}>
-            <View style={styles.timeContainer}>
+            <View style={styles.groupSizeContainer}>
               <Text style={styles.bodyLabel}>Group Size</Text>
               <View style={styles.row}>
                 <View style={styles.stepperContainer}>
@@ -311,9 +320,7 @@ const FindGroup = () => {
                   <TouchableOpacity style={styles.stepperButton} onPress={increment}>
                     <Text style={styles.stepperButtonText}>+</Text>
                   </TouchableOpacity>
-                  {/* </View> */}
                 </View>
-
               </View>
             </View>
             <View style={styles.toggleContainer}>
@@ -325,15 +332,52 @@ const FindGroup = () => {
             </View>
           </View>
         </View>
+        <View style={[
+          styles.bodyContainer,
+          !useTimeFilter && { backgroundColor: '#d3d3d3' }
+        ]}>
+          <View style={styles.row}>
+            <View style={styles.skillLevelContainer}>
+              <Text style={styles.bodyLabel}>Ignore Skill Level</Text>
+              <Tooltip
+                isVisible={tooltipVisible}
+                placement="top"
+                onClose={() => setTooltopVisible(false)}
+                showChildInTooltip={false}
+                tooltipStyle={{ marginBottom: 10 }}
+                content={
+                  <Text style={styles.skillLevelText}>
+                    When this is on, you'll only see groups that also disabled the skill rating system — meaning you can match with someone much better or worse than you.
+                  </Text>
+                }
+                arrowSize={{ width: 12, height: 8 }}
+                backgroundColor="rgba(0,0,0,0.5)"
+              >
+                <TouchableOpacity style={styles.tooltipButton} onPress={() => setTooltopVisible(true)}>
+                  <Icon name="info-outline" size={25} color="white" />
+                </TouchableOpacity>
+              </Tooltip>
+              {/* <View style={styles.skillLevelContent}> */}
+              {/* <Text style={styles.skillLevelText}>
+                When this is on, you'll only see groups that also disabled the skill rating system — meaning you can match with someone much better or worse than you.
+                </Text> */}
+              {/* </View> */}
+            </View>
+            <View style={styles.toggleContainer}>
+              <CustomToggle
+                label="Time"
+                value={useTimeFilter}
+                onToggle={(val: boolean) => setUseTimeFilter(val)}
+              />
+            </View>
+          </View>
+        </View>
 
         <View style={styles.buttonContainer}>
           <MyButton title={'Find a Group'} onPress={SearchGroup} />
         </View>
-      </ImageBackground>
-
-      {/* {(userData?.isGroupLeader || userData?.isGroupMember) && <FooterGroupNav />} */}
-      {/* {(!userData?.isGroupLeader && !userData?.isGroupMember) && <FooterNav />} */}
-
+        {/* </ImageBackground> */}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -407,17 +451,30 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
+  // rowContainer: {
+  // flex: 1,
+  // flexDirection: 'row',
+  // justifyContent: 'space-between'
+  // },
   dateContainer: {
-    flex: 2,
-    borderColor: 'grey',
+    flex: 2
   },
   timeContainer: {
+    flex: 2
+
+  },
+  groupSizeContainer: {
+    flex: 2
+
+  },
+  skillLevelContainer: {
     flex: 2,
+    flexDirection: 'row'
   },
   toggleContainer: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    marginHorizontal: scale(20),
+    // borderWidth: 1
   },
   dateButton: {
     fontSize: moderateScale(25),
@@ -428,7 +485,7 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(10),
   },
   dateTimeText: {
-    paddingLeft: scale(20),
+    paddingHorizontal: scale(20),
     fontSize: moderateScale(25),
     color: 'black',
   },
@@ -444,7 +501,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#36454F',
     borderRadius: moderateScale(5),
-    marginLeft: scale(8),
+    marginHorizontal: scale(8),
   },
   stepperButtonText: {
     fontSize: moderateScale(20),
@@ -454,6 +511,27 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(24),
     marginHorizontal: scale(20),
   },
+  // skillLevelContent: {
+  //   borderWidth: 1,
+  //   width: scale(200),
+  //   paddingVertical: verticalScale(10)
+  // },
+  skillLevelText: {
+    // fontSize: moderateScale(14),
+    // marginHorizontal: scale(20),
+    // marginVertical: verticalScale(5)
+    maxWidth: scale(220),
+    padding: moderateScale(10)
+  },
+  tooltipButton: {
+    fontSize: moderateScale(14),
+    marginHorizontal: scale(20),
+    marginVertical: verticalScale(12),
+    borderWidth: 1,
+    padding: moderateScale(5),
+    borderRadius: 5,
+    backgroundColor: '#36454F',
+  }
 });
 
 

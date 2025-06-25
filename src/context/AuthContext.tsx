@@ -10,33 +10,6 @@ import firestore from '@react-native-firebase/firestore';
 
 import { User } from '../types/userTypes';
 
-
-// interface User {
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   createdAt: string;
-//   fcmToken: string;
-//   isPartyLeader: Boolean;
-//   isPartyMember: Boolean;
-//   isGroupLeader: Boolean;
-//   isGroupMember: Boolean;
-//   groupId: string;
-//   skills: Skills[];
-//   friends?: Friend[];
-// }
-
-// interface Friend {
-//   uid: string;
-//   firstName: string;
-//   lastName: string;
-// }
-
-// interface Skills {
-//   sport: string;
-//   skillLevel: number;
-// }
-
 interface AuthContextType {
   currentUser: FirebaseAuthTypes.User | null;
   setCurrentUser: (user: FirebaseAuthTypes.User | null) => void;

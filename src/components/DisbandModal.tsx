@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Modal, TouchableWithoutFeedback, Pressable } from 'react-native'
 import React, { useEffect, useState } from 'react'
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -108,31 +109,34 @@ const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
           transparent
           visible={disbandModalVisible}
           onRequestClose={() => setDisbandModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalView}>
-              <TouchableOpacity
-                style={styles.closeIcon}
-                onPress={() => setDisbandModalVisible(false)}>
-                <Text style={styles.closeText}>✖</Text>
-              </TouchableOpacity>
+          <TouchableWithoutFeedback onPress={() => setDisbandModalVisible(false)}>
 
-              <Text style={styles.modalTitleText}>Disband group</Text>
-              <Text style={styles.modalText}>Would you like to disband the group?</Text>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalView}>
+                <TouchableOpacity
+                  style={styles.closeIcon}
+                  onPress={() => setDisbandModalVisible(false)}>
+                  <Text style={styles.closeText}>✖</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.modalTitleText}>Disband group</Text>
+                <Text style={styles.modalText}>Would you like to disband the group?</Text>
 
 
-              <TouchableOpacity
-                style={styles.submitBtn}
-                onPress={() => {
-                  if (userParty) {
-                    handleDisbandMyParty()
-                  } else {
-                    handleDisbandMyGroup()
-                  }
-                }}>
-                <Text style={styles.submitBtnText}>Disband</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.submitBtn}
+                  onPress={() => {
+                    if (userParty) {
+                      handleDisbandMyParty()
+                    } else {
+                      handleDisbandMyGroup()
+                    }
+                  }}>
+                  <Text style={styles.submitBtnText}>Disband</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
       )}
     </View>
@@ -149,72 +153,56 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: 350,
-    padding: 20,
+    width: scale(300),
+    padding: moderateScale(20),
     backgroundColor: 'white',
     borderRadius: 20,
     alignItems: 'center',
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 4,
-    // elevation: 5,
-    // position: 'relative', // Needed for positioning the close button
   },
-  // modalDetailContainer: {
-  //   width: 300,
-  //   height: 120,
-  //   borderRadius: 5,
-  //   backgroundColor: '#F9F6EE',
-  //   borderWidth: 1,
-  //   borderColor: 'grey',
-  // },
-  // modalDetailText: {
-  //   padding: 10,
-  //   color: 'black',
-  // },
   closeIcon: {
     position: 'absolute',
-    top: 5,
-    right: 15,
-    padding: 5,
+    top: verticalScale(5),
+    right: scale(15),
+    padding: moderateScale(5),
   },
   closeText: {
     fontSize: 24,
     color: '#888',
   },
   modalTitleText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     fontWeight: 'bold',
     color: 'black',
   },
   modalText: {
-    marginTop: 20,
-    fontSize: 18,
+    marginTop: verticalScale(20),
+    fontSize: moderateScale(18),
     color: 'black',
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
+    textAlign: 'center'
+
   },
   submitBtn: {
     backgroundColor: 'green',
-    padding: 10,
-    width: 100,
+    padding: moderateScale(10),
+    width: scale(100),
     alignItems: 'center',
     borderRadius: 5,
-    marginTop: 15,
+    marginTop: verticalScale(15),
   },
   submitBtnText: {
     color: 'white',
     fontWeight: 'bold',
   },
   leaveButton: {
-    width: 120,
-    height: 50,
+    width: scale(120),
+    height: verticalScale(50),
     backgroundColor: "#C41E3A",
     justifyContent: "center",
     borderRadius: 10
   },
   leaveText: {
-    fontSize: 15,
+    fontSize: moderateScale(15),
     color: "white",
     fontWeight: "bold",
     textAlign: "center"

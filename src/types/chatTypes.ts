@@ -9,6 +9,7 @@ export type ChatItem = {
   id: string;
   isGroup: boolean;
   activity?: string;
+  title?: string;
   chatName?: string;
   participants: string[];
   participantsDetails: ParticipantDetails;

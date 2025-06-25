@@ -6,12 +6,13 @@ import React, {
   useRef,
   ReactNode,
 } from 'react';
-import { Alert, Modal, View, Text, Pressable, StyleSheet } from 'react-native';
+import { Alert, Modal, View, Text, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from './AuthContext';
 import { navigate } from '../services/NavigationService';
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 import firestore from '@react-native-firebase/firestore';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 // Services & Types
 import {
@@ -46,7 +47,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   const [notificationId, setNotificationId] = useState<string | undefined>();
   const [userLeftManually, setUserLeftManually] = useState(false);
 
-  const previousGroupId = useRef<string | undefined>();
+  const previousGroupId = useRef<string | undefined>(undefined);
 
   // 🔁 Listen for groupId changes
   useEffect(() => {
@@ -55,8 +56,9 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       if (!groupId && previousGroupId.current) {
         if (!userLeftManually) {
           Toast.show({ type: 'info', text1: 'You have been removed from the group.' });
+          navigate('PublicApp', { screen: 'FindOrStart' });
+
         }
-        navigate('PublicApp', { screen: 'FindOrStart' });
         setUserLeftManually(false);
       }
       setCurrentGroupId(groupId);
@@ -64,7 +66,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [currentUser]);
+  }, [currentUser, userLeftManually]);
 
   // 🔁 Listen for group data changes
   useEffect(() => {
@@ -82,6 +84,8 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       Alert.alert('Error', 'No group to disband or no signed user.');
       return;
     }
+
+    setUserLeftManually(true);
 
     try {
       await disbandGroupService(currentGroup, currentUser.uid);
@@ -168,6 +172,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
         setNotificationModal(true);
       });
 
+
     return () => unsubscribe();
   }, [currentUser]);
 
@@ -181,6 +186,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     setNotificationModal(false);
     setNotificationMessage(null);
     navigate("PublicApp", { screen: 'FindOrStart' });
+
   };
 
   return (
@@ -201,23 +207,26 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       {children}
       <Modal
         visible={notificationModal}
-        animationType="slide"
+        animationType="fade"
         transparent
         onRequestClose={closeNotificationModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalTitleText}>Notification</Text>
-            <Text style={styles.modalText}>{notificationMessage}</Text>
-            <Pressable
-              onPress={closeNotificationModal}
-              style={styles.button}
-              android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
-            >
-              <Text style={styles.buttonText}>Close</Text>
-            </Pressable>
+        <TouchableWithoutFeedback onPress={closeNotificationModal}>
+
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitleText}>Notification</Text>
+              <Text style={styles.modalText}>{notificationMessage}</Text>
+              <Pressable
+                onPress={closeNotificationModal}
+                style={styles.button}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.2)', borderless: false }}
+              >
+                <Text style={styles.buttonText}>Close</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </GroupContext.Provider>
   );
@@ -237,30 +246,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: 350,
-    padding: 20,
+    width: scale(320),
+    padding: moderateScale(20),
     backgroundColor: 'white',
     borderRadius: 20,
     alignItems: 'center',
   },
   modalTitleText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     fontWeight: 'bold',
     color: 'black',
   },
   modalText: {
-    marginTop: 20,
-    fontSize: 16,
+    marginTop: verticalScale(20),
+    fontSize: moderateScale(16),
     color: 'black',
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
+    textAlign: 'center'
   },
   button: {
     backgroundColor: '#007FFF',
-    padding: 10,
-    width: 100,
+    padding: moderateScale(10),
+    width: scale(100),
     alignItems: 'center',
     borderRadius: 5,
-    marginTop: 15,
+    marginTop: verticalScale(15),
   },
   buttonText: {
     color: 'white',

@@ -21,26 +21,6 @@ import { ChatItem } from '../types/chatTypes';
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
-// type ParticipantDetails = {
-//   [uid: string]: {
-//     firstName: string;
-//     lastName: string;
-//   };
-// };
-
-// type ChatItem = {
-//   id: string;
-//   isGroup: boolean;
-//   activity?: string;
-//   chatName?: string;
-//   participants: string[];
-//   participantsDetails: ParticipantDetails;
-//   lastMessage?: {
-//     text: string;
-//     createdAt: any; // or use FirebaseFirestoreTypes.Timestamp
-//   };
-// };
-
 
 const ChatListScreen = () => {
   const { currentUser, userData } = useAuth();
@@ -99,6 +79,7 @@ const ChatListScreen = () => {
             id: doc.id,
             isGroup: data.isGroup,
             activity: data.activity,
+            title: data.title,
             chatName: data.chatName,
             participants: data.participants,
             participantsDetails: data.participantsDetails,
@@ -243,7 +224,9 @@ const ChatListScreen = () => {
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.chatTitle}>
-          {item.isGroup ? item.chatName || `Group Chat - ${item.activity}` : getOtherParticipantName(item)}
+          {item.isGroup
+            ? item.chatName || (item.activity === 'Custom' ? item.title : item.activity)
+            : getOtherParticipantName(item)}
         </Text>
         <Text style={styles.chatSubtitle} numberOfLines={1}>
           {item.lastMessage?.text || 'No messages yet'}

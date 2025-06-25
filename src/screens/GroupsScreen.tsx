@@ -269,6 +269,8 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     let applicantData: Applicant;
+    const now = new Date().toISOString();
+
     try {
       // 🔍 Fetch the searchParty where doc ID = currentUser.uid (leader's party)
       const partyDoc = await firestore()
@@ -291,6 +293,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           lastName: userParty.leaderLastName,
           skillLevel: skillLevel,
           note: note, // Optional note
+          appliedAt: now,
           role: "leader",
           members: userParty.members?.map((member: Member) => ({
             uid: member.uid,
@@ -307,6 +310,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           lastName: userData?.lastName || "",
           skillLevel: skillLevel,
           note: note,
+          appliedAt: now
         };
       }
 

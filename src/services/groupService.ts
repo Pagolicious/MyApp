@@ -42,12 +42,19 @@ export const disbandGroup = async (group: Group, leaderUid: string): Promise<voi
     groupId: ""
   });
 
+  const message = group.activity === "Custom"
+    ? `${group.title} at ${group.location} was disbanded by the leader.`
+    : `${group.activity} group at ${group.location} was disbanded by the leader.`;
+
   await Promise.all(
     group.members.map(async (member: Member) => {
       await firestore().collection("groupNotifications").add({
         userId: member.uid,
         type: "GROUP_DELETED",
-        message: "Your group has been deleted by the leader.",
+        groupActivity: group.activity,
+        groupTitle: group.title,
+        groupLocation: group.location,
+        message: message,
         groupId,
         timestamp: firestore.FieldValue.serverTimestamp(),
         read: false,

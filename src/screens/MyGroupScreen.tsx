@@ -43,58 +43,6 @@ import Icon2 from 'react-native-vector-icons/Entypo';
 //Types
 import { Applicant, Member } from '../types/groupTypes';
 
-// type MyGroupScreenProps = NativeStackScreenProps<
-//   RootStackParamList,
-//   'MyGroupScreen'
-// >;
-
-// interface Group {
-//   id: string;
-//   activity: string;
-//   location: string;
-//   fromDate: string;
-//   fromTime: string;
-//   toTime: string;
-//   createdBy: string;
-//   details: string;
-//   applicants: Applicant[];
-//   members: Member[];
-// }
-
-// interface Applicant {
-//   uid: string;
-//   firstName: string;
-//   lastName?: string;
-//   // skills: Skills[];
-//   note?: string;
-//   role?: "leader" | "member";
-//   members?: Member[];
-// }
-
-// interface Skills {
-//   sport: string;
-//   skillLevel: number
-// }
-
-// interface Member {
-//   uid: string;
-//   firstName: string;
-//   lastName: string;
-//   skillLevel?: string;
-// }
-
-// interface Invitation {
-//   id: string;
-//   groupId: string;
-//   sender: string;
-//   receiver: string;
-//   activity: string;
-//   location: string;
-//   fromDate: string;
-//   fromTime: string;
-//   toTime: string;
-//   status: 'pending' | 'accepted' | 'declined';
-// }
 
 const MyGroupScreen = () => {
   const { currentUser, userData } = useAuth();
@@ -104,72 +52,6 @@ const MyGroupScreen = () => {
     null,
   );
   const { currentGroupId, currentGroup } = useGroup();
-  // const [isDelisted, setIsDelisted] = useState(false);
-
-  // const { delistModalVisible, setDelistModalVisible } = useModal();
-
-  // useEffect(() => {
-  //   if (!currentUser) {
-  //     console.log("No currentUser, skipping fetchApplicants.");
-  //     setApplicants([]);
-  //     return;
-  //   }
-  //   if (!currentGroup?.applicants?.length) {
-  //     setApplicants([]); // Clear applicants if no data
-  //     return;
-  //   }
-
-  //   const fetchApplicants = async () => {
-  //     try {
-  //       if (!currentGroup) return;
-  //       if (currentGroup.applicants && currentGroup.applicants.length > 0) {
-  //         const applicantsList = await Promise.all(
-  //           currentGroup.applicants.map(async (applicant) => {
-  //             try {
-  //               const userDoc = await firestore()
-  //                 .collection('users')
-  //                 .doc(applicant.uid)
-  //                 .get();
-
-  //               if (!userDoc.exists) {
-  //                 console.log(`Applicant ${applicant.uid} does not exist.`);
-  //                 return null; // 🔹 Skip missing applicants
-  //               }
-  //               const userData = userDoc.data();
-
-  //               const skill =
-  //                 userData?.skills?.find(
-  //                   (s: any) => s.sport.toLowerCase() === currentGroup.activity?.toLowerCase()
-  //                 ) || {};
-
-  //               return {
-  //                 uid: applicant.uid,
-  //                 firstName: userData?.firstName || 'Unknown',
-  //                 lastName: userData?.lastName || 'Unknown',
-  //                 skillLevel: skill.skillLevel || 'Unknown',
-  //                 note: applicant.note || '',
-  //               };
-  //             } catch (error) {
-  //               console.error(`Error fetching applicant ${applicant.uid}:`, error);
-  //               return null; // 🔹 If there's an error fetching one applicant, don't crash everything
-  //             }
-  //           })
-  //         );
-
-  //         setApplicants(applicantsList);
-  //       } else {
-  //         setApplicants([]); // Clear the list if no applicants exist
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching applicant details:', error);
-  //       Alert.alert('Error', 'Failed to fetch applicant details.');
-  //       handleFirestoreError(error)
-
-  //     }
-  //   };
-
-  //   fetchApplicants();
-  // }, [currentUser, currentGroup]);
 
   useEffect(() => {
     if (!currentGroup?.applicants) {
@@ -190,64 +72,6 @@ const MyGroupScreen = () => {
     setModalVisible(true);
     setSelectedApplicant(item);
   };
-
-  // const inviteApplicant = async (selectedApplicant: Applicant | null) => {
-
-  //   if (!currentUser) {
-  //     console.log("User is not authenticated.");
-  //     Alert.alert("Error", "User is not authenticated. Please log in.");
-  //     return;
-  //   }
-
-
-  //   setModalVisible(false);
-  //   if (!selectedApplicant) {
-  //     Alert.alert('Error', 'No applicant selected');
-  //     return;
-  //   }
-
-  //   try {
-
-  //     if (!currentGroup) {
-  //       Alert.alert('Error', 'Group not found. Please refresh the list or create a new group.');
-  //       return;
-  //     }
-
-  //     try {
-  //       // Generate a new ID for the invitation document
-  //       const invitationId = firestore().collection('groupInvitations').doc().id;
-
-  //       // Create the invitation document with a specific ID
-  //       await firestore()
-  //         .collection('groupInvitations')
-  //         .doc(invitationId)
-  //         .set({
-  //           sender: currentUser.uid,
-  //           receiver: selectedApplicant.uid,
-  //           groupId: currentGroupId,
-  //           activity: currentGroup?.activity || 'Unknown',
-  //           location: currentGroup?.location || 'Unknown',
-  //           fromDate: currentGroup?.fromDate || 'Unknown',
-  //           fromTime: currentGroup?.fromTime || 'Unknown',
-  //           toTime: currentGroup?.toTime || 'Unknown',
-  //           status: 'pending', // Default status
-  //           createdAt: firestore.FieldValue.serverTimestamp(),
-  //           members: selectedApplicant.members || null
-  //         });
-
-  //       console.log('Invitation sent successfully.');
-  //     } catch (error) {
-  //       console.error('Error sending invitation:', error);
-  //       Alert.alert('Error', 'Failed to send invitation.');
-  //     }
-
-  //   } catch (error) {
-  //     console.error('Error saving user data: ', error);
-  //     Alert.alert('Error', 'Could not apply for group');
-  //     handleFirestoreError(error)
-
-  //   }
-  // };
 
   const handleInvite = (selectedApplicant: Applicant | null) => {
     if (!currentUser) {
@@ -344,71 +168,7 @@ const MyGroupScreen = () => {
           <View style={styles.overlay} />
         )}
         <View style={styles.flatListContainer}>
-          {/* <FlatList
-            data={applicants.filter((applicant) => applicant !== null)} // Prevents null errors
-            keyExtractor={(item) => item.uid} // Unique key for each item
-            renderItem={({ item }) => {
-              if (!item || !item.uid) return null; // Skip invalid applicants
 
-              if (item.role === "leader" && (item.members?.length ?? 0) > 0) {
-                return (
-                  <View>
-                    <Pressable
-                      onPress={() => handleCardPress(item)}
-                      android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
-                      style={styles.card}>
-                      <View style={styles.column}>
-                        <Text style={styles.cardText}>{item.firstName} (Leader)</Text>
-                        {currentGroup?.activity !== "Custom" && (
-                          <View>
-                            <Text style={styles.cardText}>
-                              {item.skillLevel ?? "N/A"}
-                            </Text>
-                            <View style={styles.cardStar}>
-                              <Icon2 name="star" size={23} color="black" />
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                      <View style={styles.memberContainer}>
-                        {item.members.map((member: Member) => (
-                          <View
-                            key={member.uid}
-                            style={styles.memberCard}>
-                            <Text style={styles.cardText}>{member.firstName}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </Pressable>
-                  </View>
-                );
-              }
-
-              return (
-                <Pressable
-                  onPress={() => handleCardPress(item)}
-                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
-                  style={styles.card}>
-                  <View style={styles.column}>
-                    <Text style={styles.cardText}>{item.firstName}</Text>
-                    {currentGroup?.activity !== "Custom" && (
-                      <View style={styles.column}>
-                        <Text style={styles.cardText}>
-                          {item.skillLevel ?? "N/A"}
-                        </Text>
-                        <View style={styles.cardStar}>
-                          <Icon2 name="star" size={23} color="black" />
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            }}
-            ListEmptyComponent={
-              <Text style={styles.noApplicantsText}>No applicants available</Text>
-            }
-          /> */}
           <FlatList
             data={applicants.filter((applicant) => applicant !== null)}
             keyExtractor={item => item.uid}
@@ -517,24 +277,6 @@ const MyGroupScreen = () => {
             <Icon1 name="close" size={40} color="white" />
           </TouchableOpacity>
         )}
-        {/* {userData?.isGroupLeader && isDelisted && (
-          <TouchableOpacity
-            style={styles.closeTestGroupButton}
-            onPress={() => setIsDelisted(false)}
-            activeOpacity={0.7} // Slight opacity on press
-          >
-            <Icon1 name="close" size={40} color="white" />
-          </TouchableOpacity>
-        )} */}
-        {/* {userData?.isGroupLeader && (
-          <SafeAreaView style={styles.slider}>
-
-            <CustomSlider
-              onDelist={() => console.log('Group delisted ❌')}
-              onReactivate={() => console.log('Group activated 🔍')}
-            />
-          </SafeAreaView>
-        )} */}
         <Modal
           animationType="fade"
           transparent
@@ -604,7 +346,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     borderRadius: 15,
 
-
     // Shadow for iOS
     shadowColor: '#000', // Shadow color
     shadowOffset: { width: 0, height: 2 }, // Shadow position
@@ -626,24 +367,6 @@ const styles = StyleSheet.create({
   memberCard: {
     backgroundColor: '#6CB4EE',
     padding: 10,
-    // marginHorizontal: 10,
-    // width: "100%",
-    // borderRadius: 15,
-    // position: 'relative',
-    // zIndex: -1,
-    // borderBottomEndRadius: 15
-
-    // opacity: 0.85, // Slightly faded to indicate stacking
-
-    // // ✅ Add Shadow for iOS
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-
-    // // ✅ Add Shadow for Android
-    // elevation: 5,
-
   },
   cardText: {
     color: 'black',
@@ -654,11 +377,6 @@ const styles = StyleSheet.create({
     // borderWidth: 2
     marginLeft: 4
   },
-  // line: {
-  //   height: 1,
-  //   width: '100%',
-  //   backgroundColor: 'black',
-  // },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -702,16 +420,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'grey',
   },
-  // input: {
-  //   height: 120,
-  //   width: 300,
-  //   borderColor: 'gray',
-  //   borderWidth: 1,
-  //   padding: 10,
-  //   borderRadius: 5,
-  //   backgroundColor: 'white',
-  //   fontSize: 16,
-  // },
   modalNoteText: {
     padding: 10,
     color: 'black',
@@ -793,22 +501,6 @@ const styles = StyleSheet.create({
     left: 20,
     position: "absolute",
   },
-  // closeTestGroupButton: {
-  //   width: 60,
-  //   height: 60,
-  //   borderRadius: 60 / 2,
-  //   backgroundColor: '#C41E3A',
-  //   bottom: 20,
-  //   left: 200,
-  //   position: "absolute",
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   elevation: 10,          // Adds shadow on Android
-  //   shadowColor: '#000',   // Adds shadow on iOS
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.3,
-  //   shadowRadius: 3,
-  // },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // darker overlay

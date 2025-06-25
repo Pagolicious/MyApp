@@ -12,6 +12,7 @@ export type Applicant = {
   lastName: string;
   skillLevel?: string | number;
   note?: string;
+  appliedAt: string,
   role?: "leader" | "member";
   members?: Omit<Applicant, "members" | "role">[];
 };

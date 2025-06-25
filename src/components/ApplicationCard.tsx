@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -36,9 +36,32 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
   const [expanded, setExpanded] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState('0s');
 
   const animation = useRef(new Animated.Value(0)).current;
   const submitOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const appliedAt = new Date(applicant.appliedAt);
+      const diffMs = now.getTime() - appliedAt.getTime();
+
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
+      const seconds = Math.floor((diffMs / 1000) % 60);
+
+      let timeStr = '';
+      if (hours > 0) timeStr += `${hours}h `;
+      if (minutes > 0 || hours > 0) timeStr += `${minutes}m `;
+      timeStr += `${seconds}s`;
+
+      setElapsedTime(timeStr.trim());
+
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [applicant.appliedAt]);
 
   const toggleExpand = () => {
     const newState = !expanded;
@@ -78,14 +101,12 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
 
 
   const viewProfile = (userId: string) => {
-    // You could navigate or link to profile
     navigate('ProfilePageScreen', { userId: userId })
-    // Example: navigation.navigate('UserProfile', { userId });
   };
 
   const animatedHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, contentHeight], // Adjust as needed
+    outputRange: [0, contentHeight],
   });
 
   return (
@@ -121,7 +142,7 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
             </View>
           )}
           <View style={styles.timerContainer}>
-            <Text style={styles.cardText}>14:26</Text>
+            <Text style={styles.cardText}>{elapsedTime}</Text>
           </View>
         </View>
       </View>
@@ -139,7 +160,7 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
             <View style={styles.clockIconContainer}>
               <Icon4 name="clock" size={20} color="black" />
             </View>
-            <Text>   14:26</Text>
+            <Text style={styles.timer}>{elapsedTime}</Text>
           </View>
           {applicant.role === "leader" && (applicant.members?.length ?? 0) > 0 && (
             <View style={styles.contentRow}>
@@ -269,6 +290,11 @@ const styles = StyleSheet.create({
     // alignContent: "center",
     // justifyContent: "center",
     // borderWidth: 1
+  },
+  timer: {
+    color: '#333',
+    marginHorizontal: scale(7),
+    // paddingTop: verticalScale(2)
   },
   members: {
     color: '#333',

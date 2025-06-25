@@ -47,7 +47,7 @@ const ProfileButtons = () => {
   return (
     <View style={styles.container}>
       {currentUser && (
-        <View>
+        <View style={styles.content}>
           <View style={styles.topSection}>
 
             <TouchableOpacity onPress={() => navigate('ProfilePageScreen', { userId: currentUser.uid })}>
@@ -102,17 +102,18 @@ export default ProfileButtons
 
 const styles = StyleSheet.create({
   container: {
-    // marginBottom: verticalScale(15),
     flex: 1,
-    justifyContent: "space-between"
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+    marginVertical: verticalScale(20),
   },
   topSection: {
-    marginVertical: verticalScale(20),
-    // borderWidth: 1,
-
+    // marginVertical: verticalScale(20),
   },
   bottomSection: {
-    marginVertical: verticalScale(20)
+    // marginVertical: verticalScale(20),
   },
   btnBorder: {
     paddingVertical: verticalScale(15),

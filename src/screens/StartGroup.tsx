@@ -251,9 +251,10 @@ const StartGroup = () => {
 
     await firestore().collection('chats').doc(groupId).set({
       isGroup: true,
-      activity,
+      activity: activity,
+      title: title || '',
       participants: memberUids,
-      participantsDetails,
+      participantsDetails: participantsDetails,
       createdAt: firestore.FieldValue.serverTimestamp(),
       lastMessage: {
         text: '',
@@ -435,6 +436,7 @@ const StartGroup = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
+        contentContainerStyle={{ paddingBottom: verticalScale(80) }}
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
       >
@@ -633,68 +635,6 @@ const StartGroup = () => {
           )}
         </View>
       )}
-      {/* <Modal
-        animationType="fade"
-        transparent
-        visible={moreModalVisible}
-        onRequestClose={() => setMoreModalVisible(false)}
-      >
-        <TouchableWithoutFeedback
-          onPress={() => {
-            setMoreModalVisible(false);
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalView}>
-              <TouchableOpacity
-                style={styles.closeIcon}
-                onPress={() => {
-                  setMoreModalVisible(false);
-                }}
-              >
-                <Text style={styles.closeText}>✖</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalTitleText}>More Filters</Text>
-              <Text style={styles.bodyLabel}>Gender</Text>
-              <View style={styles.segmentContainer}>
-                {GenderOptions.map((option) => (
-                  <Pressable
-                    key={option}
-                    onPress={() => setSelectedGender(option)}
-                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
-                    style={[
-                      styles.segment,
-                      selectedGender === option && styles.segmentSelected
-                    ]}
-                  >
-                    <Text style={selectedGender === option ? styles.textSelected : styles.text}>
-                      {option}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <Text style={styles.bodyLabel}>Group visibility</Text>
-              <View style={styles.segmentContainer}>
-                {VisibilityOption.map((option) => (
-                  <Pressable
-                    key={option}
-                    onPress={() => setSelectedVisibility(option)}
-                    android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
-                    style={[
-                      styles.segment,
-                      selectedVisibility === option && styles.segmentSelected
-                    ]}
-                  >
-                    <Text style={selectedVisibility === option ? styles.textSelected : styles.text}>
-                      {option}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal> */}
       <MoreOptionsModal
         visible={moreModalVisible}
         onClose={() => setMoreModalVisible(false)}
@@ -713,13 +653,7 @@ const StartGroup = () => {
         isVerifiedOnly={isVerifiedOnly}
         setIsVerifiedOnly={setIsVerifiedOnly}
       />
-
-
-
     </KeyboardAvoidingView>
-
-
-
   );
 };
 
