@@ -7,31 +7,21 @@ import {
   TouchableOpacity,
   FlatList,
   Animated,
-  Easing,
   ImageBackground,
-  Pressable,
   TouchableWithoutFeedback
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { TextInput } from 'react-native-gesture-handler';
-import { BlurView } from '@react-native-community/blur';
 import { Dimensions } from 'react-native';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
-
 //Navigation
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../utils/types';
 import StarRating from 'react-native-star-rating-widget';
 import { RouteProp } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 //Components
-import GroupNav from '../components/GroupNav';
-import GroupMemberNav from '../components/GroupMemberNav';
-import FooterNav from '../components/FooterNav';
-import FooterGroupNav from '../components/FooterGroupNav';
 import PartyDisplay from '../components/PartyDisplay';
 import GroupCard from '../components/GroupCard'
 
@@ -42,9 +32,6 @@ import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
-//Hooks
-import { useGroupData } from '../hooks/useGroupData';
-
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
@@ -53,12 +40,6 @@ import Icon1 from 'react-native-vector-icons/AntDesign';
 
 //Types
 import { Group, Applicant, Member } from '../types/groupTypes';
-
-
-
-// type RootStackParamList = {
-//   GroupsScreen: { activity: string };
-// };
 
 type GroupsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'GroupsScreen'>;
 type GroupsScreenRouteProp = RouteProp<RootStackParamList, 'GroupsScreen'>;
@@ -80,28 +61,21 @@ const parseGroupTime = (fromDate: string, fromTime: string): Date => {
 
 const screenWidth = Dimensions.get('window').width;
 
-
 const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { currentUser, userData } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
-  // const [userHasGroup, setUserHasGroup] = useState(false);
-  // const [userInGroup, setUserInGroup] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
   const [applyModalVisible, setApplyModalVisible] = useState(false);
   const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
-  const { currentGroup, currentGroupId, setCurrentGroupId } = useGroup();
+  const { currentGroupId } = useGroup();
   const { activity, date, time, groupSize } = route.params;
-  // const navigation = useNavigation();
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  // const { userInGroup } = useGroupData()
   const [userPickedSkillLevel, setUserPickedSkillLevel] = useState(false);
   const needsToSetSkillLevel = !hasSkillLevel && !userPickedSkillLevel && selectedGroup?.activity !== "Custom";
   const canShowGroupDetails = hasSkillLevel || userPickedSkillLevel || selectedGroup?.activity === "Custom";
 
-  const animationValue = useRef(new Animated.Value(0)).current; // Initialize animated value
+  const animationValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!currentUser) {
@@ -180,8 +154,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           }
         }
 
-
-
         if (time) {
           const centerTime = new Date(time);
           const centerHour = centerTime.getHours();
@@ -218,8 +190,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           setGroups(filteredGroups);
         }
 
-
-        // setGroups(filteredGroups);
       }, error => {
         console.error('Error listening to Firestore groups:', error);
         Alert.alert('Error', 'Could not fetch groups in real time.');
@@ -238,8 +208,8 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
     if (selectedGroup.activity !== "Custom") {
       const newSkill = {
-        sport: selectedGroup.activity.toLowerCase(), // Add the sport name
-        skillLevel, // Add the skill level value
+        sport: selectedGroup.activity.toLowerCase(),
+        skillLevel,
       };
 
       try {
@@ -247,11 +217,9 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           .collection('users')
           .doc(currentUser.uid)
           .update({
-            skills: firestore.FieldValue.arrayUnion(newSkill), // Use Firestore's arrayUnion
+            skills: firestore.FieldValue.arrayUnion(newSkill),
           });
 
-
-        // setModalVisible(false);
         setHasSkillLevel(true);
       } catch (error) {
         console.error('Error saving user data: ', error);
@@ -259,7 +227,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         handleFirestoreError(error)
       }
     }
-
   };
 
   const applyForGroup = async () => {
@@ -279,11 +246,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         .get();
 
       const userParty = partyDoc.exists ? partyDoc.data() : null;
-
-      // const skill =
-      //   userData?.skills?.find(
-      //     (s: any) => s.sport.toLowerCase() === selectedGroup?.activity?.toLowerCase()
-      //   ) || null;
 
       // 🔹 If user is a party leader, submit the whole party as ONE applicant
       if (userParty) {
@@ -318,7 +280,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         Object.entries(applicantData).filter(([_, v]) => v !== undefined)
       );
 
-      // 🔥 Save applicant data to Firestore
+      // Save applicant data to Firestore
       await firestore()
         .collection('groups')
         .doc(selectedGroup?.id)
@@ -326,7 +288,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           applicants: firestore.FieldValue.arrayUnion(sanitizedApplicantData),
         });
 
-      // ✅ Update local state
+      // Update local state
       setGroups(prevGroups =>
         prevGroups.map(group =>
           group.id === currentGroupId
@@ -342,7 +304,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Error saving user data: ', error);
       Alert.alert('Error', 'Could not apply for group');
       handleFirestoreError(error)
-
     }
   };
 
@@ -350,7 +311,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     if (!currentUser) return;
 
     try {
-      // 🔥 Remove user from applicants array in Firestore
+      // Remove user from applicants array in Firestore
       await firestore()
         .collection('groups')
         .doc(groupId)
@@ -360,7 +321,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           ),
         });
 
-      // ✅ Update local state
+      // Update local state
       setGroups(prev =>
         prev.map(group =>
           group.id === groupId
@@ -376,7 +337,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       Alert.alert("Error", "Could not cancel application.");
     }
   };
-
 
   const checkUserSkillLevel = async (activity: string): Promise<boolean> => {
     if (!currentUser) {
@@ -423,17 +383,14 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         useNativeDriver: false,
       }).start();
     }
-  }, [currentUser, selectedGroup]); // ❗ Remove skillLevel from dependencies!
-
-
-
+  }, [currentUser, selectedGroup]); // Remove skillLevel from dependencies!
 
   // Interpolate animated value for opacity and height
   const animatedStyle = {
     opacity: animationValue,
     height: animationValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 250], // Adjust height as needed
+      outputRange: [0, 250],
     }),
   };
 
@@ -445,7 +402,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
     setSelectedGroup(item);
 
-    const userHasSkill = await checkUserSkillLevel(item.activity); // ⬅️ Make `checkUserSkillLevel` return boolean
+    const userHasSkill = await checkUserSkillLevel(item.activity);
 
     if (item.activity === "Custom" || userHasSkill) {
       Animated.spring(animationValue, {
@@ -460,17 +417,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
     setApplyModalVisible(true);
   };
 
-
-
-
-  // if (loading) {
-  //   return (
-  //     <View style={styles.container}>
-  //       <Text>Loading groups...</Text>
-  //     </View>
-  //   );
-  // }
-
   return (
     <View style={styles.container}>
 
@@ -479,97 +425,27 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text>Please log in to view groups.</Text>
       ) : (
         <>
-          {/* <ImageBackground
-            source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
-            style={styles.backgroundImage} // Style for the background image
-          > */}
-          {/* <View style={styles.contentContainer}> */}
-
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Icon1 name="arrowleft" size={25} color="white" />
             </TouchableOpacity>
-            {/* <View style={styles.spacer} /> */}
             <Text style={styles.headerText}>Groups</Text>
-            {/* <View style={styles.spacer} /> */}
             {userData && (userData.isPartyLeader || userData.isPartyMember) && (
               <View style={styles.partyContainer}>
                 <PartyDisplay />
               </View>
             )}
           </View>
-
-          {/* {userHasGroup ? <GroupNav /> : null}
-          {userInGroup ? <GroupMemberNav /> : null} */}
           <ImageBackground
-            source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
-            style={styles.backgroundImage} // Style for the background image
+            source={require('../assets/BackgroundImages/whiteBackground.jpg')}
+            style={styles.backgroundImage}
           >
-
-            {/* <View style={styles.flatListContainer}>
-              <FlatList
-                data={groups || []}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => {
-
-                  const isApplicant = item.applicants.some(
-                    applicant => applicant.uid === currentUser?.uid
-                  );
-                  const isMember = item.memberUids.includes(currentUser?.uid);
-                  const isOwner = item.createdBy.uid === currentUser.uid
-                  return (
-
-                    <Pressable onPress={() => handleCardPress(item)}
-                      android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}
-                      style={[
-                        styles.card,
-                        { backgroundColor: isApplicant || isMember || isOwner ? '#50C878' : '#6A9AB0' }, // Dynamic color
-                      ]}>
-
-                      <View style={styles.column}>
-
-                        <View style={styles.cardContentActivity}>
-                          {item.activity === "Custom" ? (
-                            <Text style={styles.cardText}>{item.title}</Text>
-                          ) : (
-                            <Text style={styles.cardText}>{item.activity}</Text>
-                          )}
-                          <Text style={styles.cardText}>{item.location}</Text>
-                        </View>
-
-                        <View style={styles.cardContentDate}>
-                          <Text style={styles.cardText}>
-                            {new Date(item.fromDate).toLocaleDateString("sv-SE", {
-                              // weekday: 'short',
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
-                          </Text>
-                          <Text style={styles.cardText}>
-                            {item.fromTime} - {item.toTime}
-                          </Text>
-                        </View>
-
-                        <View style={styles.cardContentPeople}>
-                          <Text style={styles.cardTextPeople}>{item.memberUids.length}/{item.memberLimit}</Text>
-                        </View>
-                      </View>
-
-                    </Pressable>
-                  )
-                }}
-                ListEmptyComponent={
-                  <Text style={styles.noGroupsText}>No groups available</Text>
-                }
-              />
-            </View> */}
             <FlatList
               data={groups}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <GroupCard group={item} currentUserId={currentUser?.uid || ''}
-                  onPressApply={() => handleCardPress(item)} // ⬅️ this handles skill check + modal
+                  onPressApply={() => handleCardPress(item)}
                   onCancelApply={() => cancelApplication(item.id)}
 
                 />
@@ -578,10 +454,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                 <Text style={styles.noGroupsText}>No groups available</Text>
               }
             />
-
-            {/* <GroupCard title="More Info">
-              <Text>Hello</Text>
-            </GroupCard> */}
             {currentUser && (
               <Modal
                 animationType="fade"
@@ -592,27 +464,22 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                 <TouchableWithoutFeedback
                   onPress={() => {
                     setApplyModalVisible(false);
-                    setUserPickedSkillLevel(false); // ✅ Reset on close
+                    setUserPickedSkillLevel(false);
                   }}
                 >
                   <View style={styles.modalOverlay}>
                     <View style={styles.modalView}>
-                      {/* Close Button */}
                       <TouchableOpacity
                         style={styles.closeIcon}
                         onPress={() => {
                           setApplyModalVisible(false);
                           setUserPickedSkillLevel(false);
-                          // animationValue.setValue(0);
                         }}
                       >
                         <Text style={styles.closeText}>✖</Text>
                       </TouchableOpacity>
 
-                      {/* Modal Title */}
                       <Text style={styles.modalTitleText}>Apply For Group</Text>
-
-                      {/* ⭐ Star Rating always visible */}
 
                       <View style={styles.setLevelContainer}>
                         {(!hasSkillLevel && selectedGroup?.activity !== "Custom") && (
@@ -648,21 +515,11 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                         )}
 
 
-                        {/* 🧩 Expanded Group Details */}
                         {(canShowGroupDetails) && (
                           <>
                             <Animated.View style={[styles.modalExtendedContent, animatedStyle]}>
 
                               <View style={styles.modalContent}>
-
-
-                                {/* <Text style={styles.modalText}>Group Details:</Text>
-
-                                <View style={styles.modalDetailContainer}>
-                                  <Text style={styles.modalDetailText}>
-                                    {currentGroup?.details}
-                                  </Text>
-                                </View> */}
 
                                 <Text style={styles.modalText}>Your message to the group:</Text>
                                 <TextInput
@@ -675,7 +532,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                                   numberOfLines={4}
                                   textAlignVertical="top"
                                 />
-
                               </View>
 
                               <View style={styles.modalFooter}>
@@ -701,17 +557,9 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                 </TouchableWithoutFeedback>
               </Modal>
             )}
-
-
-            {/* </View> */}
           </ImageBackground>
-
-
         </>
       )}
-      {/* </ImageBackground> */}
-      {/* {(userData?.isGroupLeader || userData?.isGroupMember) && <FooterGroupNav />}
-      {(!userData?.isGroupLeader && !userData?.isGroupMember) && <FooterNav />} */}
     </View>
 
   );
@@ -799,14 +647,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: moderateScale(20),
     alignItems: 'center',
-
   },
   modalContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
-
   modalFooter: {
     alignItems: 'center',
     justifyContent: 'flex-end',
@@ -859,13 +705,6 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(20),
   },
   modalExtendedContent: {
-    // flex: 1,
-    // alignItems: 'center',
-    // flexDirection: 'column',
-    // justifyContent: 'space-between', // ✅ Push footer to bottom
-    // maxHeight: verticalScale(550), // ✅ optional limit
-    // width: '100%',
-    // justifyContent: 'space-between',
   },
   modalObervationText: {
     fontSize: moderateScale(14),

@@ -7,21 +7,14 @@ import {
   TouchableOpacity,
   FlatList,
   ImageBackground,
-  Pressable,
-  SafeAreaView
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 
 //Navigation
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../utils/types';
 import { navigate } from '../services/NavigationService';
 
 //Components
-import GroupNav from '../components/GroupNav';
-import FooterGroupNav from '../components/FooterGroupNav';
-import CustomSlider from '../components/CustomSlider';
 import ApplicationCard from '../components/ApplicationCard';
 
 //Firebase
@@ -30,18 +23,15 @@ import firestore from '@react-native-firebase/firestore';
 //Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
-import { useModal } from '../context/ModalContext';
 
 //Utils
-import handleFirestoreError from '../utils/firebaseErrorHandler';
 import { inviteApplicant } from '../utils/inviteHelpers';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
-import Icon2 from 'react-native-vector-icons/Entypo';
 
 //Types
-import { Applicant, Member } from '../types/groupTypes';
+import { Applicant } from '../types/groupTypes';
 
 
 const MyGroupScreen = () => {
@@ -55,23 +45,12 @@ const MyGroupScreen = () => {
 
   useEffect(() => {
     if (!currentGroup?.applicants) {
-      setApplicants([]); // Clear list if no applicants
+      setApplicants([]);
       return;
     }
 
     setApplicants(currentGroup.applicants);
-  }, [currentGroup]); // ✅ Runs only when `currentGroup` changes
-
-
-
-
-  const handleCardPress = (item: Applicant) => {
-    if (!userData?.isGroupLeader) {
-      return;
-    }
-    setModalVisible(true);
-    setSelectedApplicant(item);
-  };
+  }, [currentGroup]);
 
   const handleInvite = (selectedApplicant: Applicant | null) => {
     if (!currentUser) {
@@ -90,7 +69,6 @@ const MyGroupScreen = () => {
     }
     setModalVisible(false);
     inviteApplicant(currentUser, currentGroup, currentGroupId, selectedApplicant);
-    // console.log("DAWDWADAWDADWWDAWD", typeof currentGroupId, typeof currentGroup, typeof currentUser)
   };
 
   const declineApplicant = async (selectedApplicant: Applicant | null) => {
@@ -147,18 +125,11 @@ const MyGroupScreen = () => {
 
   }
 
-
-
-
-
   return (
     <View style={styles.container}>
-      {/* <GroupNav /> */}
-
-      {/* {currentUser && <GroupNav />} */}
       <ImageBackground
-        source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
-        style={styles.backgroundImage} // Style for the background image
+        source={require('../assets/BackgroundImages/whiteBackground.jpg')}
+        style={styles.backgroundImage}
 
       >
         {currentGroup?.visibility === "Private" && (
@@ -179,7 +150,6 @@ const MyGroupScreen = () => {
                 currentGroup={currentGroup}
                 onPressInvite={() => handleInvite(item)}
                 onPressDecline={() => declineApplicant(item)}
-
               />
             )}
             ListEmptyComponent={
@@ -202,14 +172,14 @@ const MyGroupScreen = () => {
             <TouchableOpacity
               style={styles.inviteGroupButton}
               onPress={() => handleInviteFriend()}
-              activeOpacity={0.7} // Slight opacity on press
+              activeOpacity={0.7}
             >
               <Text style={styles.activateButtonText}>Invite</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.editDelistedGroupButton}
               onPress={() => navigate("StartGroup")}
-              activeOpacity={0.7} // Slight opacity on press
+              activeOpacity={0.7}
             >
               <Text style={styles.activateButtonText}>Edit</Text>
               <Icon1 name="edit" size={25} color="white" />
@@ -233,14 +203,14 @@ const MyGroupScreen = () => {
             <TouchableOpacity
               style={styles.activateGroupButton}
               onPress={() => handleActivateGroup()}
-              activeOpacity={0.7} // Slight opacity on press
+              activeOpacity={0.7}
             >
               <Text style={styles.activateButtonText}>Activate</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.editDelistedGroupButton}
               onPress={() => navigate("StartGroup")}
-              activeOpacity={0.7} // Slight opacity on press
+              activeOpacity={0.7}
             >
               <Text style={styles.activateButtonText}>Edit</Text>
               <Icon1 name="edit" size={25} color="white" />
@@ -255,7 +225,6 @@ const MyGroupScreen = () => {
             <Text style={styles.activateGroupText}>Your leader have either
               chosen to pause it or it reached the member limit.
             </Text>
-
           </View>
         )}
 
@@ -263,7 +232,7 @@ const MyGroupScreen = () => {
           <TouchableOpacity
             style={styles.editGroupButton}
             onPress={() => navigate("StartGroup")}
-            activeOpacity={0.7} // Slight opacity on press
+            activeOpacity={0.7}
           >
             <Icon1 name="edit" size={40} color="white" />
           </TouchableOpacity>
@@ -272,7 +241,7 @@ const MyGroupScreen = () => {
           <TouchableOpacity
             style={styles.closeGroupButton}
             onPress={() => handleDelistGroup()}
-            activeOpacity={0.7} // Slight opacity on press
+            activeOpacity={0.7}
           >
             <Icon1 name="close" size={40} color="white" />
           </TouchableOpacity>
@@ -284,14 +253,12 @@ const MyGroupScreen = () => {
           onRequestClose={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalView}>
-              {/* Close Button in top-right corner */}
               <TouchableOpacity
                 style={styles.closeIcon}
                 onPress={() => setModalVisible(false)}>
                 <Text style={styles.closeText}>✖</Text>
               </TouchableOpacity>
 
-              {/* Modal Content */}
               <Text style={styles.modalTitleText}>Invite</Text>
               <Text style={styles.modalText}>
                 Do you want to invite this person to your group?
@@ -321,7 +288,6 @@ const MyGroupScreen = () => {
           </View>
         </Modal>
       </ImageBackground>
-      {/* <FooterGroupNav /> */}
     </View>
   );
 };
@@ -361,7 +327,6 @@ const styles = StyleSheet.create({
   },
   memberContainer: {
     marginTop: 15,
-    // borderRadius: 20,
     borderWidth: 1
   },
   memberCard: {
@@ -370,11 +335,9 @@ const styles = StyleSheet.create({
   },
   cardText: {
     color: 'black',
-    // fontWeight: "bold",
     fontSize: 20,
   },
   cardStar: {
-    // borderWidth: 2
     marginLeft: 4
   },
   modalOverlay: {
@@ -408,7 +371,6 @@ const styles = StyleSheet.create({
   modalText: {
     marginTop: 20,
     fontSize: 18,
-    // fontWeight: 'bold',
     color: 'black',
     marginBottom: 20,
   },
@@ -427,7 +389,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    // paddingHorizontal: 30,
     width: '100%',
     marginTop: 5,
   },
@@ -503,17 +464,15 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // darker overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 1, // put this below buttons
-    pointerEvents: 'none', // ✅ allows clicks to pass through!
+    pointerEvents: 'none',
   },
   activateGroupContainer: {
     zIndex: 5, // 🔝 Make sure it's above the overlay's zIndex: 1
-    position: 'absolute', // Important to make zIndex work properly
-    top: '20%', // position it visually center-ish (adjust as needed)
+    position: 'absolute',
+    top: '20%',
     alignSelf: 'center',
-    // justifyContent: 'center',
-    // alignItems: 'center',
     padding: 20,
     paddingTop: 25,
     width: 330,
@@ -528,11 +487,10 @@ const styles = StyleSheet.create({
   },
   activateGroupMemberContainer: {
     zIndex: 5, // 🔝 Make sure it's above the overlay's zIndex: 1
-    position: 'absolute', // Important to make zIndex work properly
-    top: '25%', // position it visually center-ish (adjust as needed)
+    position: 'absolute',
+    top: '25%',
     alignSelf: 'center',
     justifyContent: 'center',
-    // alignItems: 'center',
     textAlign: "center",
     padding: 15,
     paddingTop: 25,
@@ -556,10 +514,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 30,
     elevation: 5,
-    flexDirection: 'row', // 🔥 put text and icon side-by-side
-    alignItems: 'center', // vertically align them
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 10, // optional spacing between text and icon (React Native 0.71+)
+    gap: 10,
   },
   editDelistedGroupButton: {
     position: 'absolute',
@@ -571,10 +529,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 30,
     elevation: 5,
-    flexDirection: 'row', // 🔥 put text and icon side-by-side
-    alignItems: 'center', // vertically align them
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 10, // optional spacing between text and icon (React Native 0.71+)
+    gap: 10,
   },
 
   activateButtonText: {
@@ -603,11 +561,9 @@ const styles = StyleSheet.create({
   },
   privateGroupContainer: {
     zIndex: 5, // 🔝 Make sure it's above the overlay's zIndex: 1
-    position: 'absolute', // Important to make zIndex work properly
-    top: '20%', // position it visually center-ish (adjust as needed)
+    position: 'absolute',
+    top: '20%',
     alignSelf: 'center',
-    // justifyContent: 'center',
-    // alignItems: 'center',
     padding: 20,
     paddingTop: 25,
     width: 330,
@@ -630,10 +586,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 37,
     borderRadius: 30,
     elevation: 5,
-    flexDirection: 'row', // 🔥 put text and icon side-by-side
-    alignItems: 'center', // vertically align them
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 10, // optional spacing between text and icon (React Native 0.71+)
+    gap: 10,
   },
   privateButtonText: {
     color: 'white',
@@ -659,10 +615,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: '500',
   },
-
-
-
-
-
-
 });

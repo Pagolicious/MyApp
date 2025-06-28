@@ -18,10 +18,6 @@ import { navigate } from '../services/NavigationService';
 import { Friend } from '../types/userTypes';
 import { ChatItem } from '../types/chatTypes';
 
-//Icons
-import Icon1 from 'react-native-vector-icons/AntDesign';
-
-
 const ChatListScreen = () => {
   const { currentUser, userData } = useAuth();
   const [groupedChats, setGroupedChats] = useState<{
@@ -48,16 +44,6 @@ const ChatListScreen = () => {
     const info = getOtherParticipantInfo(item);
     return `${info.firstName} ${info.lastName}`.trim();
   };
-
-
-  // const handleGoBackButton = () => {
-  //   if (!userData) return;
-  //   if (userData.isGroupLeader || userData.isGroupMember) {
-  //     navigate('GroupApp', { screen: 'Profile' });
-  //   } else {
-  //     navigate('PublicApp', { screen: 'Profile' });
-  //   }
-  // };
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -103,7 +89,7 @@ const ChatListScreen = () => {
 
   useEffect(() => {
     if (!currentUser) {
-      setFriends([]); // Clear friends list on logout
+      setFriends([]);
       return;
     }
     // Reference to the user's Firestore document
@@ -203,7 +189,6 @@ const ChatListScreen = () => {
       style={styles.chatItem}
       onPress={() => {
         if (item.isGroup) {
-          // navigate('GroupChatScreen', { chatId: item.id });
           navigate('GroupChatScreen', { chatId: item.id, participantsDetails: item.participantsDetails })
 
         } else {
@@ -239,12 +224,7 @@ const ChatListScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        {/* <TouchableOpacity onPress={handleGoBackButton}>
-          <Icon1 name="arrowleft" size={25} color="white" />
-        </TouchableOpacity> */}
-        {/* <View style={styles.spacer} /> */}
         <Text style={styles.headerText}>Chats</Text>
-        {/* <View style={styles.spacer} /> */}
       </View>
 
       {loading ? (
@@ -311,7 +291,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#5f4c4c",
     padding: 15,
     alignItems: "center",
-    // flexDirection: "row",
   },
   headerText: {
     fontSize: 20,
@@ -347,12 +326,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   avatarContainer: {
-    // marginHorizontal: 1,
-    // paddingHorizontal: 1
   },
   textContainer: {
     marginHorizontal: 15,
-    // paddingHorizontal: 8
   },
   chatTitle: {
     fontWeight: "bold",

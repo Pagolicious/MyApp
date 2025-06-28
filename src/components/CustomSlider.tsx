@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
-  View,
   Text,
   StyleSheet,
   Animated,
@@ -22,7 +21,6 @@ type Props = {
 const CustomSlider = ({ onDelist, onReactivate }: Props) => {
   const panX = useRef(new Animated.Value(INITIAL_X)).current;
   const [isDelisted, setIsDelisted] = useState(false);
-  const dragOffsetX = useRef(0);
   const isDelistedRef = useRef(false);
 
   useEffect(() => {
@@ -116,13 +114,6 @@ const CustomSlider = ({ onDelist, onReactivate }: Props) => {
     })
   ).current;
 
-  // const resetSlider = () => {
-  //   Animated.spring(panX, {
-  //     toValue: INITIAL_X,
-  //     useNativeDriver: false,
-  //   }).start();
-  // };
-
   return (
     <Animated.View
       style={[
@@ -171,7 +162,6 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: 'lightgrey',
     borderRadius: 30,
-    // overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',

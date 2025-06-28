@@ -1,23 +1,12 @@
 import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Switch, Platform, KeyboardAvoidingView, ImageBackground, ScrollView } from 'react-native';
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-// import SwitchToggle from "react-native-switch-toggle";
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
-import Tooltip from 'react-native-walkthrough-tooltip';
-
-//Navigation
-import { RootStackParamList } from '../utils/types';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Tooltip, { Placement } from "react-native-tooltip-2";
 
 //Components
-import GroupNav from '../components/GroupNav';
-import GroupMemberNav from '../components/GroupMemberNav';
-import FooterNav from '../components/FooterNav';
-import FooterGroupNav from '../components/FooterGroupNav';
 import MyButton from '../components/MyButton';
 import SearchableDropdown from '../components/SearchableDropdown';
 import CustomToggle from '../components/CustomToggle';
@@ -35,17 +24,10 @@ import { navigate } from '../services/NavigationService';
 //Icons
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-// type FindGroupsProps = NativeStackScreenProps<RootStackParamList, 'GroupsScreen'>;
 
 const FindGroup = () => {
-  // const [query, setQuery] = useState('Any');
-  const [filteredSports, setFilteredSports] = useState(sportsList);
   const [activity, setActivity] = useState('Any');
-  const [showDropdown, setShowDropdown] = useState(false);
   const [Location, setLocation] = useState('Close to your location');
-  // const [userHasGroup, setUserHasGroup] = useState(false);
-  const { currentGroup } = useGroup()
-  const { currentUser, userData } = useAuth()
   const [fromDate, setFromDate] = useState(new Date());
   const [showFromDatepicker, setShowFromDatepicker] = useState(false);
   const [fromTime, setFromTime] = useState(() => {
@@ -58,42 +40,8 @@ const FindGroup = () => {
   const [useTimeFilter, setUseTimeFilter] = useState(false);
   const [useMemberFilter, setUseMemberFilter] = useState(false);
   const [groupSize, setGroupSize] = useState(2);
-  const [tooltipVisible, setTooltopVisible] = useState(false);
-
-
-
-
-  // const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-
-  // const navigation =
-  //   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  // useEffect(() => {
-  //   if (currentUser) {
-  //     setUserHasGroup(currentGroup?.createdBy === currentUser.uid);
-  //   }
-  // })
-
-  // const handleSearch = (text: string) => {
-  //   setActivity(text);
-
-  //   if (text === '') {
-  //     setFilteredSports(sportsList); // Show all options if search is empty
-  //     setShowDropdown(false); // Hide dropdown
-  //   } else {
-  //     const filtered = sportsList.filter((sport) =>
-  //       sport.toLowerCase().includes(text.toLowerCase())
-  //     );
-  //     setFilteredSports(filtered);
-  //     setShowDropdown(true);
-  //   }
-  // };
-
-  // const handleSelect = (sport: string) => {
-  //   // setActivity(sport);
-  //   setActivity(sport); // Update the search bar with the selected sport
-  //   setShowDropdown(false); // Hide dropdown
-  // };
+  const [useSkillLevelFilter, setUseSkillLevelFilter] = useState(false);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
 
   const SearchGroup = async () => {
     try {
@@ -102,11 +50,11 @@ const FindGroup = () => {
       };
 
       if (useDateFilter) {
-        params.date = fromDate.toISOString(); // or formatDate(fromDate)
+        params.date = fromDate.toISOString();
       }
 
       if (useTimeFilter) {
-        params.time = fromTime.toISOString(); // or formatTime(fromTime)
+        params.time = fromTime.toISOString();
       }
 
       if (useMemberFilter) {
@@ -194,38 +142,7 @@ const FindGroup = () => {
         <View style={styles.header}>
           <Text style={styles.headerText}>Find a Group</Text>
         </View>
-        {/* {userHasGroup ? <GroupNav /> : null}
-      {userInGroup ? <GroupMemberNav /> : null} */}
-        {/* <ImageBackground
-          source={require('../assets/BackgroundImages/whiteBackground.jpg')}
-          style={styles.backgroundImage}
-        > */}
-        {/* <View style={styles.bodyContainer}>
-          <Text style={styles.bodyTitle}>Activity</Text>
-          <TextInput
-            style={styles.input}
-            value={activity}
-            onChangeText={handleSearch}
-            onFocus={() => setShowDropdown(true)} // Show dropdown when focused
-          />
-          {showDropdown && (
 
-            <FlatList
-              style={styles.dropdown}
-              data={filteredSports}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dropdownItem}
-                  onPress={() => handleSelect(item)}
-                >
-                  <Text style={styles.dropdownText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-
-          )}
-        </View> */}
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyTitle}>Activity</Text>
           <SearchableDropdown
@@ -334,17 +251,16 @@ const FindGroup = () => {
         </View>
         <View style={[
           styles.bodyContainer,
-          !useTimeFilter && { backgroundColor: '#d3d3d3' }
+          !useSkillLevelFilter && { backgroundColor: '#d3d3d3' }
         ]}>
           <View style={styles.row}>
             <View style={styles.skillLevelContainer}>
               <Text style={styles.bodyLabel}>Ignore Skill Level</Text>
               <Tooltip
                 isVisible={tooltipVisible}
-                placement="top"
-                onClose={() => setTooltopVisible(false)}
-                showChildInTooltip={false}
-                tooltipStyle={{ marginBottom: 10 }}
+                placement={Placement.TOP}
+                onClose={() => setTooltipVisible(false)}
+                displayInsets={{ top: 20, bottom: 20, left: 10, right: 10 }}
                 content={
                   <Text style={styles.skillLevelText}>
                     When this is on, you'll only see groups that also disabled the skill rating system — meaning you can match with someone much better or worse than you.
@@ -353,21 +269,20 @@ const FindGroup = () => {
                 arrowSize={{ width: 12, height: 8 }}
                 backgroundColor="rgba(0,0,0,0.5)"
               >
-                <TouchableOpacity style={styles.tooltipButton} onPress={() => setTooltopVisible(true)}>
-                  <Icon name="info-outline" size={25} color="white" />
-                </TouchableOpacity>
+                <View style={styles.tooltipBtnContainer}>
+
+                  <TouchableOpacity style={styles.tooltipBtn} onPress={() => setTooltipVisible(true)}>
+                    <Icon name="info-outline" size={25} color="white" />
+                  </TouchableOpacity>
+                </View>
+
               </Tooltip>
-              {/* <View style={styles.skillLevelContent}> */}
-              {/* <Text style={styles.skillLevelText}>
-                When this is on, you'll only see groups that also disabled the skill rating system — meaning you can match with someone much better or worse than you.
-                </Text> */}
-              {/* </View> */}
             </View>
             <View style={styles.toggleContainer}>
               <CustomToggle
                 label="Time"
-                value={useTimeFilter}
-                onToggle={(val: boolean) => setUseTimeFilter(val)}
+                value={useSkillLevelFilter}
+                onToggle={(val: boolean) => setUseSkillLevelFilter(val)}
               />
             </View>
           </View>
@@ -376,7 +291,6 @@ const FindGroup = () => {
         <View style={styles.buttonContainer}>
           <MyButton title={'Find a Group'} onPress={SearchGroup} />
         </View>
-        {/* </ImageBackground> */}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -451,11 +365,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-  // rowContainer: {
-  // flex: 1,
-  // flexDirection: 'row',
-  // justifyContent: 'space-between'
-  // },
+
   dateContainer: {
     flex: 2
   },
@@ -474,7 +384,6 @@ const styles = StyleSheet.create({
   toggleContainer: {
     justifyContent: 'center',
     marginHorizontal: scale(20),
-    // borderWidth: 1
   },
   dateButton: {
     fontSize: moderateScale(25),
@@ -511,23 +420,16 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(24),
     marginHorizontal: scale(20),
   },
-  // skillLevelContent: {
-  //   borderWidth: 1,
-  //   width: scale(200),
-  //   paddingVertical: verticalScale(10)
-  // },
   skillLevelText: {
-    // fontSize: moderateScale(14),
-    // marginHorizontal: scale(20),
-    // marginVertical: verticalScale(5)
     maxWidth: scale(220),
     padding: moderateScale(10)
   },
-  tooltipButton: {
+  tooltipBtnContainer: {
+  },
+  tooltipBtn: {
     fontSize: moderateScale(14),
     marginHorizontal: scale(20),
     marginVertical: verticalScale(12),
-    borderWidth: 1,
     padding: moderateScale(5),
     borderRadius: 5,
     backgroundColor: '#36454F',

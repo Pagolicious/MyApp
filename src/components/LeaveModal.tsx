@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Modal, TouchableWithoutFeedback, Pressable } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -13,13 +13,6 @@ import { navigate } from '../services/NavigationService';
 
 //Types
 import { SearchParty } from '../types/groupTypes';
-
-// interface PartyGroup {
-//   leaderFirstName: string;
-//   leaderLastName: string;
-//   leaderUid: string;
-//   members: { uid: string; firstName: string; lastName: string }[];
-// }
 
 interface LeaveModalProps {
   userParty?: SearchParty | null;
@@ -121,12 +114,6 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
         });
 
       setLeaveModalVisible(false);
-      // await checkUserInGroup();
-
-      // Clear group context explicitly
-      // await updateGroup(undefined);
-      // await updateGroupId(undefined);
-
       navigate('PublicApp', { screen: 'FindOrStart' })
 
     } catch {
@@ -191,25 +178,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
     alignItems: 'center',
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 4,
-    // elevation: 5,
-    // position: 'relative', // Needed for positioning the close button
   },
-  // modalDetailContainer: {
-  //   width: 300,
-  //   height: 120,
-  //   borderRadius: 5,
-  //   backgroundColor: '#F9F6EE',
-  //   borderWidth: 1,
-  //   borderColor: 'grey',
-  // },
-  // modalDetailText: {
-  //   padding: 10,
-  //   color: 'black',
-  // },
   closeIcon: {
     position: 'absolute',
     top: 5,
@@ -255,6 +224,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center"
-
   }
 })

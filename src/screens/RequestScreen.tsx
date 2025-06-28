@@ -4,25 +4,13 @@ import React, { useEffect, useState } from 'react'
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
-//Navigation
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-
 //Components
 import GroupMemberNav from '../components/GroupMemberNav';
 import FooterGroupNav from '../components/FooterGroupNav';
 import CustomAvatar from '../components/CustomAvatar';
-import MembersHomeScreen from './MembersHomeScreen';
-import ProfileButtons from '../components/ProfileButtons';
-import FooterNav from '../components/FooterNav';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
-
-//Hooks
-import { useGroupData } from '../hooks/useGroupData';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/Entypo';
@@ -32,12 +20,7 @@ import { Friend } from '../types/userTypes';
 
 const RequestScreen = () => {
   const { currentUser } = useAuth()
-  // const { owner } = useGroupData()
-  // const { userInGroup } = useGroup()
   const [friends, setFriends] = useState<Friend[]>([]);
-  // const route = useRoute();
-
-  // const isActive = (screenName: string) => route.name === screenName;
 
   useEffect(() => {
     if (!currentUser) return;
@@ -79,8 +62,8 @@ const RequestScreen = () => {
       </View>
       <GroupMemberNav />
       <ImageBackground
-        source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
-        style={styles.backgroundImage} // Style for the background image
+        source={require('../assets/BackgroundImages/whiteBackground.jpg')}
+        style={styles.backgroundImage}
       >
         <View style={styles.onlineHeader}>
           <Text style={styles.onlineText}>Online</Text>

@@ -1,12 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useRoute } from '@react-navigation/native';
 
-//Firebase
-import firestore from '@react-native-firebase/firestore';
-
 //Components
-import GroupChat from '../components/GroupChat';
 import Chat from '../components/Chat';
 
 //Context
@@ -56,7 +52,6 @@ const ChatroomScreen = () => {
             <Chat chatId={chatId} participantsDetails={participantsDetails} />
           </View>
           <View style={styles.footerContainer}>
-            {/* <FooterGroupNav /> */}
           </View>
         </>
       )}
@@ -91,6 +86,5 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerContainer: {
-    // height: 76,
   },
 });

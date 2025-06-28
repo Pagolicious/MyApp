@@ -1,6 +1,6 @@
 // CustomToggle.js
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
 
 type CustomToggleProps = {
   label: string;
@@ -25,7 +25,7 @@ const CustomToggle: React.FC<CustomToggleProps> = ({ label, onToggle, value = fa
   const toggle = () => {
     const newValue = !isOn;
     setIsOn(newValue);
-    onToggle(newValue); // 🔁 Send the new value back to the parent
+    onToggle(newValue); // Send the new value back to the parent
     Animated.timing(animValue, {
       toValue: newValue ? 1 : 0,
       duration: 200,
@@ -40,7 +40,6 @@ const CustomToggle: React.FC<CustomToggleProps> = ({ label, onToggle, value = fa
 
   return (
     <View style={styles.wrapper}>
-      {/* <Text style={styles.label}>{label}</Text> */}
       <TouchableOpacity style={styles.switch} onPress={toggle} activeOpacity={0.8}>
         <View style={[styles.track, isOn ? styles.on : styles.off]}>
           <Animated.View style={[styles.thumb, { transform: [{ translateX }] }]} />

@@ -87,16 +87,16 @@ const styles = StyleSheet.create({
     overflow: "hidden", // Ensures progress bar sticks on top with no gap
   },
   progressBarContainer: {
-    width: "100%", // Match popup width
+    width: "100%",
     height: 5,
     backgroundColor: "#555",
   },
   progressBar: {
     height: "100%",
-    backgroundColor: "green", // Progress bar color
+    backgroundColor: "green",
   },
   content: {
-    padding: 15, // Padding inside popup, below progress bar
+    padding: 15,
     alignItems: "center",
   },
   text: {

@@ -1,42 +1,12 @@
 import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
+
+//Utils
 import handleFirestoreError from './firebaseErrorHandler';
 
 //Types
-import { Group, Applicant, Member } from '../types/groupTypes';
+import { Group, Applicant } from '../types/groupTypes';
 import { AuthUser } from '../types/userTypes';
-
-// interface Group {
-//   id: string;
-//   activity: string;
-//   location: string;
-//   fromDate: string;
-//   fromTime: string;
-//   toTime: string;
-//   createdBy: string;
-//   memberLimit: number;
-//   details: string;
-//   applicants: Applicant[];
-//   memberUids: string[];
-// }
-
-// interface Applicant {
-//   uid: string;
-//   firstName: string;
-//   lastName?: string;
-//   // skills: Skills[];
-//   note?: string;
-//   role?: "leader" | "member";
-//   members?: Member[];
-// }
-
-// interface Member {
-//   uid: string;
-//   firstName: string;
-//   lastName: string;
-//   skillLevel?: string;
-// }
-
 
 export const inviteApplicant = async (
   currentUser: AuthUser,

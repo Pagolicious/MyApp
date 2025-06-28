@@ -1,7 +1,5 @@
-// services/invitationService.ts
 import firestore from '@react-native-firebase/firestore';
 import { GroupInvitation, FriendRequest, PartyInvitation } from '../types/invitationTypes';
-import { Member } from '../types/groupTypes';
 
 export const listenToGroupInvitations = (userId: string, onUpdate: (inv: GroupInvitation | null) => void) => {
   return firestore()

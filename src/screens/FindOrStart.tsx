@@ -2,10 +2,6 @@ import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from 'react
 import React from 'react';
 import Toast from 'react-native-toast-message';
 
-//Components
-import FooterNav from '../components/FooterNav';
-import MyButton from '../components/MyButton';
-
 //Contexts
 import { useAuth } from '../context/AuthContext';
 
@@ -14,8 +10,6 @@ import { navigate } from '../services/NavigationService';
 
 const FindOrStart = () => {
   const { currentUser, userData } = useAuth();
-  // const navigation =
-  //   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleStartGroup = () => {
     if (!userData) return;
@@ -28,7 +22,6 @@ const FindOrStart = () => {
         text1: 'Action Not Allowed 🚫',
         text2: 'Only the leader can start. Ask them or create your own!',
       });
-
     }
   }
 
@@ -62,10 +55,6 @@ const FindOrStart = () => {
           </TouchableOpacity>
         </View>
       </ImageBackground>
-      {/* <View style={styles.flexEnd}> */}
-      {/* <FooterNav /> */}
-
-      {/* </View> */}
     </View>
   );
 };
@@ -73,7 +62,6 @@ const FindOrStart = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
   },
   backgroundImage: {
     flex: 1,
@@ -92,7 +80,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 15,
     backgroundColor: '#C41E3A',
-    // marginTop: 30,
   },
   buttonText: {
     color: 'white',

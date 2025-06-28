@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import MyGroupScreen from '../screens/MyGroupScreen';
-import GroupNav from '../components/GroupNav'; // ✅ Import GroupNav
+import GroupNav from '../components/GroupNav';
 
 const MyGroupWithNav = () => {
   return (

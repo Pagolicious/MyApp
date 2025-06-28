@@ -9,14 +9,13 @@ const Stack = createStackNavigator();
 const FriendStack = () => {
   return (
     <React.Fragment>
-      {/* Persistent Navigation Header */}
       <FriendNav />
 
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          ...TransitionPresets.FadeFromBottomAndroid, // ✅ Smooth fade transition
-          cardStyle: { backgroundColor: 'white' }, // ✅ Prevents grey background
+          ...TransitionPresets.FadeFromBottomAndroid, // Smooth fade transition
+          cardStyle: { backgroundColor: 'white' }, // Prevents grey background
         }}
         initialRouteName="FriendScreen"
       >

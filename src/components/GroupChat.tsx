@@ -86,22 +86,6 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
     return () => unsubscribe();
   }, [currentGroupId, currentUser?.uid]);
 
-
-  // const onSend = useCallback(
-  //   async (newMessages: IMessage[] = []) => {
-  //     const message = newMessages[0];
-  //     await firestore()
-  //       .collection('chats')
-  //       .doc(currentGroupId)
-  //       .collection('messages')
-  //       .add({
-  //         ...message,
-  //         createdAt: firestore.FieldValue.serverTimestamp(),
-  //       });
-  //   },
-  //   [currentGroupId]
-  // );
-
   const onSend = useCallback(
     async (newMessages: IMessage[] = []) => {
       const message = {
@@ -158,10 +142,6 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
   };
 
 
-
-
-
-
   // Custom renderBubble to show username above the message bubble
   const renderBubble = (props: any) => {
     const { currentMessage } = props;
@@ -196,11 +176,10 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
         user={{
           _id: currentUser.uid,
           name: userData?.firstName,
-          // avatar: userData?.avatar, // Current user's avatar
+          // avatar: userData?.avatar
         }}
         renderBubble={renderBubble}
         renderMessage={renderMessage}
-        // bottomOffset={70} // Add space for a bottom tab bar or other UI element
         renderAvatar={renderAvatar}
         onInputTextChanged={async (text) => {
           const typingRef = firestore()
@@ -229,10 +208,6 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
             </Text>
           );
         }}
-
-
-
-
       />
     </KeyboardAvoidingView>
 
@@ -247,16 +222,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 2,
-    marginLeft: 10, // Adjust for alignment with the message bubble
+    marginLeft: 10,
     color: 'grey'
   },
   otherUserBubble: {
-    backgroundColor: '#E0E0E0', // Light grey for other user
+    backgroundColor: '#E0E0E0',
     padding: 10,
     borderRadius: 15,
   },
   currentUserBubble: {
-    backgroundColor: '#007AFF', // Blue for current user
+    backgroundColor: '#007AFF',
     padding: 10,
     borderRadius: 15,
   },

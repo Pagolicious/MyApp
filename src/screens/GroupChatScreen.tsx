@@ -1,17 +1,12 @@
 import { StyleSheet, Text, View, TouchableOpacity, } from 'react-native';
-import React, { useEffect, } from 'react';
+import React from 'react';
 import { useRoute } from '@react-navigation/native';
 
-//Firebase
-import firestore from '@react-native-firebase/firestore';
-
 //Components
-import FooterGroupNav from '../components/FooterGroupNav';
 import GroupChat from '../components/GroupChat';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
 
 //Services
 import { navigate } from '../services/NavigationService';
@@ -39,53 +34,6 @@ const GroupChatScreen = () => {
     }
   };
 
-
-  // useEffect(() => {
-  //   if (!currentUser || !userData) return
-
-  //   const ensureGroupChatExistsAndJoin = async () => {
-  //     const chatRef = firestore().collection('chats').doc(currentGroupId);
-  //     const doc = await chatRef.get();
-
-  //     if (!doc.exists) {
-  //       // 🆕 Create the chat if it doesn't exist
-  //       const participants = [currentUser.uid];
-  //       const participantsDetails = {
-  //         [currentUser.uid]: {
-  //           firstName: userData.firstName || '',
-  //           lastName: userData.lastName || '',
-  //         },
-  //       };
-  //       await chatRef.set({
-  //         isGroup: true,
-  //         activity: currentGroup?.activity,
-  //         participants,
-  //         participantsDetails,
-  //         createdAt: firestore.FieldValue.serverTimestamp(),
-  //         lastMessage: {
-  //           text: '',
-  //           createdAt: firestore.FieldValue.serverTimestamp()
-  //         }
-  //       });
-  //     } else {
-  //       // ✅ Safely add user if not already present
-  //       await chatRef.update({
-  //         participants: firestore.FieldValue.arrayUnion(currentUser.uid),
-  //         [`participantsDetails.${currentUser.uid}`]: {
-  //           firstName: userData?.firstName || '',
-  //           lastName: userData?.lastName || '',
-  //         },
-  //       });
-  //     }
-  //   };
-
-  //   if (currentGroupId && currentUser?.uid) {
-  //     ensureGroupChatExistsAndJoin();
-  //   }
-  // }, [currentGroupId, currentUser?.uid]);
-
-
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -104,7 +52,6 @@ const GroupChatScreen = () => {
             <GroupChat chatId={chatId} participantsDetails={participantsDetails} />
           </View>
           <View style={styles.footerContainer}>
-            {/* <FooterGroupNav /> */}
           </View>
         </>
       )}
@@ -139,6 +86,5 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerContainer: {
-    // height: 76,
   },
 });

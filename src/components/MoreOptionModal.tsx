@@ -1,4 +1,3 @@
-// components/MoreOptionsModal.tsx
 import React from 'react';
 import {
   Modal,
@@ -10,7 +9,6 @@ import {
   StyleSheet,
 } from 'react-native';
 
-import Slider from '@react-native-community/slider';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import CustomToggle from '../components/CustomToggle';
 import { Dimensions } from 'react-native';
@@ -256,7 +254,6 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    // padding: scale(10),
     alignItems: 'center',
     paddingVertical: verticalScale(14),
   },

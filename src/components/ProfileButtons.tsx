@@ -19,21 +19,9 @@ import Icon5 from 'react-native-vector-icons/AntDesign';
 
 const ProfileButtons = () => {
   const { signOut, currentUser } = useAuth()
-  // const { clearGroupData } = useGroup()
-  // const { userInGroup } = useGroupData()
 
   const logout = async () => {
     try {
-      // console.log("////////////", currentGroup)
-      // console.log("///////////", userInGroup)
-
-      // if (currentGroup) {
-      //   await AsyncStorage.setItem('currentGroup', JSON.stringify(currentGroup));
-      // }
-      // await checkUserInGroup();
-      // await clearGroupData();
-
-      // setCurrentGroup(undefined);
       await signOut()
       navigate("LoginScreen")
 
@@ -92,8 +80,6 @@ const ProfileButtons = () => {
           </View>
         </View>
       )}
-
-
     </View>
   )
 }
@@ -110,10 +96,8 @@ const styles = StyleSheet.create({
     marginVertical: verticalScale(20),
   },
   topSection: {
-    // marginVertical: verticalScale(20),
   },
   bottomSection: {
-    // marginVertical: verticalScale(20),
   },
   btnBorder: {
     paddingVertical: verticalScale(15),

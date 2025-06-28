@@ -3,14 +3,7 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, To
 import firestore from '@react-native-firebase/firestore';
 import Toast from 'react-native-toast-message';
 
-
-//Navigation
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-// import { RootStackParamList } from '../App';
-
 //Components
-import GroupNav from '../components/GroupNav';
-import FooterGroupNav from '../components/FooterGroupNav';
 import CustomAvatar from '../components/CustomAvatar';
 import DisbandModal from '../components/DisbandModal';
 import LeaveModal from '../components/LeaveModal';
@@ -18,68 +11,26 @@ import LeaveModal from '../components/LeaveModal';
 //Context
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
-import { useModal } from '../context/ModalContext';
-
-//Hooks
-// import { useGroupData } from '../hooks/useGroupData';
-
-//Services
-import { navigate } from '../services/NavigationService';
 
 //Icons
-import Icon1 from 'react-native-vector-icons/MaterialIcons';
-import Icon2 from 'react-native-vector-icons/Feather';
+import Icon1 from 'react-native-vector-icons/Feather';
 
 //Types
 import { Friend } from '../types/userTypes';
 
-// type MembersHomeScreenProps = StackScreenProps<MyGroupStackParamList, 'MembersHomeScreen'>;
-
-
-// interface Friend {
-//   uid: string;
-//   firstName: string;
-//   lastName: string;
-// }
-
 const MembersHomeScreen = () => {
-  // const { members = [], owner } = useGroupData();
   const { currentGroupId, currentGroup, disbandGroup } = useGroup();
   const members = currentGroup?.members ?? [];
   const { currentUser, userData } = useAuth()
-  const [loading, setLoading] = useState(true); // Loading state for data container
-  const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
-  // const { leaveModalVisible, setLeaveModalVisible } = useModal();
-  // const [leaveModalVisible, setLeaveModalVisible] = useState(false)
-  // const [disbandModalVisible, setdisbandModalVisible] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
-  // const [ownerUser, setOwnerUser] = useState<any>(null);
 
   useEffect(() => {
     setLoading(!(currentGroup?.members?.length || currentGroup?.createdBy));
   }, [currentGroup]);
 
-
-  // useEffect(() => {
-  //   if (!currentGroup?.createdBy) return;
-  //   const fetchOwner = async () => {
-  //     const ownerDoc = await firestore().collection('users').doc(currentGroup.createdBy).get();
-  //     if (ownerDoc.exists) {
-  //       setOwnerUser({ uid: ownerDoc.id, ...ownerDoc.data() });
-  //     }
-  //   };
-  //   fetchOwner();
-  // }, [currentGroup?.createdBy]);
-
-
-  // useEffect(() => {
-  //   console.log("Members: ", members);
-  //   console.log("Owner: ", owner);
-  // }, [members, owner]);
-
-
-  // Refresh logic for the data container
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setLoading(true);
@@ -133,8 +84,6 @@ const MembersHomeScreen = () => {
         text2: 'Something went wrong.',
       });
     }
-
-
   }
 
   const handleSendMessage = (selectedUser: Friend | null) => {
@@ -174,14 +123,6 @@ const MembersHomeScreen = () => {
         });
 
 
-      // setLeaveModalVisible(false);
-      // await checkUserInGroup();
-
-      // Clear group context explicitly
-      // await updateGroup(undefined);
-      // await updateGroupId(undefined);
-
-      // navigate('PublicApp', { screen: 'FindOrStart' })
       setMoreModalVisible(false)
     } catch (error) {
       console.log('Error', 'Something went wrong.', error);
@@ -194,7 +135,6 @@ const MembersHomeScreen = () => {
     }
   }
 
-
   if (!currentUser) {
     return (
       <View style={styles.loadingContainer}>
@@ -206,42 +146,12 @@ const MembersHomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* <GroupNav /> */}
-
-      {/* {currentUser && <GroupNav />} */}
-      {/* <Toast /> */}
-
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
         </View>
       ) : (
         <>
-          {/* <View style={styles.ownerContainer}>
-            <View style={styles.row}>
-              <CustomAvatar
-                uid={ownerUser?.uid || 'default-uid'}
-                firstName={ownerUser?.firstName || 'Unknown'}
-                size={60}
-              />
-              <Text style={styles.nameText}>{ownerUser?.firstName || 'Unknown'}</Text>
-            </View>
-            {currentUser.uid !== ownerUser?.uid ? (
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={() => {
-                  setMoreModalVisible(true)
-                  setSelectedUser(ownerUser)
-                }}>
-                  <Icon2 name="more-vertical" size={25} color="black" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <DisbandModal />
-            )}
-
-          </View> */}
-
-          {/* <Text style={styles.textTitle}>Members</Text> */}
           <FlatList
             data={members}
             keyExtractor={(item) => item.uid}
@@ -257,14 +167,11 @@ const MembersHomeScreen = () => {
                 </View>
                 <View style={styles.buttonContainer}>
                   {currentUser.uid !== item.uid ? (
-                    // <TouchableOpacity style={styles.addFriendBtn} onPress={() => addFriend(item)}>
-                    //   <Icon1 name="person-add" size={20} color="black" />
-                    // </TouchableOpacity>
                     <TouchableOpacity onPress={() => {
                       setMoreModalVisible(true)
                       setSelectedUser(item)
                     }}>
-                      <Icon2 name="more-vertical" size={25} color="black" />
+                      <Icon1 name="more-vertical" size={25} color="black" />
                     </TouchableOpacity>
                   ) : currentUser.uid === currentGroup?.createdBy.uid ? (
                     <DisbandModal />
@@ -364,23 +271,14 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: 'center',
-    // borderWidth: 1,
-
   },
   nameText: {
     fontSize: 30,
     textAlign: "center",
     marginLeft: 15,
-    // borderWidth: 1,
   },
-  // textTitle: {
-  //   fontSize: 30,
-  //   textAlign: "center",
-  //   borderWidth: 1,
 
-  // },
   buttonContainer: {
-    // borderWidth: 1
   },
   addFriendBtn: {
     backgroundColor: '#4CBB17',
@@ -396,21 +294,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  // modalView: {
-  //   width: 350,
-  //   padding: 20,
-  //   backgroundColor: 'white',
-  //   borderRadius: 20,
-  //   alignItems: 'center',
-
-  // },
   modalView: {
     width: 300,
-    // padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
     alignItems: 'center',
-
   },
   closeIcon: {
     position: 'absolute',
@@ -430,19 +318,9 @@ const styles = StyleSheet.create({
   modalText: {
     marginTop: 20,
     fontSize: 18,
-    // fontWeight: 'bold',
     color: 'black',
     marginBottom: 20,
   },
-  // modalExtendedContent: {
-  //   alignItems: 'center',
-  // },
-  // modalObervationText: {
-  //   fontSize: 14,
-  //   color: 'red',
-  //   fontWeight: 'bold',
-  //   marginVertical: 10,
-  // },
   submitBtn: {
     backgroundColor: 'green',
     padding: 10,
@@ -459,7 +337,6 @@ const styles = StyleSheet.create({
     width: 110,
     height: 50,
     backgroundColor: "#C41E3A",
-    // alignItems: "center",
     justifyContent: "center",
     borderRadius: 10
   },
@@ -468,7 +345,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center"
-
   },
   buttonTop: {
     height: 50,
@@ -476,15 +352,11 @@ const styles = StyleSheet.create({
     borderStartStartRadius: 10,
     borderEndStartRadius: 10,
     justifyContent: 'center',
-    // backgroundColor: "#6200ea",
-
-
   },
   buttonMid: {
     height: 50,
     width: "100%",
     justifyContent: 'center',
-
   },
   buttonBottom: {
     height: 50,
@@ -492,7 +364,6 @@ const styles = StyleSheet.create({
     borderEndEndRadius: 10,
     borderStartEndRadius: 10,
     justifyContent: 'center',
-
   },
   buttonText: {
     textAlign: "center",
@@ -505,7 +376,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#C41E3A",
   }
-
 });
 
 export default MembersHomeScreen;

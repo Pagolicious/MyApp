@@ -10,19 +10,6 @@ import { useAuth } from '../context/AuthContext';
 //Types
 import { SearchParty, Member } from '../types/groupTypes';
 
-// interface SearchParty {
-//   leaderUid: string;
-//   leaderFirstName: string;
-//   leaderLastName: string;
-//   members: Member[];
-// }
-
-// interface Member {
-//   uid: string;
-//   firstName: string;
-//   lastName?: string;
-// }
-
 const PartyDisplay = () => {
   const [userParty, setUserParty] = useState<SearchParty | null>(null);
   const { currentUser } = useAuth()
@@ -103,8 +90,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 15,
     alignItems: 'center',
-    // marginRight: 50
-
   },
   avatarStack: {
     flexDirection: 'row',
@@ -115,15 +100,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   extraAvatar: {
-    // width: 40,
-    // height: 40,
-    // borderRadius: 20,
-    // backgroundColor: '#ddd',
-    // justifyContent: 'center',
-    // alignItems: 'center',
     position: 'absolute',
-    // left: 20
-
   },
   extraText: {
     fontSize: 16,
@@ -131,50 +108,3 @@ const styles = StyleSheet.create({
     color: "white",
   },
 });
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.row}>
-//         <CustomAvatar
-//           uid={userParty?.leaderUid || 'default-uid'}
-//           firstName={userParty?.leaderFirstName || 'Unknown'}
-//           size={30}
-//         />
-//         <FlatList
-//           data={userParty?.members}
-//           keyExtractor={(member) => member.uid}
-//           renderItem={({ item }) => {
-//             if (!item || !item.uid) return null;
-
-//             return (
-//               <View style={styles.extraAvatar}>
-//                 <CustomAvatar
-//                   uid={item.uid || 'default-uid'}
-//                   firstName={item.firstName || 'Unknown'}
-//                   size={30}
-//                 />
-//               </View>
-//             )
-//           }}
-//         />
-//       </View>
-//     </View>
-//   )
-// }
-
-// export default PartyDisplay
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-
-//   },
-//   row: {
-//     flexDirection: "row",
-//     // borderWidth: 2
-
-//   },
-//   extraAvatar: {
-//     marginLeft: -15
-//   }
-// })

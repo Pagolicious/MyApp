@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ImageBackground, ScrollView, } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ScrollView, } from 'react-native';
 import React, { useRef, useEffect, useState } from 'react';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { PieChart } from 'react-native-chart-kit';
@@ -16,10 +16,6 @@ import CustomAvatar from '../../components/CustomAvatar';
 
 //Context
 import { useAuth } from '../../context/AuthContext';
-import { useGroup } from '../../context/GroupContext';
-
-//Services
-import { navigate } from '../../services/NavigationService';
 
 //Icons
 import ADIcon from 'react-native-vector-icons/AntDesign';
@@ -28,7 +24,6 @@ import MCIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FA5Icon from 'react-native-vector-icons/FontAwesome5';
 import FA6Icon from 'react-native-vector-icons/FontAwesome6';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-// import MDIcon from 'react-native-vector-icons/MaterialDesignIcons';
 
 //Types
 import { User } from '../../types/userTypes';
@@ -42,7 +37,7 @@ const ProfilePageScreen = () => {
   const { userId } = route.params as { userId?: string };
   const finalUserId = userId || currentUser?.uid;
   const flatListRef = useRef<FlatList<any>>(null);
-  const ITEM_WIDTH = 110; // adjust if you update your card width
+  const ITEM_WIDTH = 110;
 
 
   const scrollToMiddle = () => {
@@ -182,7 +177,6 @@ const ProfilePageScreen = () => {
         <View style={styles.userInformation}>
           <Text style={styles.profileNameText}>{profileUserData?.firstName} {profileUserData?.lastName}</Text>
           <Text style={styles.profileAgeLocationText}>35 years old, Göteborg</Text>
-          {/* <Text style={styles.profileLocationText}>Göteborg</Text> */}
 
         </View>
         <View style={styles.bioContainer}>
@@ -226,16 +220,6 @@ const ProfilePageScreen = () => {
 
 
       <View style={styles.chartContainer}>
-        {/* <ImageBackground
-        source={require('../../assets/BackgroundImages/whiteBg2.png')}
-        style={styles.chartContainer}
-        imageStyle={{
-          resizeMode: 'cover'
-        }}
-
-      > */}
-        {/* Your content */}
-
         <PieChart
           data={pieDataShowd}
           width={screenWidth - 100}
@@ -261,7 +245,6 @@ const ProfilePageScreen = () => {
           paddingLeft="5"
           absolute
         />
-
       </View>
 
     </ScrollView>
@@ -271,7 +254,6 @@ const ProfilePageScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
   },
   header: {
     height: verticalScale(65),
@@ -290,10 +272,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topSection: {
-    // flex: 2,
     alignItems: 'center',
-    // justifyContent: 'center',
-    // borderWidth: 1
   },
   avatar: {
     marginVertical: verticalScale(15),
@@ -302,10 +281,6 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(24),
     fontWeight: 'bold',
   },
-  // profileAgeText: {
-  //   fontSize: moderateScale(18),
-  //   marginTop: verticalScale(5),
-  // },
   profileAgeLocationText: {
     fontSize: moderateScale(18),
     marginTop: verticalScale(5),
@@ -314,11 +289,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bioContainer: {
-    // alignItems: "center",
-    // justifyContent: "center",
     paddingVertical: verticalScale(25),
     paddingHorizontal: scale(45)
-    // borderWidth: 1
   },
   bioText: {
     fontSize: moderateScale(14),
@@ -330,34 +302,20 @@ const styles = StyleSheet.create({
   },
   card: {
     alignItems: 'center',
-    // justifyContent: 'center',
     padding: moderateScale(10),
     marginRight: scale(7),
     backgroundColor: '#F4F4F4',
     borderRadius: 12,
-    // width: 100,
-    // height: 150,
-    // borderWidth: 1
   },
   cardContent: {
     borderWidth: 1,
     borderRadius: 12,
     padding: moderateScale(7),
     width: scale(90),
-    // height: 100,
     alignItems: 'center',
-    // elevation: 5
   },
   iconWrapper: {
-    // alignItems: 'center',
-    // justifyContent: 'center',
-    // backgroundColor: 'grey', // optional for visibility
-    // borderWidth: 1,
-    // borderRadius: 10,
-    // padding: 8,
     marginBottom: verticalScale(6),
-    // width: 40, // keep consistent size
-    // height: 40,
   },
 
   sportName: {
@@ -373,22 +331,11 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     flexDirection: 'column',
-    // justifyContent: 'space-between',
-    // marginVertical: 10,
     padding: moderateScale(10),
     margin: moderateScale(20),
     borderWidth: 1,
     borderRadius: 12
-    // backgroundColor: '#E0F2FE', // Light blue background
-    // borderColor: '#1E3A8A',     // Deep blue border
   },
-  // stat: {
-  //   fontSize: 13,
-  //   fontWeight: '600',
-  //   color: '#444',
-  // },
-
-
 });
 
 

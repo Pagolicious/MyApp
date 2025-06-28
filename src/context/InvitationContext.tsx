@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Alert, Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { navigate } from '../services/NavigationService';
 
@@ -171,18 +171,6 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
             isDelisted: true,
           });
         }
-
-        // await firestore()
-        //   .collection('chats')
-        //   .doc(groupInvitation.groupId)
-        //   .collection('messages')
-        //   .add({
-        //     _id: `${Date.now()}-system`,
-        //     text: `${userData?.firstName} has joined the group.`,
-        //     createdAt: firestore.FieldValue.serverTimestamp(),
-        //     user: { _id: 'system', name: 'System' },
-        //     type: 'system',
-        //   });
 
         setCurrentGroupId(groupInvitation.groupId);
         navigate('GroupApp', { screen: 'MembersHomeScreen' });

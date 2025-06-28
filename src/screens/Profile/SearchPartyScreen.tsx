@@ -8,22 +8,12 @@ import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 
 //Components
-import FooterGroupNav from '../../components/FooterGroupNav';
-import FooterNav from '../../components/FooterNav';
-import FriendNav from '../../components/FriendNav';
 import CustomAvatar from '../../components/CustomAvatar';
 import DisbandModal from '../../components/DisbandModal';
 import LeaveModal from '../../components/LeaveModal';
 
 //Contexts
 import { useAuth } from '../../context/AuthContext';
-import { useGroup } from '../../context/GroupContext';
-
-//Hooks
-import useOnlineStatus from '../../hooks/useOnlineStatus';
-
-//Services
-import { navigate } from '../../services/NavigationService';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
@@ -87,16 +77,6 @@ const SearchPartyScreen = () => {
 
   }
 
-  // const handleGoBackButton = () => {
-  //   if (!userData) return;
-
-  //   if (userData.isGroupLeader || userData.isGroupMember) {
-  //     navigate('GroupApp', { screen: 'More' })
-  //   } else {
-  //     navigate('PublicApp', { screen: 'More' })
-  //   }
-  // }
-
   const handleGoBackButton = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -114,8 +94,6 @@ const SearchPartyScreen = () => {
         <View style={styles.spacer} />
 
       </View>
-      {/* Display the User's Party */}
-      {/* <View style={styles.partyCard}> */}
       {userParty &&
         <View style={styles.partyLeaderContainer}>
           <View style={styles.row}>
@@ -140,7 +118,6 @@ const SearchPartyScreen = () => {
         </View>
       }
 
-      {/* <Text style={styles.memberHeader}>Members:</Text> */}
       <FlatList
         data={userParty?.members}
         keyExtractor={(member) => member.uid}
@@ -157,9 +134,6 @@ const SearchPartyScreen = () => {
                 />
                 <Text style={styles.nameText}>{item.firstName}</Text>
               </View>
-              {/* <Text style={{ color: item.isOnline ? 'green' : 'gray' }}>
-              {item.isOnline ? '🟢 Online' : '⚪ Offline'}
-            </Text> */}
               <TouchableOpacity onPress={() => {
                 setMoreModalVisible(true)
                 setSelectedMember(item)
@@ -187,17 +161,6 @@ const SearchPartyScreen = () => {
           <TouchableWithoutFeedback onPress={() => setMoreModalVisible(false)}>
             <View style={styles.modalOverlay}>
               <View style={styles.modalView}>
-                {/* <Pressable
-                        style={styles.buttonMid}
-                        onPress={() => {
-                          setMoreModalVisible(false)
-                          if (selectedMember) {
-                            handleInviteToSeacrhParty(selectedMember)
-                          }
-                        }}
-                        android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
-                        <Text style={styles.buttonText}>Invite to search party</Text>
-                      </Pressable> */}
                 <Pressable
                   style={styles.buttonMid}
                   onPress={() => setMoreModalVisible(false)}
@@ -225,8 +188,6 @@ const SearchPartyScreen = () => {
 
       )}
     </View>
-    // </View >
-
   )
 }
 
@@ -291,7 +252,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: 300,
-    // padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
     alignItems: 'center',
@@ -303,9 +263,6 @@ const styles = StyleSheet.create({
     borderStartStartRadius: 10,
     borderEndStartRadius: 10,
     justifyContent: 'center',
-    // backgroundColor: "#6200ea",
-
-
   },
   buttonMid: {
     height: 50,
@@ -336,7 +293,6 @@ const styles = StyleSheet.create({
     width: 110,
     height: 50,
     backgroundColor: "#C41E3A",
-    // alignItems: "center",
     justifyContent: "center",
     borderRadius: 10
   },

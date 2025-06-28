@@ -1,9 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-//Context
-import { useAuth } from '../context/AuthContext';
-
 interface Avatar {
   uid: string,
   firstName: string,

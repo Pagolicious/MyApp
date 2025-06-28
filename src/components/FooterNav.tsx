@@ -102,9 +102,7 @@ export default FooterNav;
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
-    // justifyContent: 'flex-end',
-    // borderWidth: 5
+
   },
   footer: {
     height: 75,
@@ -121,7 +119,6 @@ const styles = StyleSheet.create({
     height: 75,
     width: 120,
     borderRadius: 5,
-    // borderWidth: 2,
     marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',

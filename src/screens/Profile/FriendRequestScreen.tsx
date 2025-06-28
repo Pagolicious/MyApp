@@ -1,25 +1,14 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, Pressable, Alert } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import LinearGradient from 'react-native-linear-gradient';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
 //Components
-import FooterGroupNav from '../../components/FooterGroupNav';
-import FooterNav from '../../components/FooterNav';
-import FriendNav from '../../components/FriendNav';
 import CustomAvatar from '../../components/CustomAvatar';
 
 //Contexts
 import { useAuth } from '../../context/AuthContext';
-import { useGroup } from '../../context/GroupContext';
-
-//Services
-import { navigate } from '../../services/NavigationService';
-
-//Icons
-import Icon1 from 'react-native-vector-icons/AntDesign';
 
 interface FriendRequest {
   id: string;
@@ -33,15 +22,8 @@ interface FriendRequest {
 
 const FriendRequestScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { currentGroup } = useGroup()
-  const [userHasGroup, setUserHasGroup] = useState(false);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
 
-  useEffect(() => {
-    if (currentUser) {
-      setUserHasGroup(currentGroup?.createdBy.uid === currentUser.uid);
-    }
-  }, [currentUser, currentGroup]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -93,9 +75,6 @@ const FriendRequestScreen = () => {
         friends: firestore.FieldValue.arrayUnion(userToAdd),
       });
 
-      // // Remove the friend request document from Firestore
-      // await firestore().collection('friendRequests').doc(requestId).delete();
-
       // Update friend request to accepted in the Firestore collection
       await firestore().collection('friendRequests').doc(requestId).update({
         status: 'accepted',
@@ -126,13 +105,12 @@ const FriendRequestScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* <FriendNav /> */}
       <View style={styles.background}>
         <View style={styles.flatListContainer}>
 
           <FlatList
             data={friendRequests}
-            keyExtractor={(item) => item.id.toString()} // Ensure each item has a unique key
+            keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => {
 
               return (
@@ -173,8 +151,6 @@ const FriendRequestScreen = () => {
           />
         </View>
       </View>
-      {/* {(userHasGroup || userInGroup) && <FooterGroupNav />}
-      {(!userHasGroup && !userInGroup) && <FooterNav />} */}
     </View>
   )
 }
@@ -185,23 +161,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // header: {
-  //   height: 65,
-  //   backgroundColor: '#5f4c4c',
-  //   padding: 15,
-  //   alignItems: 'center',
-  //   flexDirection: "row"
-  // },
-  // headerText: {
-  //   fontSize: 20,
-  //   fontWeight: 'bold',
-  //   color: 'white',
-  //   marginRight: 20,
-
-  // },
-  // spacer: {
-  //   flex: 1,
-  // },
   background: {
     flex: 1,
     backgroundColor: "white"
@@ -229,15 +188,11 @@ const styles = StyleSheet.create({
   bottomRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    // alignItems: "center",
   },
   requestText: {
     fontSize: 16,
-    // fontWeight: "bold"
-    // borderWidth: 2
   },
   avatar: {
-    // borderWidth: 2
   },
   acceptButton: {
     backgroundColor: "green",

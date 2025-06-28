@@ -1,10 +1,5 @@
 import { StyleSheet, Text, View, Alert, Platform } from 'react-native';
-import React, { useState, useContext, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-//Navigation
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-// import { RootStackParamList } from '../App';
+import React, { useState, useContext } from 'react';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -12,27 +7,20 @@ import MyTextInput from '../components/MyTextInput';
 import SocialMedia from '../components/SocialMedia';
 
 //Firebase
-import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 //Context
 import { AuthContext } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext'
 
-//Hooks
-import { useGroupData } from '../hooks/useGroupData';
-
 //Services
 import { navigate } from '../services/NavigationService';
-
-// type NameProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 const LoginScreen = () => {
   const { signIn, setCurrentUser, currentUser, userData } = useContext(AuthContext)!;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
-  const { currentGroup } = useGroup();
 
   const loginWithEmailAndPassword = async () => {
     try {
@@ -43,15 +31,13 @@ const LoginScreen = () => {
       const user = auth().currentUser;
       setCurrentUser(user);
 
-
-
       if (!user) {
         Alert.alert('User not found. Please try again.');
         setLoading(false);
         return;
       }
 
-      // ✅ Wait for `userData` to be available
+      // Wait for `userData` to be available
       let retries = 10;
       while (!userData && retries > 0) {
         await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
@@ -63,7 +49,6 @@ const LoginScreen = () => {
         setLoading(false);
         return;
       }
-
 
       if (userData?.isGroupLeader) {
         navigate('GroupApp', { screen: 'MyGroupScreen' });
@@ -80,7 +65,6 @@ const LoginScreen = () => {
       const errorMessage =
         (error as { message?: string }).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
-      // setLoading(false);
     }
   };
 
@@ -103,9 +87,7 @@ const LoginScreen = () => {
             placeholderTextColor="gray"
             secureTextEntry
             style={{ color: 'black' }}
-
           />
-
           <MyButton title={'Login'} onPress={loginWithEmailAndPassword} />
           <View style={styles.lineContainer}>
             <View style={styles.line} />

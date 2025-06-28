@@ -7,20 +7,14 @@ import {
   Pressable,
   TouchableOpacity
 } from 'react-native';
-import { Applicant, Group } from '../types/groupTypes'; // update path if needed
+import { Applicant, Group } from '../types/groupTypes';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { navigate } from '../services/NavigationService';
-import Toast from 'react-native-toast-message';
-
-//Context
-import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext'
 
 //Icons
 import Icon1 from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/Octicons';
-import Icon3 from 'react-native-vector-icons/MaterialIcons';
-import Icon4 from 'react-native-vector-icons/Fontisto';
+import Icon3 from 'react-native-vector-icons/Fontisto';
 
 
 interface Props {
@@ -32,7 +26,6 @@ interface Props {
 }
 
 const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGroup, onPressInvite, onPressDecline }) => {
-  const { currentUser, userData } = useAuth()
   const [expanded, setExpanded] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
@@ -44,7 +37,7 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const appliedAt = new Date(applicant.appliedAt);
+      const appliedAt = new Date(applicant.appliedAt ?? new Date().toISOString());
       const diffMs = now.getTime() - appliedAt.getTime();
 
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -158,7 +151,7 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
         >
           <View style={styles.contentRow}>
             <View style={styles.clockIconContainer}>
-              <Icon4 name="clock" size={20} color="black" />
+              <Icon3 name="clock" size={20} color="black" />
             </View>
             <Text style={styles.timer}>{elapsedTime}</Text>
           </View>
@@ -234,20 +227,14 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 15,
     borderRadius: 10,
-    // elevation: 3,
     borderWidth: 4,
     backgroundColor: '#e0e0e0',
-
   },
   extendedContainer: {
     overflow: 'hidden',
-    position: 'relative', // ⬅️ this is needed so the absolute button is placed correctly
-
-    // borderWidth: 1,
-    // paddingTop: 10
+    position: 'relative',
   },
   extendedContent: {
-    // borderWidth: 1,
     paddingTop: 10
   },
   row: {
@@ -258,7 +245,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // borderWidth: 1
   },
   rightContent: {
     flexDirection: 'row'
@@ -285,22 +271,16 @@ const styles = StyleSheet.create({
   },
   contentRow: {
     flexDirection: "row",
-    // alignItems: "center",
     paddingTop: verticalScale(8),
-    // alignContent: "center",
-    // justifyContent: "center",
-    // borderWidth: 1
   },
   timer: {
     color: '#333',
     marginHorizontal: scale(7),
-    // paddingTop: verticalScale(2)
   },
   members: {
     color: '#333',
     marginHorizontal: scale(8),
     paddingTop: verticalScale(1)
-
   },
   note: {
     color: '#333',
@@ -315,33 +295,27 @@ const styles = StyleSheet.create({
   },
   creatorRow: {
     flexDirection: 'row',
-    // justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: verticalScale(8),
     marginHorizontal: scale(5),
   },
-
   creatorText: {
     fontSize: 14,
     color: '#444',
   },
-
   creatorName: {
     fontWeight: 'bold',
     color: '#000',
   },
-
   profileButton: {
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
   },
-
   inviteButton: {
     position: 'absolute',
     bottom: verticalScale(5),
     right: scale(5),
-    // backgroundColor: '#007AFF',
     paddingVertical: verticalScale(8),
     paddingHorizontal: scale(18),
     borderRadius: 6,
@@ -351,7 +325,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: verticalScale(5),
     right: scale(85),
-    // backgroundColor: '#007AFF',
     paddingVertical: verticalScale(8),
     paddingHorizontal: scale(13),
     borderRadius: 6,
@@ -361,9 +334,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   }
-
-
-
 });
 
 export default ApplicationCard;

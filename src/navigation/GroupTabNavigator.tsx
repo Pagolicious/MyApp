@@ -1,25 +1,19 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import GroupNav from '../components/GroupNav';
 
 // Screens (Only for Group Members)
 import MyGroupScreen from '../screens/MyGroupScreen';
-import MyGroupWithNav from '../components/MyGroupWithNav';
 import FindGroup from '../screens/FindGroup';
-import GroupChatScreen from '../screens/GroupChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import MembersHomeScreen from '../screens/MembersHomeScreen';
 import ChatListScreen from '../screens/ChatListScreen';
 
-// import MyGroupStackNavigator from '../navigation/MyGroupStackNavigator'; // ✅ Use Stack Navigator
-
 //Contexts
 import { useAuth } from '../context/AuthContext';
-
 
 // Icons
 import Icon1 from 'react-native-vector-icons/FontAwesome';
@@ -53,7 +47,7 @@ const GroupTabNavigator = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarShowLabel: false, // ✅ Remove default labels to prevent duplication
+        tabBarShowLabel: false, // Remove default labels to prevent duplication
         tabBarIcon: ({ focused }) => {
           let iconName: string = '';
           let IconComponent: React.ElementType = Icon1; // Default icon
@@ -82,18 +76,12 @@ const GroupTabNavigator = () => {
           );
         },
       })}>
-      {/* <Tab.Screen name="My Group" component={MyGroupWithNav} /> */}
-      {/* <Tab.Screen
-        name="My Group"
-        component=
-        {MyGroupStack} // ✅ Opens the Stack Navigator
-      /> */}
+
       <Tab.Screen name="My Group" component={MyGroupStack} />
 
       <Tab.Screen name="Browse" component={FindGroup} options={{ title: 'Find' }} />
       <Tab.Screen name="Chats" component={ChatListScreen} />
       <Tab.Screen name="More" component={ProfileScreen} />
-      {/* <Tab.Screen name="Members Home" component={MembersHomeScreen} /> */}
 
     </Tab.Navigator>
   );
@@ -104,10 +92,6 @@ const styles = StyleSheet.create({
 
     backgroundColor: '#5f4c4c',
     height: 75,
-    // paddingBottom: 5,
-    // borderTopWidth: 0, // ✅ Removes default tab border
-    // borderWidth: 2
-
   },
   subTabBar: {
     backgroundColor: '#8b7d7d',
@@ -117,21 +101,19 @@ const styles = StyleSheet.create({
 
     alignItems: 'center',
     justifyContent: 'center',
-    // flexDirection: 'column', // ✅ Ensures vertical alignment
     width: 100,
     height: 75,
     borderRadius: 5,
     marginTop: 35,
-    // borderWidth: 2
   },
   iconText: {
     fontSize: 16,
     color: 'lightgray',
-    marginTop: 3, // ✅ Adds better spacing
+    marginTop: 3,
     fontWeight: 'bold',
   },
   activeText: {
-    color: '#00BFFF', // ✅ Changes color when active
+    color: '#00BFFF',
   },
 });
 

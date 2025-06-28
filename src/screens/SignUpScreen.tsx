@@ -66,7 +66,7 @@ const SignUpScreen = ({ navigation }: NameProps) => {
       await firestore().collection('users').doc(userId).set({
         email: email,
         fcmToken: fcmToken,
-        createdAt: firestore.FieldValue.serverTimestamp(), // Track when the user was created
+        createdAt: firestore.FieldValue.serverTimestamp(),
         isOnline: false,
         isPartyLeader: false,
         isPartyMember: false,
@@ -92,7 +92,6 @@ const SignUpScreen = ({ navigation }: NameProps) => {
     FirebaseMessagingService.setupMessagingHandlers(navigation);
 
     return () => {
-      // Cleanup if necessary
     };
   }, []);
 

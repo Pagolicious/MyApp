@@ -7,7 +7,7 @@ import {
   Pressable,
   TouchableOpacity
 } from 'react-native';
-import { Group } from '../types/groupTypes'; // update path if needed
+import { Group } from '../types/groupTypes';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { navigate } from '../services/NavigationService';
 import Toast from 'react-native-toast-message';
@@ -81,9 +81,6 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
     }
   };
 
-
-
-
   const onPressButton = () => {
     if (!currentUser || !userData) return
 
@@ -110,7 +107,6 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
     } else {
       onPressApply()
     }
-
   }
 
   const handleMaps = () => {
@@ -118,24 +114,12 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
   }
 
   const viewProfile = (userId: string) => {
-    // You could navigate or link to profile
     navigate('ProfilePageScreen', { userId: userId })
-    // Example: navigation.navigate('UserProfile', { userId });
   };
-
-
-  // const toggleExpand = () => {
-  //   setExpanded(prev => !prev);
-  //   Animated.timing(animation, {
-  //     toValue: expanded ? 0 : 1,
-  //     duration: 300,
-  //     useNativeDriver: false,
-  //   }).start();
-  // };
 
   const animatedHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, contentHeight], // Adjust as needed
+    outputRange: [0, contentHeight],
   });
 
   return (
@@ -254,20 +238,15 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 15,
     borderRadius: 10,
-    // elevation: 3,
     borderWidth: 4,
     backgroundColor: '#e0e0e0',
 
   },
   extendedContainer: {
     overflow: 'hidden',
-    position: 'relative', // ⬅️ this is needed so the absolute button is placed correctly
-
-    // borderWidth: 1,
-    // paddingTop: 10
+    position: 'relative'
   },
   extendedContent: {
-    // borderWidth: 1,
     paddingTop: 10
   },
   row: {
@@ -291,11 +270,7 @@ const styles = StyleSheet.create({
   },
   contentRow: {
     flexDirection: "row",
-    // alignItems: "center",
     paddingTop: verticalScale(10),
-    // alignContent: "center",
-    // justifyContent: "center",
-    // borderWidth: 1
   },
   location: {
     color: '#333',
@@ -322,46 +297,36 @@ const styles = StyleSheet.create({
   },
   creatorRow: {
     flexDirection: 'row',
-    // justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: verticalScale(8),
     marginHorizontal: scale(5),
   },
-
   creatorText: {
     fontSize: 14,
     color: '#444',
   },
-
   creatorName: {
     fontWeight: 'bold',
     color: '#000',
   },
-
   profileButton: {
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
   },
-
   submitButton: {
     position: 'absolute',
     bottom: verticalScale(5),
     right: scale(5),
-    // backgroundColor: '#007AFF',
     paddingVertical: verticalScale(8),
     paddingHorizontal: scale(16),
     borderRadius: 6,
     elevation: 3,
   },
-
   submitButtonText: {
     color: 'white',
     fontWeight: 'bold',
   }
-
-
-
 });
 
 export default GroupCard;

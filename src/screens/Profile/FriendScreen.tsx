@@ -1,33 +1,25 @@
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Modal, TouchableWithoutFeedback, Pressable, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import LinearGradient from 'react-native-linear-gradient';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
 //Components
-import FooterGroupNav from '../../components/FooterGroupNav';
-import FooterNav from '../../components/FooterNav';
-import FriendNav from '../../components/FriendNav';
 import CustomAvatar from '../../components/CustomAvatar';
 
 //Contexts
 import { useAuth } from '../../context/AuthContext';
 import { useGroup } from '../../context/GroupContext';
 
-//Hooks
-import useOnlineStatus from '../../hooks/useOnlineStatus';
-
 //Services
 import { navigate } from '../../services/NavigationService';
 
 //Utils
-import handleFirestoreError from '../../utils/firebaseErrorHandler';
 import { inviteApplicant } from '../../utils/inviteHelpers'
 
 //Icons
-import Icon1 from 'react-native-vector-icons/AntDesign';
-import Icon2 from 'react-native-vector-icons/Feather';
+import Icon1 from 'react-native-vector-icons/Feather';
 
 //Types
 import { Friend } from '../../types/userTypes';
@@ -40,15 +32,9 @@ const FriendScreen = () => {
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
-  // const isOnline = useOnlineStatus(currentUser.uid)
-  // const route = useRoute();
-  // const isOnline = useOnlineStatus();
-
-  // const isActive = (screenName: string) => route.name === screenName;
-
   useEffect(() => {
     if (!currentUser) {
-      setFriends([]); // Clear friends list on logout
+      setFriends([]);
       return;
     }
     // Reference to the user's Firestore document
@@ -187,6 +173,10 @@ const FriendScreen = () => {
     inviteApplicant(currentUser, currentGroup, currentGroupId, selectedFriend);
   };
 
+  const viewProfile = (userId: string) => {
+    navigate('ProfilePageScreen', { userId: userId })
+  };
+
 
   if (!currentUser) {
     return (
@@ -199,21 +189,6 @@ const FriendScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate('GroupApp', { screen: 'Profile' })}>
-          <Icon1 name="arrowleft" size={25} color="black" />
-        </TouchableOpacity>
-        <View style={styles.spacer} />
-
-        <Text style={styles.headerText}>Friends list</Text>
-        <View style={styles.spacer} />
-
-      </View> */}
-      {/* <FriendNav /> */}
-
-      {/* <View style={styles.onlineHeader}>
-        <Text style={styles.onlineText}>Online</Text>
-      </View> */}
       <FlatList
         data={friends}
         keyExtractor={(item) => item.uid}
@@ -225,7 +200,7 @@ const FriendScreen = () => {
                 firstName={item.firstName || 'Unknown'}
                 size={60}
               />
-              <Text style={styles.nameText}>{item.firstName}</Text>
+              <Text style={styles.nameText}>{item.firstName} {item.lastName}</Text>
             </View>
             <Text style={{ color: item.isOnline ? 'green' : 'gray' }}>
               {item.isOnline ? '🟢 Online' : '⚪ Offline'}
@@ -234,15 +209,8 @@ const FriendScreen = () => {
               setMoreModalVisible(true)
               setSelectedFriend(item)
             }}>
-              <Icon2 name="more-vertical" size={25} color="black" />
+              <Icon1 name="more-vertical" size={25} color="black" />
             </TouchableOpacity>
-            {/* {currentUser.uid !== item.uid &&
-                <View>
-                  <TouchableOpacity style={styles.inviteFriendBtn} onPress={() => inviteToGroup()}>
-                    <Icon1 name="plus" size={20} color="black" />
-                  </TouchableOpacity>
-                </View>
-              } */}
           </View>
         )}
         ListEmptyComponent={
@@ -258,6 +226,28 @@ const FriendScreen = () => {
           <TouchableWithoutFeedback onPress={() => setMoreModalVisible(false)}>
             <View style={styles.modalOverlay}>
               <View style={styles.modalView}>
+                <Pressable
+                  style={styles.buttonTop}
+                  onPress={() => {
+                    setMoreModalVisible(false)
+                    if (selectedFriend) {
+                      viewProfile(selectedFriend.uid)
+                    }
+                  }}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonText}>View Profile</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.buttonMid}
+                  onPress={() => {
+                    setMoreModalVisible(false)
+                    if (selectedFriend) {
+                      navigate('LabelScreen', { friend: selectedFriend });
+                    }
+                  }}
+                  android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
+                  <Text style={styles.buttonText}>Add / Edit Labels</Text>
+                </Pressable>
                 {userData && !userData.isGroupLeader && !userData.isGroupMember && !userData.isPartyMember &&
                   <Pressable
                     style={styles.buttonMid}
@@ -265,6 +255,7 @@ const FriendScreen = () => {
                       setMoreModalVisible(false)
                       if (selectedFriend) {
                         handleInviteToSeacrhParty(selectedFriend)
+
                       }
                     }}
                     android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
@@ -272,7 +263,7 @@ const FriendScreen = () => {
                   </Pressable>
                 }
                 <Pressable
-                  style={styles.buttonTop}
+                  style={styles.buttonMid}
                   onPress={() => setMoreModalVisible(false)}
                   android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
                   <Text style={styles.buttonText}>Send message</Text>
@@ -304,8 +295,6 @@ const FriendScreen = () => {
       <View style={styles.background}>
 
       </View>
-      {/* {(userHasGroup || userInGroup) && <FooterGroupNav />}
-      {(!userHasGroup && !userInGroup) && <FooterNav />} */}
     </View>
   )
 }
@@ -317,41 +306,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white"
   },
-  // header: {
-  //   height: 65,
-  //   backgroundColor: '#5f4c4c',
-  //   padding: 15,
-  //   alignItems: 'center',
-  //   flexDirection: "row"
-  // },
-  // headerText: {
-  //   fontSize: 20,
-  //   fontWeight: 'bold',
-  //   color: 'white',
-  //   marginRight: 20,
-
-  // },
-  // spacer: {
-  //   flex: 1,
-  // },
   background: {
     flex: 1,
     backgroundColor: "white"
   },
-  // onlineHeader: {
-  //   borderBottomWidth: 1,
-  //   padding: 5
-  // },
-  // onlineText: {
-  //   fontSize: 24,
-  //   textAlign: "center"
-
-  // },
   noFriendsText: {
     flex: 1,
     textAlign: "center",
-    marginTop: 200,
-    fontSize: 24
+    marginTop: verticalScale(200),
+    fontSize: moderateScale(24)
   },
   loadingContainer: {
     flex: 1,
@@ -362,7 +325,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: "center",
     borderBottomWidth: 1,
-    padding: 10,
+    padding: moderateScale(10),
     flexDirection: "row",
   },
   row: {
@@ -370,14 +333,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nameText: {
-    fontSize: 30,
+    fontSize: moderateScale(20),
     textAlign: "center",
-    marginLeft: 15,
+    marginLeft: scale(15),
   },
   inviteFriendBtn: {
     backgroundColor: '#4CBB17',
-    width: 40,
-    height: 40,
+    width: scale(40),
+    height: verticalScale(40),
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -389,46 +352,43 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: 300,
-    // padding: 20,
+    width: scale(250),
     backgroundColor: 'white',
     borderRadius: 10,
     alignItems: 'center',
 
   },
   buttonTop: {
-    height: 50,
+    height: verticalScale(50),
     width: "100%",
     borderStartStartRadius: 10,
     borderEndStartRadius: 10,
     justifyContent: 'center',
-    // backgroundColor: "#6200ea",
-
-
+    backgroundColor: '#fff',
   },
   buttonMid: {
-    height: 50,
+    height: verticalScale(50),
     width: "100%",
     justifyContent: 'center',
-
+    backgroundColor: '#fff',
   },
   buttonBottom: {
-    height: 50,
+    height: verticalScale(50),
     width: "100%",
     borderEndEndRadius: 10,
     borderStartEndRadius: 10,
     justifyContent: 'center',
-
+    backgroundColor: '#fff',
   },
   buttonText: {
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 16
+    fontSize: moderateScale(16),
   },
   buttonRedText: {
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: moderateScale(16),
     color: "#C41E3A",
   }
 })

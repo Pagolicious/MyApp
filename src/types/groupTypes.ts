@@ -3,7 +3,7 @@ export interface Member {
   firstName: string;
   lastName: string;
   skillLevel?: string | number;
-  role?: string; // For InvitationContext
+  role?: string;
 }
 
 export type Applicant = {
@@ -12,7 +12,7 @@ export type Applicant = {
   lastName: string;
   skillLevel?: string | number;
   note?: string;
-  appliedAt: string,
+  appliedAt?: string,
   role?: "leader" | "member";
   members?: Omit<Applicant, "members" | "role">[];
 };

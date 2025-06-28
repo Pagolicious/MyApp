@@ -1,9 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 //Navigation
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRoute } from '@react-navigation/native';
 
 //Context
 import { useAuth } from '../context/AuthContext';
@@ -30,7 +29,7 @@ const FooterGroupNav = () => {
   }
 
   const handleNavigation = () => {
-    if (currentGroup?.createdBy === currentUser.uid) {
+    if (currentGroup?.createdBy.uid === currentUser.uid) {
       navigate('MyGroupScreen');
     } else {
       navigate('MembersHomeScreen');
@@ -121,8 +120,7 @@ export default FooterGroupNav;
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
-    // justifyContent: 'flex-end',
+
   },
   footer: {
     height: 75,
@@ -138,7 +136,6 @@ const styles = StyleSheet.create({
     height: 75,
     width: 100,
     borderRadius: 5,
-    // borderWidth: 2,
     marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',

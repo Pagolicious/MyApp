@@ -8,20 +8,27 @@ import React, {
 } from 'react';
 import { Alert, Modal, View, Text, Pressable, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useAuth } from './AuthContext';
-import { navigate } from '../services/NavigationService';
-import handleFirestoreError from '../utils/firebaseErrorHandler';
-import firestore from '@react-native-firebase/firestore';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
-// Services & Types
+//Firestore
+import firestore from '@react-native-firebase/firestore';
+
+//Contexts
+import { useAuth } from './AuthContext';
+
+//Services
+import { navigate } from '../services/NavigationService';
 import {
-  fetchGroupById,
   listenToGroupData,
   listenToUserGroupId,
   disbandGroup as disbandGroupService,
 } from '../services/groupService';
+
+//Types
 import { Group } from '../types/groupTypes';
+
+//Utils
+import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 interface GroupContextType {
   currentGroupId: string | undefined;

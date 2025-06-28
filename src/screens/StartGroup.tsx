@@ -19,9 +19,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
-// import SegmentedControlTab from 'react-native-segmented-control-tab';
 
-// import { Picker } from '@react-native-picker/picker';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 
@@ -50,21 +48,9 @@ import { navigate } from '../services/NavigationService';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
-// import Icon2 from 'react-native-vector-icons/Entypo';
 
 //Types
 import { Member } from '../types/groupTypes';
-
-
-// interface Member {
-//   uid: string;
-//   firstName: string;
-//   lastName: string
-// }
-
-// const GenderOptions = ['All', 'Women only', 'Men only'];
-// const VisibilityOption = ['Public', 'Private'];
-
 
 const StartGroup = () => {
   const navigation =
@@ -105,10 +91,6 @@ const StartGroup = () => {
   const [isFriendsOnly, setIsFriendsOnly] = useState(false);
   const [isAutoAccept, setIsAutoAccept] = useState(false);
   const [isVerifiedOnly, setIsVerifiedOnly] = useState(true);
-
-  // const [showDropdown, setShowDropdown] = useState(false);
-  // const [filteredSports, setFilteredSports] = useState(sportsList);
-
 
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
   const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 2)); // Min limit 2
@@ -206,7 +188,7 @@ const StartGroup = () => {
           });
           memberUids.push(member.uid);
         });
-        // ✅ Remove the `searchParties` document since the leader is starting a group
+        // Remove the `searchParties` document since the leader is starting a group
         await partyDocRef.delete();
         console.log("✅ searchParties entry removed for leader:", currentUser.uid);
       }
@@ -316,7 +298,7 @@ const StartGroup = () => {
     } catch (error) {
       console.log("Coudn't edit group", error)
     }
-    navigate("GroupApp", { screen: 'MyGroupScreen' })
+    navigate("GroupApp", { screen: "MyGroupScreen" });
   }
 
   let syncTimeCheck = 0;
@@ -373,7 +355,7 @@ const StartGroup = () => {
     // Sync "To" time only if it hasn't been manually changed
     if (syncTimeCheck === 0) {
       const newToTime = new Date(fromTime);
-      newToTime.setHours(newToTime.getHours() + 1); // Example: Set "To" time as one hour after "From" time
+      newToTime.setHours(newToTime.getHours() + 1); // Set "To" time as one hour after "From" time
       setToTime(newToTime);
     }
   };
@@ -400,35 +382,6 @@ const StartGroup = () => {
   const skillInfo = () => {
     Alert.alert('Button Pressed!');
   };
-
-  // const handleIndexChange = (index: number) => {
-  //   setSelectedGender(index);
-  // };
-
-  // const dismissKeyboard = () => {
-  //   Keyboard.dismiss();
-  // };
-
-  // const handleSearch = (text: string) => {
-  //   setActivity(text);
-
-  //   if (text === '') {
-  //     setFilteredSports(sportsList); // Show all options if search is empty
-  //     setShowDropdown(false); // Hide dropdown
-  //   } else {
-  //     const filtered = sportsList.filter((sport) =>
-  //       sport.toLowerCase().includes(text.toLowerCase())
-  //     );
-  //     setFilteredSports(filtered);
-  //     setShowDropdown(true);
-  //   }
-  // };
-
-  // const handleSelect = (sport: string) => {
-  //   // setActivity(sport);
-  //   setActivity(sport); // Update the search bar with the selected sport
-  //   setShowDropdown(false); // Hide dropdown
-  // };
 
   return (
     <KeyboardAvoidingView
@@ -558,8 +511,6 @@ const StartGroup = () => {
         </View>
         {activity !== "Custom" && (
           <View style={styles.bodyContainer}>
-            {/* <View style={styles.row}> */}
-            {/* <View style={styles.skillLevelContainer}> */}
             <View style={styles.bodySkillTitle}>
               <Text style={styles.bodyLabel}>Skill Level</Text>
               <Text style={styles.bodyValueTitle}>{skillvalue}</Text>
@@ -580,15 +531,10 @@ const StartGroup = () => {
                 thumbTintColor="#007FFF"
               />
             </View>
-
-            {/* </View> */}
-
-            {/* </View> */}
           </View>
         )}
 
         <View style={styles.bodyContainer}>
-          {/* <View style={styles.memberNeededContainer}> */}
           <View style={styles.row}>
             <Text style={styles.bodyLabel}>Set Member Limit</Text>
             <View style={styles.stepperContainer}>
@@ -599,7 +545,6 @@ const StartGroup = () => {
               <TouchableOpacity style={styles.stepperButton} onPress={increment}>
                 <Text style={styles.stepperButtonText}>+</Text>
               </TouchableOpacity>
-              {/* </View> */}
             </View>
 
           </View>
@@ -665,7 +610,6 @@ const styles = StyleSheet.create({
     height: verticalScale(65),
     backgroundColor: '#5f4c4c',
     padding: scale(15),
-    // justifyContent: "space-between",
     alignItems: 'center',
     flexDirection: "row",
   },
@@ -673,7 +617,6 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     fontWeight: 'bold',
     color: 'white',
-    // marginLeft: 'auto',
     marginRight: scale(20),
   },
   spacer: {
@@ -764,20 +707,9 @@ const styles = StyleSheet.create({
   sliderContainer: {
     marginHorizontal: scale(10)
   },
-  // skillLevelContainer: {
-  // flex: 1,
-  // borderRightWidth: 1,
-  // borderColor: 'grey',
-  // },
-  // memberNeededContainer: {
-  //   flex: 1,
-  //   justifyContent: 'flex-end',
-  // },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    // borderWidth: 1,
     margin: moderateScale(20),
     marginLeft: scale(70)
   },
@@ -797,34 +729,24 @@ const styles = StyleSheet.create({
     marginHorizontal: scale(20)
   },
   footerContainer: {
-    // flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    // margin: 10,
     padding: moderateScale(15),
-    // backgroundColor: '#5f4c4c',
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'transparent', // Transparent background
+    backgroundColor: 'transparent',
 
   },
-  // exitBtn: {
-  //   width: 80,
-  //   height: 60,
-  //   backgroundColor: '#5f4c4c',
-  // },
   moreOptionBtn: {
     flex: 1,
-    // width: 100,
     height: verticalScale(50),
     backgroundColor: 'grey',
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
     marginHorizontal: scale(5),
-
   },
   moreOptionText: {
     fontSize: moderateScale(16),
@@ -833,7 +755,6 @@ const styles = StyleSheet.create({
   },
   startGroupBtn: {
     flex: 3,
-    // width: 280,
     height: verticalScale(50),
     backgroundColor: '#4CBB17',
     justifyContent: "center",
@@ -849,10 +770,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     marginTop: verticalScale(5),
-    maxHeight: verticalScale(220), // Limit height of dropdown for scrolling
-    // borderWidth: 1,
-    // borderColor: 'gray',
-    // borderRadius: 5,
+    maxHeight: verticalScale(220),
     backgroundColor: 'white',
   },
   dropdownItem: {
@@ -863,57 +781,6 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: moderateScale(16),
   },
-  // modalOverlay: {
-  //   flex: 1,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  // },
-  // modalView: {
-  //   width: 350,
-  //   padding: 20,
-  //   backgroundColor: 'white',
-  //   borderRadius: 20,
-  //   alignItems: 'center',
-  // },
-  // closeIcon: {
-  //   position: 'absolute',
-  //   top: 5,
-  //   right: 15,
-  //   padding: 5,
-  // },
-  // closeText: {
-  //   fontSize: 24,
-  //   color: '#888',
-  // },
-  // modalTitleText: {
-  //   fontSize: 24,
-  //   fontWeight: 'bold',
-  //   color: 'black',
-  // },
-  // segmentContainer: {
-  //   flexDirection: 'row',
-  //   backgroundColor: '#eee',
-  //   borderRadius: 8,
-  //   overflow: 'hidden',
-  //   marginTop: 10
-  // },
-  // segment: {
-  //   flex: 1,
-  //   padding: 10,
-  //   alignItems: 'center',
-  //   paddingVertical: 14,
-  // },
-  // segmentSelected: {
-  //   backgroundColor: '#007AFF',
-  // },
-  // text: {
-  //   color: '#000',
-  // },
-  // textSelected: {
-  //   color: '#fff',
-  //   fontWeight: 'bold',
-  // },
 });
 
 export default StartGroup;

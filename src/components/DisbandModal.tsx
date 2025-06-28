@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Modal, TouchableWithoutFeedback, Pressable } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Firebase
@@ -9,18 +9,8 @@ import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext'
 import { useGroup } from '../context/GroupContext'
 
-//Services
-import { navigate } from '../services/NavigationService';
-
 //Types
 import { SearchParty } from '../types/groupTypes';
-
-// interface PartyGroup {
-//   leaderFirstName: string;
-//   leaderLastName: string;
-//   leaderUid: string;
-//   members: { uid: string; firstName: string; lastName: string }[];
-// }
 
 interface DisbandModalProps {
   userParty?: SearchParty | null;
@@ -50,20 +40,6 @@ const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
         .doc(currentUser.uid)
         .delete()
 
-      // if (groupData && groupData.memberUids) {
-      //   const notifyPromises = groupData.memberUids.map((uid: string) =>
-      //     firestore().collection('users').doc(uid).update({
-      //       notification: {
-      //         type: 'GROUP_DELETED',
-      //         message: 'Your group has been deleted by the leader.',
-      //         groupId: currentGroupId,
-      //         timestamp: new Date(),
-      //       },
-      //     })
-      //   );
-      //   await Promise.all(notifyPromises); // Wait for all notifications to complete
-      // }
-
       await Promise.all(
         members.map(async (member) => {
           await firestore().collection("partyNotifications").add({
@@ -82,7 +58,6 @@ const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
         })
       );
       setDisbandModalVisible(false);
-      // navigate("FindOrStart");
     } catch (error) {
       console.error("Error deleting party:", error);
       Alert.alert("Error", "Something went wrong while deleting the party.");

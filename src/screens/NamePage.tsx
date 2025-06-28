@@ -1,10 +1,6 @@
 import { StyleSheet, Text, View, Alert, TextInput, Button } from 'react-native';
 import React, { useState } from 'react';
 
-//Navigation
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../utils/types'
-
 //Firebase
 import firestore from '@react-native-firebase/firestore';
 
@@ -27,7 +23,7 @@ const NamePage = () => {
   const addName = async () => {
     if (!currentUser) {
       return;
-    } // Ensure currentUser is defined
+    }
     await firestore()
       .collection('users')
       .doc(currentUser.uid)
@@ -79,7 +75,6 @@ const NamePage = () => {
         Others will not see your last name, only the first letter if there are
         multiple people with the same first name in the same group.
       </Text>
-      {/* <Button title="Submit" onPress={handleSubmit} /> */}
       <Button title="Submit" onPress={handleSubmit} />
       <Button
         title="Move On"
