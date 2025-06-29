@@ -21,9 +21,10 @@ interface Props {
   onChange: (value: string) => void;
   options: string[];
   placeholder?: string;
+  hideTrigger?: boolean;
 }
 
-const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeholder }) => {
+const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeholder, hideTrigger }) => {
   const [searchText, setSearchText] = useState(value);
   const [filteredOptions, setFilteredOptions] = useState(options);
   const [visible, setVisible] = useState(false);
@@ -56,16 +57,19 @@ const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeho
   return (
 
     <>
-      <TouchableOpacity onPress={() => setVisible(true)}>
-        <TextInput
-          value={value}
-          placeholder={placeholder || 'Search...'}
-          placeholderTextColor="#999"
-          style={[styles.input, { color: 'black' }]}
-          editable={false}
-          pointerEvents="none"
-        />
-      </TouchableOpacity>
+      {!hideTrigger && (
+        <TouchableOpacity onPress={() => setVisible(true)}>
+          <TextInput
+            value={value}
+            placeholder={placeholder || 'Search...'}
+            placeholderTextColor="#999"
+            style={[styles.input, { color: 'black' }]}
+            editable={false}
+            pointerEvents="none"
+          />
+        </TouchableOpacity>
+      )}
+
 
       <Modal visible={visible} transparent animationType="fade">
         <KeyboardAvoidingView

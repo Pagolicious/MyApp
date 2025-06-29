@@ -1,12 +1,19 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Pressable, Animated } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../../utils/types';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { useNavigation } from '@react-navigation/native';
+import { Dimensions } from 'react-native';
 
-//Assets
-import sportsList from "../../assets/JsonFiles/sportsList.json"
+//Components
+import NewLabelModal from '../../components/NewLabel'
+
+//Contexts
+import { useAuth } from '../../context/AuthContext';
+
+//Firebase
+import firestore from '@react-native-firebase/firestore';
 
 //Icons
 import ADIcon from 'react-native-vector-icons/AntDesign';
@@ -19,12 +26,54 @@ type LabelScreenRouteProp = RouteProp<RootStackParamList, 'LabelScreen'>;
 const LabelScreen = () => {
   const route = useRoute<LabelScreenRouteProp>();
   const { friend } = route.params;
+  const { currentUser } = useAuth()
   const navigation = useNavigation();
   const [suggestionLabels, setSuggestionLabels] = useState<string[]>([
     'Close Friends', 'Badminton', 'Tennis', 'Colleagues', 'Family', 'Football', 'New Friends', 'Table Tennis'
   ]);
+  const [showDelete, setShowDelete] = useState(false);
+  const [userLabels, setUserLabels] = useState<string[]>([]);
+
+  const deleteAnim = useRef(new Animated.Value(0)).current;
+  const labelWidthAnim = useRef(new Animated.Value(1)).current; // 1 = 100%
+  const screenWidth = Dimensions.get('window').width;
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribe = firestore()
+      .collection('users')
+      .doc(currentUser.uid)
+      .onSnapshot(docSnap => {
+        const data = docSnap.data();
+        const friendDoc = data?.friends.find((f: any) => f.uid === friend.uid);
+        if (friendDoc?.labels) {
+          setUserLabels(friendDoc.labels);
+        } else {
+          setUserLabels([]);
+        }
+      });
+
+    return () => unsubscribe();
+  }, []);
 
 
+  const toggleDeleteButtons = () => {
+    setShowDelete(prev => !prev);
+
+    Animated.parallel([
+      Animated.timing(deleteAnim, {
+        toValue: showDelete ? 0 : 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(labelWidthAnim, {
+        toValue: showDelete ? 1 : 0.45,
+        duration: 300,
+        useNativeDriver: false,
+      })
+    ]).start();
+  };
 
   const handleGoBackButton = () => {
     if (navigation.canGoBack()) {
@@ -48,17 +97,63 @@ const LabelScreen = () => {
         <Text style={styles.labelTitleText}>Add Labels to {friend.firstName} {friend.lastName}</Text>
       </View>
       <View style={styles.labelContainer}>
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.addLabel}>
-            <EIcon name="plus" size={45} color="black" style={styles.plusIcon} />
-          </TouchableOpacity>
-          <View style={styles.delLabel}>
-            <TouchableOpacity style={styles.delLabelBtn} onPress={() => console.log('d')}>
-              <MIcon name="delete" size={25} color="red" />
-              <Text>Delete</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.labelContent}>
+          {userLabels.map((label, index) => (
+            <View key={`${label}-${index}`} style={styles.labelRow}>
+              <Animated.View
+                style={[
+                  styles.label,
+                  {
+                    width: labelWidthAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [screenWidth * 0.5 - 30, screenWidth - 40],
+                    }),
+                  }
+                ]}
+              >
+                <Text style={styles.labelText}>{label}</Text>
+              </Animated.View>
+              <Animated.View
+                style={[
+                  styles.deleteButtonContainer,
+                  {
+                    opacity: deleteAnim,
+                    transform: [{
+                      translateX: deleteAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20, 0],
+                      })
+                    }]
+                  }
+                ]}
+              >
+                <TouchableOpacity style={styles.deleteButton} onPress={() => console.log(`Delete ${label}`)}>
+                  <MIcon name="delete" size={20} color="red" />
+                  <Text style={styles.deleteText}>Delete</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+          ))}
+
         </View>
+
+      </View>
+      <View style={styles.buttonContainer}>
+        {currentUser && (
+          <NewLabelModal
+            friend={friend}
+            currentUserId={currentUser.uid}
+            onLabelAdded={(label) => {
+            }}
+
+          />
+        )}
+        {/* <Pressable style={styles.createCustomButton}>
+          <Text style={styles.buttonText}>Create Custom</Text>
+        </Pressable> */}
+        <Pressable style={styles.editButton} onPress={toggleDeleteButtons}>
+          <Text style={styles.buttonText}>Edit</Text>
+        </Pressable>
       </View>
       <View style={styles.line}></View>
       <Text style={styles.suggestionTitle}>Suggestion</Text>
@@ -67,8 +162,9 @@ const LabelScreen = () => {
           data={suggestionLabels}
           keyExtractor={(item, index) => item + index}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.labelItem}>
-              <Text style={styles.labelText}>{item}</Text>
+            <TouchableOpacity style={styles.suggestionLabelItem}>
+              <Text style={styles.suggestionLabelText}>{item}</Text>
+              <EIcon name="plus" size={20} color="black" style={styles.suggestionPlusIcon} />
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.labelList}
@@ -113,51 +209,83 @@ const styles = StyleSheet.create({
 
   },
   labelContainer: {
-    marginVertical: verticalScale(15)
+    marginVertical: verticalScale(15),
+    marginHorizontal: scale(20)
   },
-  row: {
+  labelContent: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+  labelRow: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly'
-  },
-  addLabel: {
-    width: scale(200),
-    height: verticalScale(40),
-    borderWidth: 1,
-    borderTopLeftRadius: 10,
-    borderTopEndRadius: 10,
-    borderStartEndRadius: 10,
-    backgroundColor: '#f2f2f2',
-    justifyContent: 'center',
-    alignItems: 'flex-end', // aligns icon to the right
-    paddingRight: 20, // space for icon's base position
-    overflow: 'visible', // allow icon to render outside
-  },
-
-  plusIcon: {
-    position: 'absolute',
-    right: -23, // move slightly outside the right border
-    // bottom: 0,
-    top: '85%',
-    transform: [{ translateY: -15 }],
-
-  },
-  delLabel: {
-
-  },
-  delLabelBtn: {
     alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    width: scale(80),
-    height: verticalScale(40),
-    borderRadius: 10,
-    backgroundColor: "lightgrey"
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: '100%',
   },
-  // subtitle: {
-  //   marginTop: 10,
-  //   fontSize: 16,
-  //   color: 'gray',
+
+  label: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    // backgroundColor: '#e0e0e0',
+    borderRadius: 10,
+    borderWidth: 1,
+    marginRight: 5,
+  },
+  labelText: {
+    fontSize: moderateScale(16),
+    // color: '#333',
+  },
+  deleteButtonContainer: {
+    borderWidth: 1,
+    padding: 8,
+    borderRadius: 10,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  deleteText: {
+    fontSize: moderateScale(16)
+  },
+
+
+  // delLabelBtn: {
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   flexDirection: 'row',
+  //   width: scale(80),
+  //   height: verticalScale(40),
+  //   borderRadius: 10,
+  //   backgroundColor: "lightgrey"
   // },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginVertical: 15
+  },
+
+  createCustomButton: {
+    backgroundColor: '#007AFF',
+    // borderWidth: 1,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(16),
+    borderRadius: 6,
+    elevation: 3,
+  },
+  editButton: {
+    backgroundColor: "green",
+    // borderWidth: 1,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(16),
+    borderRadius: 6,
+    elevation: 3,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   line: {
     height: 1,
     backgroundColor: 'black',
@@ -182,16 +310,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 15,
   },
-  labelItem: {
+  suggestionLabelItem: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 1,
     borderRadius: 20,
     backgroundColor: '#f0f0f0',
-    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    // alignSelf: 'flex-start',
+    // overflow: 'visible', // allow icon to render outside
+    // paddingRight: 20, // space for icon's base position
+    // justifyContent: 'center',
+    // alignItems: 'flex-end',
+    alignItems: 'center'
+
   },
-  labelText: {
+  suggestionLabelText: {
     fontSize: 16,
   },
-
+  suggestionPlusIcon: {
+  }
+  // width: scale(200),
+  //     height: verticalScale(40),
+  //     borderWidth: 1,
+  //     borderTopLeftRadius: 10,
+  //     borderTopEndRadius: 10,
+  //     borderStartEndRadius: 10,
+  //     backgroundColor: '#f2f2f2',
+  //     justifyContent: 'center',
+  //     alignItems: 'flex-end',
+  //     paddingRight: 20,
+  //     overflow: 'visible',
 });

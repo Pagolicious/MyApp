@@ -3,6 +3,7 @@ export interface Friend {
   firstName: string;
   lastName: string;
   isOnline?: boolean;
+  labels?: string[];
 }
 
 export interface Skills {
