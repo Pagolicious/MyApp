@@ -30,7 +30,7 @@ const { height } = Dimensions.get('window');
 interface NewLabelModalProps {
   friend: Friend;       // the friend you want to label
   currentUserId: string
-  onLabelAdded?: (label: string) => void; // optional callback to refresh UI
+  onLabelAdded?: (handleLabelAdded: string) => void; // optional callback to refresh UI
   placeholder?: string;
 }
 
@@ -41,6 +41,8 @@ const SearchableDropdown: React.FC<NewLabelModalProps> = ({ friend, currentUserI
   const [filteredOptions, setFilteredOptions] = useState(cleanSportsList);
   const [visible, setVisible] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customLabel, setCustomLabel] = useState('');
 
   const handleSearch = (text: string) => {
     setSearchText(text);
@@ -54,13 +56,15 @@ const SearchableDropdown: React.FC<NewLabelModalProps> = ({ friend, currentUserI
   const handleSelect = async (item: string) => {
     // setSearchText(item);
     // onChange(item);
-    setVisible(false);
-    Keyboard.dismiss();
+    setShowCustomInput(false);
+    setCustomLabel('');
 
-    if (item === 'Custom') {
-      // setShowCustomInput(true);
-      return
+    if (item.toLowerCase() === 'custom') {
+      setShowCustomInput(true);
+      return;
     } else {
+      setVisible(false);
+      Keyboard.dismiss();
       try {
         const userRef = firestore().collection('users').doc(currentUserId);
         const docSnap = await userRef.get();
@@ -100,6 +104,8 @@ const SearchableDropdown: React.FC<NewLabelModalProps> = ({ friend, currentUserI
         setSearchText('');
         setFilteredOptions(cleanSportsList);
         setVisible(true);
+        setShowCustomInput(false);
+        setCustomLabel('');
       }}
       >
         <Text style={styles.buttonText}>Create New</Text>
@@ -127,19 +133,44 @@ const SearchableDropdown: React.FC<NewLabelModalProps> = ({ friend, currentUserI
                   keyExtractor={(item, index) => index.toString()}
                   style={styles.dropdown}
                   keyboardShouldPersistTaps="handled"
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.dropdownItem}
-                      onPress={() => handleSelect(item)}
-                    >
-                      <Text
-                        style={[
-                          styles.dropdownText,
-                          item.toLowerCase().includes('custom') && styles.customOptionText,
-                        ]}
-                      >{item}</Text>
-                    </TouchableOpacity>
-                  )}
+                  renderItem={({ item }) => {
+                    if (item.toLowerCase() === 'custom' && showCustomInput) {
+                      return (
+                        <View style={[styles.dropdownItem, {
+                          flexDirection: 'row', alignItems: 'center', padding: 0
+                        }]}>
+                          <TextInput
+                            value={customLabel}
+                            onChangeText={setCustomLabel}
+                            placeholder="Enter custom label"
+                            placeholderTextColor="#999"
+
+                            style={styles.customTextInput}
+                          />
+                          <TouchableOpacity onPress={() => handleSelect(customLabel)}>
+                            <Text style={styles.submitBtn}>Submit</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+
+                    return (
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelect(item)}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownText,
+                            item.toLowerCase().includes('custom') && styles.customOptionText,
+                          ]}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+
                 />
               </View>
             </View>
@@ -169,6 +200,8 @@ const styles = StyleSheet.create({
     height: 50,
     paddingLeft: 20,
     fontSize: 25,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   overlay: {
     flex: 1,
@@ -189,14 +222,28 @@ const styles = StyleSheet.create({
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+
   },
   customOptionText: {
     color: '#007AFF',
     fontWeight: 'bold',
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
   },
+  customTextInput: {
+    flex: 1,
+    fontSize: moderateScale(16),
+    // paddingVertical: verticalScale(8),
+    // borderWidth: 1
+    marginHorizontal: scale(10)
+
+  },
+  submitBtn: {
+    color: '#007AFF',
+    paddingHorizontal: scale(10),
+    fontWeight: 'bold'
+  }
 });
 
 export default SearchableDropdown;

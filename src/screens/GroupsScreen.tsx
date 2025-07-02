@@ -36,7 +36,7 @@ import { useGroup } from '../context/GroupContext';
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 //Icons
-import Icon1 from 'react-native-vector-icons/AntDesign';
+import ADIcon from 'react-native-vector-icons/AntDesign';
 
 //Types
 import { Group, Applicant, Member } from '../types/groupTypes';
@@ -69,10 +69,10 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
   const { currentGroupId } = useGroup();
-  const { activity, date, time, groupSize } = route.params;
+  const { activity, date, time, groupSize, ignoreSkillInSearch } = route.params;
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [userPickedSkillLevel, setUserPickedSkillLevel] = useState(false);
-  const needsToSetSkillLevel = !hasSkillLevel && !userPickedSkillLevel && selectedGroup?.activity !== "Custom";
+  // const needsToSetSkillLevel = !hasSkillLevel && !userPickedSkillLevel && selectedGroup?.activity !== "Custom";
   const canShowGroupDetails = hasSkillLevel || userPickedSkillLevel || selectedGroup?.activity === "Custom";
 
   const animationValue = useRef(new Animated.Value(0)).current;
@@ -113,6 +113,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             visibility: data.visibility || 'Public',
             minAge: data.minAge || 18,
             maxAge: data.maxAge || 70,
+            isIgnoreSkillLevel: data.isIgnoreSkillLevel || false,
             isFriendsOnly: data.isFriendsOnly || false,
             isAutoAccept: data.isAutoAccept || false,
             isVerifiedOnly: data.isVerifiedOnly || false,
@@ -124,12 +125,52 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         let filteredGroups = groupList;
 
+        // filteredGroups = filteredGroups.filter(group =>
+        //   !(group.isDelisted || group.visibility === 'Private')
+        // );
+
+        // filteredGroups = filteredGroups.filter(group => !group.isIgnoreSkillLevel || isIgnoreSkillLevel);
+
         // Filter groups based on `activity` parameter
         if (activity !== 'Any') {
           filteredGroups = filteredGroups.filter(group =>
             group.activity.toLowerCase() === activity.toLowerCase()
           );
         }
+
+        if (!ignoreSkillInSearch) {
+          // Apply skill level filtering
+          if (userData?.skills && Array.isArray(userData.skills)) {
+            filteredGroups = filteredGroups.filter(group => {
+              // Always allow custom groups
+              if (group.activity?.toLowerCase() === 'custom') return true;
+
+              // Filter out groups that ignore skill level (unless user opted in)
+              if (group.isIgnoreSkillLevel) return false;
+
+              const groupSkill = group.skillLevel;
+              const groupActivity = group.activity?.toLowerCase();
+
+              const userSkillObj = userData.skills.find(
+                (s: { sport: string; skillLevel: number }) =>
+                  s.sport.toLowerCase() === groupActivity
+              );
+
+              if (!userSkillObj || groupSkill === undefined) return false;
+
+              return (
+                groupSkill >= userSkillObj.skillLevel - 1 &&
+                groupSkill <= userSkillObj.skillLevel + 1
+              );
+            });
+          }
+        } else {
+          // User chose to ignore skill levels
+          filteredGroups = filteredGroups.filter(group =>
+            group.activity?.toLowerCase() === 'custom' || group.isIgnoreSkillLevel
+          );
+        }
+
 
         if (date) {
           try {
@@ -153,6 +194,8 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             filteredGroups = filteredGroups.filter(group => group.memberLimit === parsedGroupSize);
           }
         }
+
+
 
         if (time) {
           const centerTime = new Date(time);
@@ -197,7 +240,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
     // Cleanup the listener when the component unmounts or dependencies change
     return () => unsubscribe();
-  }, [activity, date, time, groupSize, currentUser]);
+  }, [activity, date, time, groupSize, currentUser, ignoreSkillInSearch]);
 
 
   const addSkillLevel = async () => {
@@ -427,7 +470,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         <>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icon1 name="arrowleft" size={25} color="white" />
+              <ADIcon name="arrowleft" size={25} color="white" />
             </TouchableOpacity>
             <Text style={styles.headerText}>Groups</Text>
             {userData && (userData.isPartyLeader || userData.isPartyMember) && (

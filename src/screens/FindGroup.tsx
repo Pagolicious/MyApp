@@ -45,20 +45,21 @@ const FindGroup = () => {
 
   const SearchGroup = async () => {
     try {
-      const params: { activity: string; date?: string; time?: string; groupSize?: number } = {
+      const params: { activity: string; date?: string; time?: string; groupSize?: number, ignoreSkillInSearch?: boolean } = {
         activity: activity,
       };
 
       if (useDateFilter) {
         params.date = fromDate.toISOString();
       }
-
       if (useTimeFilter) {
         params.time = fromTime.toISOString();
       }
-
       if (useMemberFilter) {
         params.groupSize = groupSize;
+      }
+      if (useSkillLevelFilter) {
+        params.ignoreSkillInSearch = useSkillLevelFilter;
       }
       console.log("Search...")
       navigate('GroupsScreen', params);

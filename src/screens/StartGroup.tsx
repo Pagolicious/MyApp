@@ -14,13 +14,15 @@ import {
   Modal,
   Pressable
 } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
+import StarRating from 'react-native-star-rating-widget';
 
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import { Animated } from 'react-native';
 
 
 //Navigation
@@ -50,7 +52,7 @@ import { navigate } from '../services/NavigationService';
 import Icon1 from 'react-native-vector-icons/AntDesign';
 
 //Types
-import { Member } from '../types/groupTypes';
+import { GroupUpdate, Member } from '../types/groupTypes';
 
 const StartGroup = () => {
   const navigation =
@@ -78,7 +80,8 @@ const StartGroup = () => {
     return defaultTime;
   });
   const [showToTimepicker, setShowToTimepicker] = useState(false);
-  const [skillvalue, setSkillvalue] = useState(1);
+  const [skillLevel, setSkillLevel] = useState<number | null>(null);
+  const [skillModalVisible, setSkillModalVisible] = useState(false)
   const [details, setDetails] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const { setCurrentGroupId, currentGroup, currentGroupId } = useGroup();
@@ -88,12 +91,51 @@ const StartGroup = () => {
   const [selectedVisibility, setSelectedVisibility] = useState('Public');
   const [minAge, setMinAge] = useState(18);
   const [maxAge, setMaxAge] = useState(70);
+  const [isIgnoreSkillLevel, setIsIgnoreSkillLevel] = useState(false);
   const [isFriendsOnly, setIsFriendsOnly] = useState(false);
   const [isAutoAccept, setIsAutoAccept] = useState(false);
   const [isVerifiedOnly, setIsVerifiedOnly] = useState(true);
 
+  const modalHeight = useRef(new Animated.Value(300)).current; // Initial height
+  const submitOpacity = useRef(new Animated.Value(0)).current;
+  const modalAnimation = useRef(new Animated.Value(0)).current;
+
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
   const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 2)); // Min limit 2
+
+  const handleModalClose = () => {
+    Animated.timing(modalAnimation, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start(() => {
+      setSkillLevel(null);
+      setSkillModalVisible(false);
+    });
+  };
+
+  const animatedStyle = {
+    opacity: modalAnimation,
+    height: modalAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 100],
+    }),
+  };
+
+  useEffect(() => {
+    if (skillModalVisible) {
+      Animated.spring(modalAnimation, {
+        toValue: 0,
+        stiffness: 120,
+        damping: 14,
+        mass: 1,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [skillModalVisible]);
+
+
+
 
   useEffect(() => {
     if (userData?.isGroupLeader && currentGroup) {
@@ -111,13 +153,14 @@ const StartGroup = () => {
       setFromTime(parseTime(currentGroup.fromTime));
       setToDate(new Date(currentGroup.toDate || Date.now()));
       setToTime(parseTime(currentGroup.toTime));
-      setSkillvalue(currentGroup.skillvalue || 1);
+      // setSkillvalue(currentGroup.skillvalue || 1);
       setDetails(currentGroup.details || '');
       setMemberLimit(currentGroup.memberLimit || 2);
       setSelectedGender(currentGroup.gender || "All");
       setSelectedVisibility(currentGroup.visibility || "Public");
       setMinAge(currentGroup.minAge || 18);
       setMaxAge(currentGroup.maxAge || 70);
+      setIsIgnoreSkillLevel(currentGroup.isIgnoreSkillLevel || false);
       setIsFriendsOnly(currentGroup.isFriendsOnly || false);
       setIsAutoAccept(currentGroup.isAutoAccept || false);
       setIsVerifiedOnly(currentGroup.isVerifiedOnly || true);
@@ -146,10 +189,10 @@ const StartGroup = () => {
       return;
     }
 
-    if (!activity.trim() || !location.trim()) {
-      Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
-      return;
-    }
+    // if (!activity.trim() || !location.trim()) {
+    //   Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
+    //   return;
+    // }
 
     if (!userData) return
 
@@ -202,13 +245,14 @@ const StartGroup = () => {
       fromTime: formatTime(fromTime),
       toDate: toDate.toISOString(),
       toTime: formatTime(toTime),
-      skillvalue: skillvalue,
+      skillLevel: skillLevel,
       memberLimit: memberLimit,
       details: details,
       createdBy: {
         uid: currentUser.uid,
         firstName: userData.firstName,
-        lastName: userData.lastName
+        lastName: userData.lastName,
+        // skillLevel: skillLevel
       },
       groupId: groupId,
       isDelisted: false,
@@ -216,6 +260,7 @@ const StartGroup = () => {
       visibility: selectedVisibility,
       minAge: minAge,
       maxAge: maxAge,
+      isIgnoreSkillLevel: isIgnoreSkillLevel,
       isFriendsOnly: isFriendsOnly,
       isAutoAccept: isAutoAccept,
       isVerifiedOnly: isVerifiedOnly,
@@ -274,27 +319,45 @@ const StartGroup = () => {
     if (!currentUser) return
 
     try {
-      await firestore().collection('groups').doc(currentGroupId).update({
-        activity: activity,
-        location: location,
-        title: title,
+      const updateData: GroupUpdate = {
+        activity,
+        location,
+        title,
         fromDate: fromDate.toISOString(),
         fromTime: formatTime(fromTime),
         toDate: toDate.toISOString(),
         toTime: formatTime(toTime),
-        skillvalue: skillvalue,
-        memberLimit: memberLimit,
-        details: details,
+        // skillvalue,
+        memberLimit,
+        details,
+        // createdBy: {
+        //   uid: currentUser?.uid ?? '',
+        //   firstName: userData?.firstName ?? '',
+        //   lastName: userData?.lastName ?? '',
+        //   skillLevel: skillLevel ?? undefined
+        // },
         applicants: [],
         isDelisted: false,
         gender: selectedGender,
         visibility: selectedVisibility,
-        minAge: minAge,
-        maxAge: maxAge,
-        isFriendsOnly: isFriendsOnly,
-        isAutoAccept: isAutoAccept,
-        isVerifiedOnly: isVerifiedOnly
-      })
+        minAge,
+        maxAge,
+        isIgnoreSkillLevel,
+        isFriendsOnly,
+        isAutoAccept,
+        isVerifiedOnly,
+      };
+
+      if (activity === 'Custom') {
+        (updateData as any).isIgnoreSkillLevel = firestore.FieldValue.delete();
+      } else {
+        updateData.isIgnoreSkillLevel = isIgnoreSkillLevel;
+      }
+      // updateData.isIgnoreSkillLevel = isIgnoreSkillLevel;
+
+
+      await firestore().collection('groups').doc(currentGroupId).update(updateData);
+
     } catch (error) {
       console.log("Coudn't edit group", error)
     }
@@ -379,9 +442,48 @@ const StartGroup = () => {
     return time.toLocaleTimeString('sv-SE', options);
   };
 
-  const skillInfo = () => {
-    Alert.alert('Button Pressed!');
+  const getMatchedSkillLevel = (activityName: string): number | undefined => {
+    return userData?.skills?.find(
+      (s) => s.sport.toLowerCase() === activityName.toLowerCase()
+    )?.skillLevel;
   };
+
+  const onActivityChange = (selectedActivity: string) => {
+    setActivity(selectedActivity);
+    const level = getMatchedSkillLevel(selectedActivity);
+    setSkillLevel(level ?? null);
+  };
+
+
+
+  const addSkillLevel = async () => {
+    if (!currentUser) {
+      console.log("User not logged in")
+      return;
+    }
+
+    if (activity !== "Custom") {
+      const newSkill = {
+        sport: activity.toLowerCase(),
+        skillLevel,
+      };
+
+      try {
+        await firestore()
+          .collection('users')
+          .doc(currentUser.uid)
+          .update({
+            skills: firestore.FieldValue.arrayUnion(newSkill),
+          });
+
+      } catch (error) {
+        console.error('Error saving user data: ', error);
+      }
+    }
+  };
+
+
+
 
   return (
     <KeyboardAvoidingView
@@ -410,7 +512,7 @@ const StartGroup = () => {
           <Text style={styles.bodyLabel}>Activity</Text>
           <SearchableDropdown
             value={activity}
-            onChange={(val) => setActivity(val)}
+            onChange={onActivityChange}
             options={sportsList.filter(sport => sport.toLowerCase() !== 'any')}
             placeholder="Search for a sport..."
           />
@@ -509,7 +611,7 @@ const StartGroup = () => {
             </View>
           </View>
         </View>
-        {activity !== "Custom" && (
+        {/* {activity !== "Custom" && (
           <View style={styles.bodyContainer}>
             <View style={styles.bodySkillTitle}>
               <Text style={styles.bodyLabel}>Skill Level</Text>
@@ -532,7 +634,7 @@ const StartGroup = () => {
               />
             </View>
           </View>
-        )}
+        )} */}
 
         <View style={styles.bodyContainer}>
           <View style={styles.row}>
@@ -570,12 +672,41 @@ const StartGroup = () => {
           </TouchableOpacity>
 
           {!userData?.isGroupLeader ? (
-            <TouchableOpacity style={styles.startGroupBtn} onPress={addGroup}>
-              <Text style={styles.startGroupText}>Create</Text>
+            <TouchableOpacity style={styles.startGroupBtn} onPress={() => {
+              // const level = getMatchedSkillLevel(activity);
+              if (!activity.trim() || !location.trim()) {
+                Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
+                return;
+              } else if (activity === 'Custom' || skillLevel !== null || isIgnoreSkillLevel) {
+                addGroup();
+              } else {
+                setSkillModalVisible(true);
+              }
+
+
+            }}
+            >
+              <Text style={styles.submitBtnText}>Create</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.startGroupBtn} onPress={editGroup}>
-              <Text style={styles.startGroupText}>Edit</Text>
+            <TouchableOpacity style={styles.startGroupBtn} onPress={() => {
+              // const level = getMatchedSkillLevel(activity);
+              if (!activity.trim() || !location.trim()) {
+                Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
+                return;
+              } else {
+                editGroup()
+              }
+              // } else if (activity === 'Custom' || skillLevel !== null || isIgnoreSkillLevel) {
+              //   editGroup();
+              // } else {
+              //   setSkillModalVisible(true);
+              // }
+
+
+            }}
+            >
+              <Text style={styles.submitBtnText}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -591,13 +722,85 @@ const StartGroup = () => {
         maxAge={maxAge}
         setMinAge={setMinAge}
         setMaxAge={setMaxAge}
+        isIgnoreSkillLevel={isIgnoreSkillLevel}
+        setIsIgnoreSkillLevel={setIsIgnoreSkillLevel}
         isFriendsOnly={isFriendsOnly}
         setIsFriendsOnly={setIsFriendsOnly}
         isAutoAccept={isAutoAccept}
         setIsAutoAccept={setIsAutoAccept}
         isVerifiedOnly={isVerifiedOnly}
         setIsVerifiedOnly={setIsVerifiedOnly}
+        activity={activity}
       />
+      <Modal
+        animationType="fade"
+        transparent
+        visible={skillModalVisible}
+        onRequestClose={handleModalClose}
+      >
+        <TouchableWithoutFeedback onPress={handleModalClose}>
+          <View style={styles.modalOverlay}>
+            {/* Block closing when clicking inside modal */}
+            <TouchableWithoutFeedback onPress={() => { }}>
+              {/* <Animated.View style={[styles.modalView, animatedModalStyle]}> */}
+              <View style={styles.modalView}>
+
+                <TouchableOpacity
+                  style={styles.closeIcon}
+                  onPress={handleModalClose}
+                >
+                  <Text style={styles.closeText}>✖</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.modalTitleText}>Set a skill level</Text>
+
+                <View style={styles.setLevelContainer}>
+                  <Text style={styles.modalText}>
+                    Before creating your group, let us know your skill level for this activity. This helps us match you with others at a similar level.
+                  </Text>
+
+                  <StarRating
+                    rating={skillLevel ?? 0}
+                    onChange={(newRating) => {
+                      setSkillLevel(newRating);
+                      if (newRating > 0) {
+                        Animated.spring(modalAnimation, {
+                          toValue: 1,
+                          stiffness: 120,
+                          damping: 14,
+                          mass: 1,
+                          useNativeDriver: false,
+                        }).start();
+                      }
+                    }}
+                    enableHalfStar={false}
+                  />
+
+                  <Text style={styles.modalObervationText}>
+                    You can NOT change your skill level later
+                  </Text>
+
+                  {skillLevel !== null && skillLevel > 0 && (
+                    <Animated.View style={animatedStyle}>
+                      <TouchableOpacity
+                        style={styles.submitBtnModal}
+                        onPress={async () => {
+                          await addSkillLevel()
+                          setSkillModalVisible(false)
+                        }}>
+                        <Text style={styles.submitBtnText}>Submit</Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  )}
+                </View>
+              </View>
+
+              {/* </Animated.View> */}
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
     </KeyboardAvoidingView>
   );
 };
@@ -760,12 +963,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    marginHorizontal: scale(5,)
+    marginHorizontal: scale(5)
 
   },
-  startGroupText: {
+  submitBtnText: {
     fontSize: moderateScale(16),
-    color: "black",
+    color: "white",
     fontWeight: "bold",
   },
   dropdown: {
@@ -781,6 +984,62 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: moderateScale(16),
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: scale(300),
+    padding: scale(20),
+    backgroundColor: 'white',
+    borderRadius: moderateScale(20),
+    alignItems: 'center',
+  },
+  closeIcon: {
+    position: 'absolute',
+    top: scale(5),
+    right: scale(15),
+    padding: scale(5),
+  },
+  closeText: {
+    fontSize: moderateScale(24),
+    color: '#888',
+  },
+  modalTitleText: {
+    fontSize: moderateScale(24),
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  setLevelContainer: {
+    alignItems: 'center'
+  },
+  modalText: {
+    marginTop: verticalScale(20),
+    fontSize: moderateScale(16),
+    color: 'black',
+    marginBottom: verticalScale(20),
+    textAlign: 'center'
+  },
+  modalObervationText: {
+    fontSize: moderateScale(14),
+    color: 'red',
+    fontWeight: 'bold',
+    marginVertical: verticalScale(10),
+  },
+  submitBtnModal: {
+    // flex: 3,
+    paddingVertical: verticalScale(15),
+    paddingHorizontal: scale(90),
+    marginTop: verticalScale(30),
+    marginBottom: verticalScale(5),
+    backgroundColor: '#4CBB17',
+    // justifyContent: "center",
+    // alignItems: "center",
+    borderRadius: 10,
+    // marginHorizontal: scale(5)
+  }
 });
 
 export default StartGroup;

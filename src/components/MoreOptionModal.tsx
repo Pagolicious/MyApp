@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -13,7 +13,10 @@ import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import CustomToggle from '../components/CustomToggle';
 import { Dimensions } from 'react-native';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import Tooltip, { Placement } from "react-native-tooltip-2";
 
+//Icons
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface Props {
   visible: boolean;
@@ -26,12 +29,15 @@ interface Props {
   maxAge: number;
   setMinAge: (value: number) => void;
   setMaxAge: (value: number) => void;
+  isIgnoreSkillLevel: boolean;
+  setIsIgnoreSkillLevel: (value: boolean) => void;
   isFriendsOnly: boolean;
   setIsFriendsOnly: (value: boolean) => void;
   isAutoAccept: boolean;
   setIsAutoAccept: (value: boolean) => void;
   isVerifiedOnly: boolean;
   setIsVerifiedOnly: (value: boolean) => void;
+  activity: string;
 }
 
 const GenderOptions = ['All', 'Women only', 'Men only'];
@@ -49,14 +55,19 @@ const MoreOptionsModal: React.FC<Props> = ({
   maxAge,
   setMinAge,
   setMaxAge,
+  isIgnoreSkillLevel,
+  setIsIgnoreSkillLevel,
   isFriendsOnly,
   setIsFriendsOnly,
   isAutoAccept,
   setIsAutoAccept,
   isVerifiedOnly,
-  setIsVerifiedOnly
+  setIsVerifiedOnly,
+  activity
 
 }) => {
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+
   return (
     <Modal
       animationType="fade"
@@ -152,7 +163,37 @@ const MoreOptionsModal: React.FC<Props> = ({
               </View>
 
               <View style={styles.toggleContainer}>
+                {activity !== 'Custom' && (
+                  <View style={styles.toggleRow}>
+                    <Text style={styles.bodyLabel}>Ignore Skill Level</Text>
+                    <Tooltip
+                      isVisible={tooltipVisible}
+                      placement={Placement.TOP}
+                      onClose={() => setTooltipVisible(false)}
+                      displayInsets={{ top: 20, bottom: 20, left: 10, right: 10 }}
+                      content={
+                        <Text style={styles.skillLevelText}>
+                          When this is on, you'll only see groups that also disabled the skill rating system — meaning you can match with someone much better or worse than you.
+                        </Text>
+                      }
+                      arrowSize={{ width: 12, height: 8 }}
+                      backgroundColor="rgba(0,0,0,0.5)"
+                    >
+                      <View style={styles.tooltipBtnContainer}>
 
+                        <TouchableOpacity style={styles.tooltipBtn} onPress={() => setTooltipVisible(true)}>
+                          <Icon name="info-outline" size={22} color="white" />
+                        </TouchableOpacity>
+                      </View>
+
+                    </Tooltip>
+                    <CustomToggle
+                      label="Ignore-SK"
+                      value={isIgnoreSkillLevel}
+                      onToggle={(val: boolean) => setIsIgnoreSkillLevel(val)}
+                    />
+                  </View>
+                )}
                 <View style={styles.toggleRow}>
                   <Text style={styles.bodyLabel}>Friends Only</Text>
                   <CustomToggle
@@ -218,7 +259,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   bodyLabel: {
-    marginTop: verticalScale(15),
+    marginTop: verticalScale(10),
     paddingLeft: scale(10),
     fontSize: moderateScale(17),
     color: 'grey',
@@ -290,10 +331,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+
     width: '100%',
     marginTop: verticalScale(10),
     paddingHorizontal: scale(5),
   },
+  skillLevelText: {
+    maxWidth: scale(220),
+    padding: moderateScale(10)
+  },
+  tooltipBtnContainer: {
+  },
+  tooltipBtn: {
+    fontSize: moderateScale(14),
+    // marginHorizontal: scale(20),
+    // marginVertical: verticalScale(12),
+    padding: moderateScale(3),
+    borderRadius: 5,
+    backgroundColor: '#36454F',
+  }
 });
 
 

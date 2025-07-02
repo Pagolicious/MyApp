@@ -20,6 +20,9 @@ import ADIcon from 'react-native-vector-icons/AntDesign';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 import EIcon from 'react-native-vector-icons/Entypo';
 
+//Types
+import { Friend } from '../../types/userTypes';
+
 
 type LabelScreenRouteProp = RouteProp<RootStackParamList, 'LabelScreen'>;
 
@@ -75,6 +78,73 @@ const LabelScreen = () => {
     ]).start();
   };
 
+  const handleDeleteLabel = async (labelToRemove: string) => {
+
+    if (!currentUser) return
+
+    try {
+      const userRef = firestore().collection('users').doc(currentUser.uid);
+      const docSnap = await userRef.get();
+      const data = docSnap.data();
+
+      if (!data?.friends) return;
+
+      const updatedFriends = data.friends.map((f: any) => {
+        if (f.uid === friend.uid) {
+          const newLabels = (f.labels || []).filter((label: string) => label !== labelToRemove);
+          return { ...f, labels: newLabels };
+        }
+        return f;
+      });
+
+      await userRef.update({ friends: updatedFriends });
+    } catch (error) {
+      console.error('Failed to delete label:', error);
+    }
+  };
+
+  const handleSuggestionPress = async (label: string) => {
+    if (!currentUser) return
+
+    try {
+      const userRef = firestore().collection('users').doc(currentUser.uid);
+      const docSnap = await userRef.get();
+      const data = docSnap.data();
+
+      if (!data?.friends) return;
+
+
+      const updatedFriends = data.friends.map((f: Friend) => {
+        if (f.uid === friend.uid) {
+          const currentLabels = f.labels || [];
+          if (!currentLabels.includes(label)) {
+            return {
+              ...f,
+              labels: [...currentLabels, label]
+            };
+          }
+        }
+        return f;
+      });
+
+      await userRef.update({ friends: updatedFriends });
+
+      setSuggestionLabels(prev =>
+        prev.filter(s => s.toLowerCase() !== label.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error updating Firestore labels:', error);
+
+    }
+  };
+
+  // const handleLabelAdded = (label: string) => {
+  //   setUserLabels(prev => [...prev, label]);
+  //   setSuggestionLabels(prev => prev.filter(s => s !== label));
+  // };
+
+
+
   const handleGoBackButton = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -127,11 +197,14 @@ const LabelScreen = () => {
                   }
                 ]}
               >
-                <TouchableOpacity style={styles.deleteButton} onPress={() => console.log(`Delete ${label}`)}>
-                  <MIcon name="delete" size={20} color="red" />
+
+                <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteLabel(label)}>
+                  <MIcon name="delete" size={20} color="#C41E3A" />
                   <Text style={styles.deleteText}>Delete</Text>
                 </TouchableOpacity>
               </Animated.View>
+
+
             </View>
           ))}
 
@@ -143,32 +216,37 @@ const LabelScreen = () => {
           <NewLabelModal
             friend={friend}
             currentUserId={currentUser.uid}
-            onLabelAdded={(label) => {
-            }}
+          // onLabelAdded={handleLabelAdded}
 
           />
         )}
         {/* <Pressable style={styles.createCustomButton}>
           <Text style={styles.buttonText}>Create Custom</Text>
         </Pressable> */}
-        <Pressable style={styles.editButton} onPress={toggleDeleteButtons}>
-          <Text style={styles.buttonText}>Edit</Text>
-        </Pressable>
+        {userLabels.length > 0 && (
+          <Pressable style={styles.editButton} onPress={toggleDeleteButtons}>
+            <Text style={styles.buttonText}>Edit Labels</Text>
+          </Pressable>
+        )}
+
       </View>
       <View style={styles.line}></View>
       <Text style={styles.suggestionTitle}>Suggestion</Text>
       <View style={styles.suggestionContainer}>
-        <FlatList
-          data={suggestionLabels}
-          keyExtractor={(item, index) => item + index}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.suggestionLabelItem}>
-              <Text style={styles.suggestionLabelText}>{item}</Text>
+        <View style={styles.labelList}>
+          {suggestionLabels.map((label, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleSuggestionPress(label)}
+              style={styles.suggestionButton}
+            >
+              <Text style={styles.suggestionText}>{label}</Text>
               <EIcon name="plus" size={20} color="black" style={styles.suggestionPlusIcon} />
+
             </TouchableOpacity>
-          )}
-          contentContainerStyle={styles.labelList}
-        />
+          ))}
+        </View>
+
       </View>
     </View>
 
@@ -230,6 +308,7 @@ const styles = StyleSheet.create({
     // backgroundColor: '#e0e0e0',
     borderRadius: 10,
     borderWidth: 1,
+    borderColor: 'green',
     marginRight: 5,
   },
   labelText: {
@@ -237,14 +316,19 @@ const styles = StyleSheet.create({
     // color: '#333',
   },
   deleteButtonContainer: {
-    borderWidth: 1,
-    padding: 8,
-    borderRadius: 10,
+    // borderWidth: 1,
+    // borderRadius: 10,
   },
   deleteButton: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    borderColor: '#C41E3A',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 8,
+
+
   },
   deleteText: {
     fontSize: moderateScale(16)
@@ -265,17 +349,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     marginVertical: 15
   },
-
-  createCustomButton: {
-    backgroundColor: '#007AFF',
-    // borderWidth: 1,
-    paddingVertical: verticalScale(8),
-    paddingHorizontal: scale(16),
-    borderRadius: 6,
-    elevation: 3,
-  },
   editButton: {
-    backgroundColor: "green",
+    backgroundColor: '#007AFF',
     // borderWidth: 1,
     paddingVertical: verticalScale(8),
     paddingHorizontal: scale(16),
@@ -310,7 +385,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 15,
   },
-  suggestionLabelItem: {
+  suggestionButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderWidth: 1,
@@ -325,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
 
   },
-  suggestionLabelText: {
+  suggestionText: {
     fontSize: 16,
   },
   suggestionPlusIcon: {

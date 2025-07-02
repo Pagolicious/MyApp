@@ -21,6 +21,7 @@ import Icon1 from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/Octicons';
 import Icon3 from 'react-native-vector-icons/MaterialIcons';
 import Icon4 from 'react-native-vector-icons/Fontisto';
+import EIcon from 'react-native-vector-icons/Entypo';
 
 
 interface Props {
@@ -155,9 +156,21 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
           </Text>
           <Text style={styles.cardText}>{group.fromTime} - {group.toTime}</Text>
         </View>
+        {/* <View style={styles.column}> */}
         <View style={styles.people}>
-          <Text style={styles.cardTextPeople}>{group.memberUids.length}/{group.memberLimit}</Text>
+          {group.isIgnoreSkillLevel || (group.skillLevel != null && group.skillLevel > 0) && (
+            <View style={styles.starRating}>
+              <Text style={styles.cardTextPeople}>
+                {group.skillLevel}</Text>
+              <EIcon name="star" size={16} color="black" />
+            </View>
+          )}
+          <Text style={styles.cardTextPeople}>
+            {group.memberUids.length}/{group.memberLimit}
+          </Text>
         </View>
+
+        {/* </View> */}
       </View>
 
       {/* 🔽 Expanded Content */}
@@ -251,9 +264,12 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    // justifyContent: 'space-evenly'
   },
   column: {
     flex: 1,
+    // borderWidth: 1,
+    // justifyContent: 'flex-end'
   },
   people: {
     justifyContent: 'center',
@@ -263,10 +279,13 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(15),
     fontWeight: 'bold',
     color: '#000',
+    // borderWidth: 1
   },
   cardTextPeople: {
-    fontSize: moderateScale(17),
+    fontSize: moderateScale(15),
     fontWeight: 'bold',
+    // borderWidth: 1,
+    marginRight: scale(2)
   },
   contentRow: {
     flexDirection: "row",
@@ -326,6 +345,12 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  starRating: {
+    flexDirection: 'row',
+    // marginHorizontal: scale(10),
+    alignItems: 'center',
+    // borderWidth: 1
   }
 });
 

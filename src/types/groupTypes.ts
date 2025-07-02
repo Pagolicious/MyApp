@@ -1,3 +1,6 @@
+export type GroupUpdate = Partial<Omit<Group, 'id' | 'members' | 'createdBy' | 'memberUids'>>;
+
+
 export interface Member {
   uid: string;
   firstName: string;
@@ -26,7 +29,7 @@ export interface Group {
   fromTime: string;
   toTime: string;
   toDate: string;
-  skillvalue?: number;
+  skillLevel?: number
   createdBy: CreatedBy;
   memberLimit: number;
   details: string;
@@ -35,6 +38,7 @@ export interface Group {
   visibility: string,
   minAge: number,
   maxAge: number,
+  isIgnoreSkillLevel?: boolean;
   isFriendsOnly: boolean,
   isAutoAccept: boolean,
   isVerifiedOnly: boolean,

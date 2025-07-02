@@ -15,6 +15,7 @@ import { navigate } from '../services/NavigationService';
 import Icon1 from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/Octicons';
 import Icon3 from 'react-native-vector-icons/Fontisto';
+import EIcon from 'react-native-vector-icons/Entypo';
 
 
 interface Props {
@@ -130,7 +131,7 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
                 {applicant.skillLevel ?? "N/A"}
               </Text>
               <View style={styles.cardStar}>
-                <Icon2 name="star" size={18} color="black" />
+                <EIcon name="star-outlined" size={18} color="black" />
               </View>
             </View>
           )}
@@ -153,7 +154,7 @@ const ApplicationCard: React.FC<Props> = ({ applicant, currentUserId, currentGro
             <View style={styles.clockIconContainer}>
               <Icon3 name="clock" size={20} color="black" />
             </View>
-            <Text style={styles.timer}>{elapsedTime}</Text>
+            <Text style={styles.timer}> Applied {elapsedTime} ago</Text>
           </View>
           {applicant.role === "leader" && (applicant.members?.length ?? 0) > 0 && (
             <View style={styles.contentRow}>

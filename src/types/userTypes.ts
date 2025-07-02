@@ -15,6 +15,7 @@ export interface User {
   uid: string;
   firstName: string;
   lastName: string;
+  age: number;
   email: string;
   createdAt: string;
   fcmToken: string;

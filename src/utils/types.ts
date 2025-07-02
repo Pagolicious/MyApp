@@ -66,6 +66,7 @@ export type RootStackParamList = {
     date?: string;
     time?: string;
     groupSize?: number;
+    ignoreSkillInSearch?: boolean;
   };
   MyGroupScreen: undefined;
   GroupChatScreen: undefined;
