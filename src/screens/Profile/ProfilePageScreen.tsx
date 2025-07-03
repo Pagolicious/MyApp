@@ -147,6 +147,19 @@ const ProfilePageScreen = () => {
     }
   };
 
+  const calculateAge = (birthDate: Date): number => {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--; // birthday hasn't happened yet this year
+    }
+    return age;
+  };
+
+
   const handleGoBackButton = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -176,8 +189,11 @@ const ProfilePageScreen = () => {
         </View>
         <View style={styles.userInformation}>
           <Text style={styles.profileNameText}>{profileUserData?.firstName} {profileUserData?.lastName}</Text>
-          <Text style={styles.profileAgeLocationText}>35 years old, Göteborg</Text>
-
+          <Text style={styles.profileAgeLocationText}>
+            {profileUserData?.DateOfBirth
+              ? `${calculateAge(new Date(profileUserData.DateOfBirth.toDate()))} years old, Göteborg`
+              : 'Göteborg'}
+          </Text>
         </View>
         <View style={styles.bioContainer}>
           <Text style={styles.bioText}>

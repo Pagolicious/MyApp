@@ -11,9 +11,17 @@ export const listenToUserGroupId = (
   callback: (groupId: string | undefined) => void
 ) => {
   return firestore().collection('users').doc(userId).onSnapshot((doc) => {
+    if (!doc || !doc.exists) {
+      console.warn(`User ${userId} document does not exist`);
+      return callback(undefined);
+    }
     const userData = doc.data();
     callback(userData?.groupId || undefined);
-  });
+  },
+    error => {
+      console.error(`Error listening to user ${userId}:`, error);
+      callback(undefined);
+    });
 };
 
 export const listenToGroupData = (
@@ -22,7 +30,7 @@ export const listenToGroupData = (
 ) => {
   return firestore().collection('groups').doc(groupId).onSnapshot(
     (doc) => {
-      if (doc.exists) {
+      if (!doc || doc.exists) {
         callback({ id: doc.id, ...doc.data() } as Group);
       } else {
         callback(undefined);

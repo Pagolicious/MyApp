@@ -3,48 +3,36 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { AppState } from 'react-native';
 
-const useOnlineStatus = () => {
+export const useOnlineStatus = () => {
   useEffect(() => {
-    const updateStatus = async (isOnline: boolean) => {
-      const user = auth().currentUser;
-      if (user) {
-        console.log(`Updating online status for ${user.uid}: ${isOnline}`);
-        await firestore()
-          .collection('users')
-          .doc(user.uid)
-          .update({ isOnline })
-          .catch(error => console.error('Firestore update error:', error));
-      }
-    };
+    const user = auth().currentUser;
+    if (!user) return;
 
-    // App state change listener (Handles app going to background/inactive)
+    const userDoc = firestore().collection('users').doc(user.uid);
+
+    const setOnline = () =>
+      userDoc.set({ isOnline: true }, { merge: true });
+
+    const setOffline = () =>
+      userDoc.set({ isOnline: false }, { merge: true });
+
+    setOnline(); // when hook runs
+
     const handleAppStateChange = (nextAppState: string) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
-        updateStatus(false); // Set offline when app closes
+        setOffline();
       } else if (nextAppState === 'active') {
-        updateStatus(true); // Set online when app is reopened
+        setOnline();
       }
     };
 
-    const appStateListener = AppState.addEventListener('change', handleAppStateChange);
-
-    // Auth state change listener (Handles login/logout)
-    const unsubscribeAuth = auth().onAuthStateChanged(user => {
-      if (user) {
-        updateStatus(true); // User logged in → Set online
-      } else {
-        updateStatus(false); // User logged out → Set offline
-      }
-    });
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {
-      console.log('Cleaning up useOnlineStatus'); // Debugging log
-      appStateListener.remove();
-      unsubscribeAuth();
+      setOffline(); // when unmounted
+      subscription.remove();
     };
   }, []);
-
-  return null;
 };
 
 export default useOnlineStatus;

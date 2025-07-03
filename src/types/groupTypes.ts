@@ -29,7 +29,7 @@ export interface Group {
   fromTime: string;
   toTime: string;
   toDate: string;
-  skillLevel?: number
+  skillLevel?: number | null;
   createdBy: CreatedBy;
   memberLimit: number;
   details: string;

@@ -1,3 +1,6 @@
+import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+
+
 export interface Friend {
   uid: string;
   firstName: string;
@@ -15,10 +18,10 @@ export interface User {
   uid: string;
   firstName: string;
   lastName: string;
-  age: number;
+  DateOfBirth: FirebaseFirestoreTypes.Timestamp;
   email: string;
   createdAt: string;
-  fcmToken: string;
+  fcmToken?: string;
   isPartyLeader: boolean;
   isPartyMember: boolean;
   isGroupLeader: boolean;

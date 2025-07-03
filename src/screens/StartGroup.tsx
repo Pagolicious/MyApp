@@ -327,7 +327,7 @@ const StartGroup = () => {
         fromTime: formatTime(fromTime),
         toDate: toDate.toISOString(),
         toTime: formatTime(toTime),
-        // skillvalue,
+        skillLevel,
         memberLimit,
         details,
         // createdBy: {
@@ -513,7 +513,7 @@ const StartGroup = () => {
           <SearchableDropdown
             value={activity}
             onChange={onActivityChange}
-            options={sportsList.filter(sport => sport.toLowerCase() !== 'any')}
+            options={sportsList.filter(sport => sport.toLowerCase() !== 'any' && sport.toLowerCase() !== 'sports')}
             placeholder="Search for a sport..."
           />
         </View>

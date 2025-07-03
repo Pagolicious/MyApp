@@ -23,6 +23,10 @@ import Icon3 from 'react-native-vector-icons/MaterialIcons';
 import Icon4 from 'react-native-vector-icons/Fontisto';
 import EIcon from 'react-native-vector-icons/Entypo';
 
+//Types
+import { User } from '../types/userTypes';
+
+
 
 interface Props {
   group: Group;
@@ -45,6 +49,14 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
   const isMember = group.memberUids.includes(currentUserId);
   const isOwner = group.createdBy.uid === currentUserId;
 
+
+  const userHasSkillForGroup = (group: Group, userData: User): boolean => {
+    const activity = group.activity?.toLowerCase();
+    const hasSkill = userData?.skills?.some(
+      s => s.sport.toLowerCase() === activity
+    );
+    return !!hasSkill;
+  };
 
   const toggleExpand = () => {
     const newState = !expanded;
@@ -141,6 +153,13 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
         },
       ]}
     >
+      {userData && !userHasSkillForGroup(group, userData) && !group.isIgnoreSkillLevel && group.activity !== 'Custom' && (
+        <View style={styles.noSkillContainer}>
+          <Text style={styles.noSkillText}>No skill rating yet</Text>
+        </View>
+      )}
+
+
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.cardText}>{group.activity === 'Custom' ? group.title : group.activity}</Text>
@@ -158,7 +177,7 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
         </View>
         {/* <View style={styles.column}> */}
         <View style={styles.people}>
-          {group.isIgnoreSkillLevel || (group.skillLevel != null && group.skillLevel > 0) && (
+          {(!group.isIgnoreSkillLevel && group.skillLevel != null && group.skillLevel > 0) && (
             <View style={styles.starRating}>
               <Text style={styles.cardTextPeople}>
                 {group.skillLevel}</Text>
@@ -248,11 +267,12 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
 
 const styles = StyleSheet.create({
   card: {
-    margin: 10,
-    padding: 15,
+    marginVertical: verticalScale(15),
+    marginHorizontal: scale(10),
+    padding: scale(15),
     borderRadius: 10,
     borderWidth: 4,
-    backgroundColor: '#e0e0e0',
+    // backgroundColor: '#e0e0e0',
 
   },
   extendedContainer: {
@@ -305,8 +325,8 @@ const styles = StyleSheet.create({
   details: {
     color: '#333',
     marginHorizontal: scale(5),
-    paddingTop: verticalScale(2)
-
+    paddingTop: verticalScale(2),
+    maxWidth: scale(260)
   },
   clockIconContainer: {
     marginLeft: scale(3),
@@ -351,7 +371,28 @@ const styles = StyleSheet.create({
     // marginHorizontal: scale(10),
     alignItems: 'center',
     // borderWidth: 1
+  },
+  noSkillContainer: {
+    position: 'absolute',
+    top: -16, // Raise above the card top
+    alignSelf: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    borderColor: '#6A9AB0',
+    borderWidth: 3,
+    borderRadius: 20,
+    zIndex: 10, // Ensure it's above all card content
+  },
+  noSkillText: {
+    fontSize: moderateScale(12),
+    color: 'orange',
+    // marginTop: 4,
+    marginHorizontal: scale(5),
+    fontStyle: 'italic',
+    fontWeight: 'bold'
   }
+
 });
 
 export default GroupCard;

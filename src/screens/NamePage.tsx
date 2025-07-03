@@ -1,5 +1,21 @@
-import { StyleSheet, Text, View, Alert, TextInput, Button } from 'react-native';
-import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Alert,
+  TextInput,
+  ImageBackground,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
+import React, { useState, useRef } from 'react';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import Toast from 'react-native-toast-message';
+import Ripple from 'react-native-material-ripple';
+
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -16,9 +32,12 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 const NamePage = () => {
   const { currentUser } = useAuth();
-
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [firstNameError, setFirstNameError] = useState(false);
+  const [lastNameError, setLastNameError] = useState(false);
+  const firstNameRef = useRef<TextInput>(null);
+  const lastNameRef = useRef<TextInput>(null);
 
   const addName = async () => {
     if (!currentUser) {
@@ -32,8 +51,8 @@ const NamePage = () => {
         lastName: lastName,
       })
       .then(() => {
-        Alert.alert('Form Submitted', `${firstName} ${lastName}`);
-        navigate('PublicApp', { screen: 'FindOrStart' })
+        // navigate('PublicApp', { screen: 'FindOrStart' }
+        navigate('DateOfBirthScreen')
       })
       .catch(error => {
         console.error('Error saving user data: ', error);
@@ -42,70 +61,136 @@ const NamePage = () => {
       });
   };
 
+  const showToast = () =>
+    setTimeout(() => {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Information',
+        text2: 'Please enter both your first and last name.',
+      });
+    }, 300);
+
   const handleSubmit = () => {
-    if (firstName === '' || lastName === '') {
-      Alert.alert('Error', 'Please fill out all fields.');
-    } else {
-      addName();
+    const firstEmpty = firstName.trim() === '';
+    const lastEmpty = lastName.trim() === '';
+
+    setFirstNameError(firstEmpty);
+    setLastNameError(lastEmpty);
+
+    if (firstEmpty) {
+      firstNameRef.current?.focus();
+      return showToast();
     }
+
+    if (lastEmpty) {
+      lastNameRef.current?.focus();
+      return showToast();
+    }
+    addName();
   };
 
   return (
-    <View style={styles.container}>
-      <View>
-        <Text>
-          Welcome back, {firstName} {lastName}!
-        </Text>
-        <Text>Update your name if needed.</Text>
-      </View>
-      <Text style={styles.headingText}>What's Your Name?</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      <Text style={styles.infoText}>
-        Others will not see your last name, only the first letter if there are
-        multiple people with the same first name in the same group.
-      </Text>
-      <Button title="Submit" onPress={handleSubmit} />
-      <Button
-        title="Move On"
-        onPress={() => navigate('PublicApp', { screen: 'FindOrStart' })}
-      />
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+
+          <ImageBackground
+            source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
+            style={styles.backgroundImage} // Style for the background image
+          >
+            <View style={styles.content}>
+
+              <Text style={styles.headingText}>What's Your Name?</Text>
+              <TextInput
+                ref={firstNameRef}
+                style={[
+                  styles.input,
+                  firstNameError && { borderColor: 'red' }
+                ]}
+                placeholder="First Name"
+                placeholderTextColor={'grey'}
+                value={firstName}
+                onChangeText={text => {
+                  setFirstName(text);
+                  if (text.trim() !== '') setFirstNameError(false);
+                }} />
+              <TextInput
+                ref={lastNameRef}
+                style={[
+                  styles.input,
+                  lastNameError && { borderColor: 'red' }
+                ]}
+                placeholder="Last Name"
+                placeholderTextColor={'grey'}
+                value={lastName}
+                onChangeText={text => {
+                  setLastName(text);
+                  if (text.trim() !== '') setLastNameError(false);
+                }} />
+
+              <Ripple
+                rippleColor="black"
+                rippleContainerBorderRadius={10}
+                style={styles.button}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.buttonText}>Next</Text>
+              </Ripple>
+            </View>
+          </ImageBackground>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
     justifyContent: 'center',
-    padding: 15,
+    padding: moderateScale(25),
+  },
+  content: {
+    gap: verticalScale(15),
   },
   headingText: {
-    fontSize: 30,
+    fontSize: moderateScale(25),
     fontWeight: 'bold',
-    marginBottom: 55,
+    textAlign: 'center',
+    marginBottom: verticalScale(10)
   },
   input: {
-    height: 50,
-    borderBottomWidth: 1,
-    borderBottomColor: 'gray',
-    marginBottom: 12,
-    paddingLeft: 8,
-    fontSize: 30,
+    fontSize: moderateScale(20),
+    backgroundColor: '#DCDCDC',
+    // borderBottomColor: 'gray',
+    borderRadius: 10,
+    paddingHorizontal: scale(15),
+    borderWidth: 1,
+    // borderColor: '#007AFF'
   },
-  infoText: {
-    margin: 10,
+  button: {
+    overflow: 'hidden',
+    backgroundColor: '#007AFF',
+    padding: moderateScale(10),
+    borderRadius: 10
   },
+  buttonText: {
+    fontSize: moderateScale(20),
+    textAlign: 'center',
+    color: 'white'
+  }
+  // infoText: {
+  //   margin: 10,
+  // },
 });
 
 export default NamePage;

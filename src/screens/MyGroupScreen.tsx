@@ -24,6 +24,9 @@ import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
+//Hooks
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
+
 //Utils
 import { inviteApplicant } from '../utils/inviteHelpers';
 
@@ -42,6 +45,8 @@ const MyGroupScreen = () => {
     null,
   );
   const { currentGroupId, currentGroup } = useGroup();
+
+  useOnlineStatus()
 
   useEffect(() => {
     if (!currentGroup?.applicants) {

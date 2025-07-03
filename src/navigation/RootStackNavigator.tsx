@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import SignUpScreen from '../screens/SignUpScreen';
 import LoginScreen from '../screens/LoginScreen';
 import NamePage from '../screens/NamePage';
+import DateOfBirthScreen from '../screens/DateOfBirthScreen';
 import FindOrStart from '../screens/FindOrStart';
 import FindGroup from '../screens/FindGroup';
 import StartGroup from '../screens/StartGroup';
@@ -50,6 +51,7 @@ const RootStackNavigator = () => {
       <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
       <Stack.Screen name="StartGroup" component={StartGroup} />
       <Stack.Screen name="NamePage" component={NamePage} />
+      <Stack.Screen name="DateOfBirthScreen" component={DateOfBirthScreen} />
       <Stack.Screen name="GroupChatScreen" component={GroupChatScreen} />
 
       <Stack.Screen name="Friends" component={FriendStack} />

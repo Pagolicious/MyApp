@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     if (currentUser) {
-      await firestore().collection('users').doc(currentUser.uid).update({ isOnline: false });
+      await firestore().collection('users').doc(currentUser.uid).set({ isOnline: false }, { merge: true });
     }
     setCurrentUser(null);
     await auth().signOut();

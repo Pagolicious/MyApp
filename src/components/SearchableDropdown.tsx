@@ -22,9 +22,10 @@ interface Props {
   options: string[];
   placeholder?: string;
   hideTrigger?: boolean;
+  highlightItems?: string[];
 }
 
-const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeholder, hideTrigger }) => {
+const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeholder, hideTrigger, highlightItems }) => {
   const [searchText, setSearchText] = useState(value);
   const [filteredOptions, setFilteredOptions] = useState(options);
   const [visible, setVisible] = useState(false);
@@ -99,7 +100,14 @@ const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeho
                       style={styles.dropdownItem}
                       onPress={() => handleSelect(item)}
                     >
-                      <Text style={styles.dropdownText}>{item}</Text>
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          highlightItems?.includes(item.toLowerCase()) && { fontWeight: 'bold', color: 'tomato' },
+                        ]}
+                      >
+                        {item}
+                      </Text>
                     </TouchableOpacity>
                   )}
                 />

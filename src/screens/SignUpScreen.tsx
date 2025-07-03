@@ -60,20 +60,24 @@ const SignUpScreen = ({ navigation }: NameProps) => {
       const userId = userCredential.user.uid;
 
       // Generate the FCM token
-      const fcmToken = await messaging().getToken();
+      // const fcmToken = await messaging().getToken();
 
       // Save the user data along with the FCM token to Firestore
       await firestore().collection('users').doc(userId).set({
         email: email,
-        fcmToken: fcmToken,
+        // fcmToken: fcmToken,
         createdAt: firestore.FieldValue.serverTimestamp(),
         isOnline: false,
         isPartyLeader: false,
         isPartyMember: false,
         isGroupLeader: false,
         isGroupMember: false,
-        groupId: ''
+        groupId: '',
+        skills: []
       });
+
+      // Force logout to require explicit login
+      await auth().signOut();
 
       Alert.alert('User Created! Please Login');
       navigation.navigate('LoginScreen');

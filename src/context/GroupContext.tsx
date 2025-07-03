@@ -166,7 +166,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
       .orderBy('timestamp', 'desc')
       .limit(1)
       .onSnapshot((snapshot) => {
-        if (snapshot.empty) {
+        if (snapshot.empty || !snapshot) {
           setNotificationMessage(null);
           setNotificationModal(false);
           return;

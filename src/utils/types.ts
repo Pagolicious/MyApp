@@ -58,6 +58,7 @@ export type RootStackParamList = {
   SignUpScreen: undefined;
   LoginScreen: undefined;
   NamePage: undefined;
+  DateOfBirthScreen: undefined;
   FindOrStart: undefined;
   FindGroup: undefined;
   StartGroup: undefined;

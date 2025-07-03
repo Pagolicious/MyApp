@@ -12,6 +12,9 @@ import LeaveModal from '../components/LeaveModal';
 import { useAuth } from '../context/AuthContext';
 import { useGroup } from '../context/GroupContext';
 
+//Hooks
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
+
 //Icons
 import Icon1 from 'react-native-vector-icons/Feather';
 
@@ -26,6 +29,8 @@ const MembersHomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
+
+  useOnlineStatus()
 
   useEffect(() => {
     setLoading(!(currentGroup?.members?.length || currentGroup?.createdBy));

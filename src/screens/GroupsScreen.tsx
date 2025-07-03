@@ -77,6 +77,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const animationValue = useRef(new Animated.Value(0)).current;
 
+
   useEffect(() => {
     if (!currentUser) {
       return;
@@ -98,7 +99,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             memberLimit: data.memberLimit || 1,
             toTime: data.toTime || '',
             toDate: data.toDate || '',
-            skillvalue: data.skillvalue || 0,
+            skillLevel: data.skillLevel || null,
             createdBy: data.createdBy || {
               uid: data.createdBy,
               firstName: '',
@@ -125,18 +126,18 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         let filteredGroups = groupList;
 
-        // filteredGroups = filteredGroups.filter(group =>
-        //   !(group.isDelisted || group.visibility === 'Private')
-        // );
-
-        // filteredGroups = filteredGroups.filter(group => !group.isIgnoreSkillLevel || isIgnoreSkillLevel);
-
         // Filter groups based on `activity` parameter
         if (activity !== 'Any') {
-          filteredGroups = filteredGroups.filter(group =>
-            group.activity.toLowerCase() === activity.toLowerCase()
-          );
+          filteredGroups = filteredGroups.filter(group => {
+            const groupActivity = group.activity.toLowerCase();
+            if (activity === 'Sports') {
+              return groupActivity !== 'custom' && groupActivity !== 'sports';
+            }
+            return groupActivity === activity.toLowerCase();
+          });
         }
+
+
 
         if (!ignoreSkillInSearch) {
           // Apply skill level filtering
@@ -156,7 +157,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                   s.sport.toLowerCase() === groupActivity
               );
 
-              if (!userSkillObj || groupSkill === undefined) return false;
+              if (!userSkillObj || groupSkill == null) return true;
 
               return (
                 groupSkill >= userSkillObj.skillLevel - 1 &&
@@ -485,6 +486,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <FlatList
               data={groups}
+              style={{ marginTop: verticalScale(15) }}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <GroupCard group={item} currentUserId={currentUser?.uid || ''}
@@ -746,6 +748,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(18),
     color: 'black',
     marginBottom: verticalScale(20),
+    textAlign: 'center'
   },
   modalExtendedContent: {
   },

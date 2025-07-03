@@ -7,6 +7,7 @@ export const listenToGroupInvitations = (userId: string, onUpdate: (inv: GroupIn
     .where('receiver', '==', userId)
     .where('status', '==', 'pending')
     .onSnapshot(snapshot => {
+      if (!snapshot) return;
       if (!snapshot.empty) {
         const doc = snapshot.docs[0]; // Assumes one active invitation per user
         const data = doc.data() as Omit<GroupInvitation, 'id'>;
@@ -14,6 +15,8 @@ export const listenToGroupInvitations = (userId: string, onUpdate: (inv: GroupIn
       } else {
         onUpdate(null);
       }
+    }, error => {
+      console.error('Error listening to groupInvitations:', error);
     });
 };
 
@@ -23,8 +26,12 @@ export const listenToFriendRequests = (userId: string, onUpdate: (list: FriendRe
     .where('receiver', '==', userId)
     .where('status', '==', 'pending')
     .onSnapshot(snapshot => {
+      if (!snapshot || snapshot.empty) return;
+
       const requests: FriendRequest[] = snapshot.docs.map(doc => doc.data() as FriendRequest);
       onUpdate(requests);
+    }, error => {
+      console.error('Error listening to friendRequests:', error);
     });
 };
 
@@ -34,12 +41,16 @@ export const listenToPartyInvitations = (userId: string, onNew: (invite: PartyIn
     .where('receiver', '==', userId)
     .where('status', '==', 'pending')
     .onSnapshot(snapshot => {
+      if (!snapshot || snapshot.empty) return;
+
       snapshot.docChanges().forEach(change => {
         if (change.type === 'added') {
           const invite = { id: change.doc.id, ...change.doc.data() } as PartyInvitation;
           onNew(invite);
         }
       });
+    }, error => {
+      console.error('Error listening to searchPartyInvitation:', error);
     });
 };
 

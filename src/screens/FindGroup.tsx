@@ -150,6 +150,7 @@ const FindGroup = () => {
             value={activity}
             onChange={(val) => setActivity(val)}
             options={sportsList}
+            highlightItems={['any', 'custom', 'sports']}
           />
         </View>
         <View style={styles.bodyContainer}>

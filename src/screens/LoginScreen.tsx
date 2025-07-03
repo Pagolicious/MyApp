@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, Alert, Platform } from 'react-native';
-import React, { useState, useContext } from 'react';
+import { StyleSheet, Text, View, Alert, Platform, TouchableOpacity } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -50,14 +50,14 @@ const LoginScreen = () => {
         return;
       }
 
-      if (userData?.isGroupLeader) {
+      if (userData.isGroupLeader) {
         navigate('GroupApp', { screen: 'MyGroupScreen' });
-      } else if (userData?.isGroupMember) {
+      } else if (userData.isGroupMember) {
         navigate('GroupApp', { screen: 'MembersHomeScreen' });
-      } else if (!userData?.firstName || !userData?.lastName) {
-        navigate('NamePage');
-      } else {
+      } else if (userData.firstName) {
         navigate('PublicApp', { screen: 'FindOrStart' })
+      } else {
+        navigate('NamePage');
       }
       setLoading(false);
 
@@ -89,6 +89,7 @@ const LoginScreen = () => {
             style={{ color: 'black' }}
           />
           <MyButton title={'Login'} onPress={loginWithEmailAndPassword} />
+
           <View style={styles.lineContainer}>
             <View style={styles.line} />
             <Text style={styles.textOr}>Or</Text>
@@ -97,6 +98,13 @@ const LoginScreen = () => {
           <Text style={styles.signInText}>Sign in with</Text>
 
           <SocialMedia />
+          <View style={styles.containerHaveAccount}>
+            <Text style={styles.textHaveAccount}>Don't have an account?</Text>
+            <TouchableOpacity
+              onPress={() => navigate('SignUpScreen')}>
+              <Text style={styles.buttonSignIn}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -148,6 +156,25 @@ const styles = StyleSheet.create({
   signInText: {
     fontSize: 12,
     marginBottom: 5,
+  },
+  textHaveAccount: {
+    alignSelf: 'center',
+    marginRight: 10,
+    color: 'black',
+    marginBottom: 5,
+    marginTop: 15,
+    fontSize: 12,
+  },
+  containerHaveAccount: {
+    flexDirection: 'row',
+  },
+  buttonSignIn: {
+    alignSelf: 'center',
+    marginRight: 10,
+    color: 'blue',
+    marginBottom: 5,
+    marginTop: 15,
+    fontSize: 12,
   },
 });
 

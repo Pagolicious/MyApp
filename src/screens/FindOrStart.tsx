@@ -2,6 +2,9 @@ import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from 'react
 import React from 'react';
 import Toast from 'react-native-toast-message';
 
+//Hooks
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
+
 //Contexts
 import { useAuth } from '../context/AuthContext';
 
@@ -10,9 +13,11 @@ import { navigate } from '../services/NavigationService';
 
 const FindOrStart = () => {
   const { currentUser, userData } = useAuth();
+  useOnlineStatus();
 
   const handleStartGroup = () => {
     if (!userData) return;
+
 
     if (!userData.isPartyMember) {
       navigate("StartGroup")
