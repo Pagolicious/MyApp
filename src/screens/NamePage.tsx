@@ -11,7 +11,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import Toast from 'react-native-toast-message';
 import Ripple from 'react-native-material-ripple';
@@ -31,13 +31,21 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 
 const NamePage = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [firstNameError, setFirstNameError] = useState(false);
   const [lastNameError, setLastNameError] = useState(false);
   const firstNameRef = useRef<TextInput>(null);
   const lastNameRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (userData) {
+      if (userData.firstName) setFirstName(userData.firstName);
+      if (userData.lastName) setLastName(userData.lastName);
+    }
+  }, [userData]);
+
 
   const addName = async () => {
     if (!currentUser) {
@@ -77,12 +85,12 @@ const NamePage = () => {
     setFirstNameError(firstEmpty);
     setLastNameError(lastEmpty);
 
-    if (firstEmpty) {
+    if (firstEmpty && !userData?.firstName) {
       firstNameRef.current?.focus();
       return showToast();
     }
 
-    if (lastEmpty) {
+    if (lastEmpty && !userData?.lastName) {
       lastNameRef.current?.focus();
       return showToast();
     }

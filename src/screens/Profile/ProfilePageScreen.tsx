@@ -28,6 +28,10 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 //Types
 import { User } from '../../types/userTypes';
 
+//Utils
+import { getSportIconConfig } from '../../utils/sportIconConfig';
+
+
 
 const ProfilePageScreen = () => {
   const { currentUser } = useAuth()
@@ -37,14 +41,14 @@ const ProfilePageScreen = () => {
   const { userId } = route.params as { userId?: string };
   const finalUserId = userId || currentUser?.uid;
   const flatListRef = useRef<FlatList<any>>(null);
-  const ITEM_WIDTH = 110;
+  // const ITEM_WIDTH = 110;
 
 
-  const scrollToMiddle = () => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: ITEM_WIDTH * sportsPlayed.length, animated: false });
-    }
-  };
+  // const scrollToMiddle = () => {
+  //   if (flatListRef.current) {
+  //     flatListRef.current.scrollToOffset({ offset: ITEM_WIDTH * sportsPlayed.length, animated: false });
+  //   }
+  // };
 
 
   const fetchUser = async () => {
@@ -65,9 +69,9 @@ const ProfilePageScreen = () => {
 
 
 
-  useEffect(() => {
-    scrollToMiddle();
-  }, []);
+  // useEffect(() => {
+  //   scrollToMiddle();
+  // }, []);
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -77,7 +81,34 @@ const ProfilePageScreen = () => {
     { sport: 'Table tennis', count: 2 },
     { sport: 'Basket', count: 5 },
     { sport: 'Tennis', count: 3 },
-    { sport: 'Volleyball', count: 1 }
+    { sport: 'Volleyball', count: 1 },
+    { sport: 'Baseball', count: 1 },
+    { sport: 'Golf', count: 1 },
+    { sport: 'Cricket', count: 1 },
+    { sport: 'Swimming', count: 1 },
+    { sport: 'Hockey', count: 1 },
+    { sport: 'Rugby', count: 1 },
+    { sport: 'Cycling', count: 1 },
+    { sport: 'Martial Arts', count: 1 },
+    { sport: 'Boxing', count: 1 },
+    { sport: 'Skiing', count: 1 },
+    { sport: 'Snowboarding', count: 1 },
+    { sport: 'Surfing', count: 1 },
+    { sport: 'Skateboarding', count: 1 },
+    { sport: 'Archery', count: 1 },
+    { sport: 'Fencing', count: 1 },
+    { sport: 'Rowing', count: 1 },
+    { sport: 'Kayaking', count: 1 },
+    { sport: 'Sailing', count: 1 },
+    { sport: 'Rock Climbing', count: 1 },
+    { sport: 'Bouldering', count: 1 },
+    { sport: 'Polo', count: 1 },
+    { sport: 'Darts', count: 1 },
+    { sport: 'Bowling', count: 1 },
+    { sport: 'Snooker', count: 1 },
+    { sport: 'Squash', count: 1 },
+    { sport: 'Weightlifting', count: 1 },
+    { sport: 'Ice Skating', count: 1 },
   ];
 
   const userStats = {
@@ -86,7 +117,7 @@ const ProfilePageScreen = () => {
     hosted: 5
   };
 
-  const repeatedData = [...sportsPlayed, ...sportsPlayed, ...sportsPlayed,];
+  // const repeatedData = [...sportsPlayed, ...sportsPlayed, ...sportsPlayed,];
 
 
   const total = userStats.shows + userStats.noShows;
@@ -205,33 +236,29 @@ const ProfilePageScreen = () => {
       <FlatList
         ref={flatListRef}
         horizontal
-        data={repeatedData}
-        // snapToInterval={ITEM_WIDTH}
-        // decelerationRate="fast"
+        data={sportsPlayed}
         keyExtractor={(item, index) => item.sport + index}
         contentContainerStyle={styles.sportListContainer}
         showsHorizontalScrollIndicator={false}
-        onScroll={({ nativeEvent }) => {
-          const offset = nativeEvent.contentOffset.x;
-          const totalLength = ITEM_WIDTH * repeatedData.length;
-          const edgeOffset = ITEM_WIDTH * 2;
-
-          if (offset < edgeOffset || offset > totalLength - edgeOffset) {
-            scrollToMiddle(); // reset to center if too close to edge
-          }
-        }}
         scrollEventThrottle={16}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardContent}>
-              <View style={styles.iconWrapper}>
-                {getSportIcon(item.sport)}
+        renderItem={({ item }) => {
+          const { icon, color } = getSportIconConfig(item.sport);
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardContent}>
+                <View style={styles.iconWrapper}>
+                  {/* {getSportIcon(item.sport)} */}
+                  {icon}
+
+                </View>
+                {/* <Text style={styles.sportName}>{item.sport}</Text> */}
+                <Text style={styles.sportName}>{item.sport}</Text>
+
               </View>
-              <Text style={styles.sportName}>{item.sport}</Text>
+              <Text style={styles.playedText}>{item.count} played</Text>
             </View>
-            <Text style={styles.playedText}>{item.count} played</Text>
-          </View>
-        )}
+          )
+        }}
       />
 
 
@@ -335,7 +362,7 @@ const styles = StyleSheet.create({
   },
 
   sportName: {
-    fontSize: 13,
+    fontSize: moderateScale(11),
     fontWeight: '600',
     color: '#333',
     marginBottom: 2,
