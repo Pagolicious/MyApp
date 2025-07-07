@@ -97,7 +97,7 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
   const onPressButton = () => {
     if (!currentUser || !userData) return
 
-    if (userData.isGroupLeader && isOwner) {
+    if (isOwner) {
       try {
         disbandGroup();
       } catch {
@@ -111,13 +111,15 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
         text1: 'Not Allowed',
         text2: 'As a party member, only your leader can submit applications.',
       });
-    } else if (userData.isGroupLeader || userData.isGroupMember) {
+    }
+    else if (userData?.groups?.length > 3) {
       Toast.show({
-        type: 'info',
-        text1: 'Already in a Group',
-        text2: 'You can’t apply to a new group while in another one.',
+        type: 'error',
+        text1: 'Group Limit Reached',
+        text2: 'You already have 3 groups, which is the maximum allowed.',
       });
-    } else {
+    }
+    else {
       onPressApply()
     }
   }

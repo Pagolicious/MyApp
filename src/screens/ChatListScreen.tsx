@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 
 //Firebase
@@ -6,6 +6,7 @@ import firestore from '@react-native-firebase/firestore';
 
 //Contexts
 import { useAuth } from '../context/AuthContext';
+import { useGroup } from '../context/GroupContext';
 
 //Components
 import CustomAvatar from '../components/CustomAvatar';
@@ -20,6 +21,8 @@ import { ChatItem } from '../types/chatTypes';
 
 const ChatListScreen = () => {
   const { currentUser, userData } = useAuth();
+  const { setCurrentGroupId } = useGroup();
+
   const [groupedChats, setGroupedChats] = useState<{
     groupChats: ChatItem[];
     directChats: ChatItem[];
@@ -66,6 +69,7 @@ const ChatListScreen = () => {
             isGroup: data.isGroup,
             activity: data.activity,
             title: data.title,
+            groupId: data.groupId,
             chatName: data.chatName,
             participants: data.participants,
             participantsDetails: data.participantsDetails,
@@ -189,7 +193,13 @@ const ChatListScreen = () => {
       style={styles.chatItem}
       onPress={() => {
         if (item.isGroup) {
-          navigate('GroupChatScreen', { chatId: item.id, participantsDetails: item.participantsDetails })
+          // setCurrentGroupId(item.groupId);
+          Alert.alert(item.groupId || 'Missing')
+          navigate('GroupChatScreen', {
+            chatId: item.id,
+            groupId: item.groupId,
+            participantsDetails: item.participantsDetails
+          })
 
         } else {
           navigate('ChatRoomScreen', { chatId: item.id, participantsDetails: item.participantsDetails });

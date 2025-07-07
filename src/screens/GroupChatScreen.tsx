@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, } from 'react-native';
 import React from 'react';
 import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 //Components
 import GroupChat from '../components/GroupChat';
@@ -20,18 +21,19 @@ import Icon1 from 'react-native-vector-icons/AntDesign';
 const GroupChatScreen = () => {
   const { currentUser, userData } = useAuth()
   const route = useRoute();
-  const { chatId, participantsDetails } = route.params as {
+  const navigation = useNavigation();
+
+  const { chatId, participantsDetails, groupId } = route.params as {
+    groupId: string;
     chatId: string;
     participantsDetails?: ParticipantDetails;
   };
 
   const handleGoBackButton = () => {
-    if (!userData) return;
-    if (userData.isGroupLeader || userData.isGroupMember) {
-      navigate('GroupApp', { screen: 'Chats' });
-    } else {
-      navigate('PublicApp', { screen: 'Chats' });
-    }
+    navigation.goBack();
+
+    // navigate('GroupApp', { screen: 'Chats' });
+
   };
 
   return (
@@ -49,7 +51,7 @@ const GroupChatScreen = () => {
       ) : (
         <>
           <View style={styles.chatContainer}>
-            <GroupChat chatId={chatId} participantsDetails={participantsDetails} />
+            <GroupChat chatId={chatId} groupId={groupId} participantsDetails={participantsDetails} />
           </View>
           <View style={styles.footerContainer}>
           </View>

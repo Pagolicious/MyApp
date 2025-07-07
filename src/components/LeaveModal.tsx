@@ -81,13 +81,18 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
           members: currentGroup?.members.filter((member) => member.uid !== currentUser.uid),
         });
 
-      await firestore()
-        .collection('users')
-        .doc(currentUser.uid)
-        .update({
-          isGroupMember: false,
-          groupId: ""
-        })
+      // Get current user's full doc
+      const userRef = firestore().collection('users').doc(currentUser.uid);
+      const userSnap = await userRef.get();
+      const userDoc = userSnap.data();
+      const updatedGroups = (userDoc?.groups || []).filter(
+        (g: any) => g.groupId !== currentGroupId
+      );
+
+      await userRef.update({
+        groups: updatedGroups,
+        selectedGroupId: firestore.FieldValue.delete()
+      })
 
       await firestore()
         .collection('chats')
@@ -114,7 +119,16 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
         });
 
       setLeaveModalVisible(false);
-      navigate('PublicApp', { screen: 'FindOrStart' })
+      if (updatedGroups.length > 0) {
+        navigate('GroupApp', {
+          screen: 'My Group',
+          params: {
+            screen: 'SelectGroupScreen'
+          }
+        });
+      } else {
+        navigate('PublicApp', { screen: 'FindOrStart' })
+      }
 
     } catch {
       Alert.alert('Error', 'Something went wrong.');

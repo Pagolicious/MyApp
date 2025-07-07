@@ -32,6 +32,11 @@ const FriendScreen = () => {
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
+  const isGroupLeader = userData?.groups?.some(
+    group => group.groupId === currentGroupId && group.role === 'leader'
+  );
+
+
   useEffect(() => {
     if (!currentUser) {
       setFriends([]);
@@ -248,7 +253,7 @@ const FriendScreen = () => {
                   android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
                   <Text style={styles.buttonText}>Add / Edit Labels</Text>
                 </Pressable>
-                {userData && !userData.isGroupLeader && !userData.isGroupMember && !userData.isPartyMember &&
+                {userData && !userData.isPartyMember &&
                   <Pressable
                     style={styles.buttonMid}
                     onPress={() => {
@@ -268,7 +273,7 @@ const FriendScreen = () => {
                   android_ripple={{ color: "rgba(0, 0, 0, 0.2)", borderless: false }}>
                   <Text style={styles.buttonText}>Send message</Text>
                 </Pressable>
-                {userData && !userData.isPartyLeader && !userData.isGroupMember && !userData.isPartyMember &&
+                {isGroupLeader &&
                   <Pressable
                     style={styles.buttonMid}
                     onPress={() => handleInviteToGroup(selectedFriend)}

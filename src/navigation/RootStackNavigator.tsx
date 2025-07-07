@@ -41,7 +41,7 @@ const RootStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={currentUser ? (userData?.isGroupLeader || userData?.isGroupMember ? "GroupApp" : "PublicApp") : "SignUpScreen"}
+      // initialRouteName={currentUser ? (userData?.isGroupLeader || userData?.isGroupMember ? "GroupApp" : "PublicApp") : "SignUpScreen"}
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
@@ -53,7 +53,6 @@ const RootStackNavigator = () => {
       <Stack.Screen name="NamePage" component={NamePage} />
       <Stack.Screen name="DateOfBirthScreen" component={DateOfBirthScreen} />
       <Stack.Screen name="GroupChatScreen" component={GroupChatScreen} />
-
       <Stack.Screen name="Friends" component={FriendStack} />
       <Stack.Screen name="SearchPartyScreen" component={SearchPartyScreen} />
       <Stack.Screen name="ChatListScreen" component={ChatListScreen} />

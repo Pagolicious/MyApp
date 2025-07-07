@@ -439,10 +439,10 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleCardPress = async (item: Group) => {
-    if (userData?.isGroupLeader || userData?.isGroupMember || userData?.isPartyMember) {
-      console.log("User is already in a group");
-      return;
-    }
+    // if (userData?.isGroupLeader || userData?.isGroupMember || userData?.isPartyMember) {
+    //   console.log("User is already in a group");
+    //   return;
+    // }
 
     setSelectedGroup(item);
 

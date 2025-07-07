@@ -151,11 +151,23 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
 
 
         const userUpdates = allMembersToAdd.map(async (member) => {
-          return firestore().collection('users').doc(member.uid).update({
-            isGroupMember: true,
-            isPartyMember: false,
-            isPartyLeader: false,
-            groupId: groupInvitation?.groupId,
+
+          const userRef = firestore().collection('users').doc(member.uid);
+          const userSnap = await userRef.get();
+          const userDoc = userSnap.data();
+
+          const newGroupEntry = {
+            groupId: groupInvitation.groupId,
+            role: 'member',
+            joinedAt: new Date().toISOString(),
+            status: 'active',
+          };
+
+          const updatedGroups = [...(userDoc?.groups || []), newGroupEntry];
+
+          return userRef.update({
+            groups: updatedGroups,
+            selectedGroupId: groupInvitation.groupId
           });
         });
 
@@ -172,8 +184,10 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
           });
         }
 
-        setCurrentGroupId(groupInvitation.groupId);
-        navigate('GroupApp', { screen: 'MembersHomeScreen' });
+        setCurrentGroupId(undefined);
+        setTimeout(() => {
+          navigate('GroupApp', { screen: 'SelectGroupScreen' });
+        }, 100);
       }
 
       setModalVisible(false);

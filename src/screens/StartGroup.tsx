@@ -23,6 +23,8 @@ import StarRating from 'react-native-star-rating-widget';
 
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { Animated } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { RouteProp, useRoute } from '@react-navigation/native';
 
 
 //Navigation
@@ -54,9 +56,15 @@ import Icon1 from 'react-native-vector-icons/AntDesign';
 //Types
 import { GroupUpdate, Member } from '../types/groupTypes';
 
+type StartGroupRouteProp = RouteProp<RootStackParamList, 'StartGroup'>;
+
+
 const StartGroup = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const route = useRoute<StartGroupRouteProp>();
+  const { isEdit = false } = route.params || {};
 
   const { currentUser, userData } = useAuth();
 
@@ -103,6 +111,15 @@ const StartGroup = () => {
   const increment = () => setMemberLimit(prev => Math.min(prev + 1, 50)); // Max limit 50
   const decrement = () => setMemberLimit(prev => Math.max(prev - 1, 2)); // Min limit 2
 
+  // const isGroupMember = userData?.groups?.some(
+  //   group => group.groupId === currentGroupId && group.role === 'member'
+  // );
+
+  const isGroupLeader = userData?.groups?.some(
+    group => group.groupId === currentGroupId && group.role === 'leader'
+  );
+
+
   const handleModalClose = () => {
     Animated.timing(modalAnimation, {
       toValue: 0,
@@ -138,7 +155,7 @@ const StartGroup = () => {
 
 
   useEffect(() => {
-    if (userData?.isGroupLeader && currentGroup) {
+    if (isGroupLeader && currentGroup && isEdit) {
       const parseTime = (timeString: string): Date => {
         const [hours, minutes] = timeString.split(':').map(Number);
         const date = new Date();
@@ -189,16 +206,17 @@ const StartGroup = () => {
       return;
     }
 
-    // if (!activity.trim() || !location.trim()) {
-    //   Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
-    //   return;
-    // }
-
     if (!userData) return
 
-    if (userData?.isGroupLeader) {
-      return
+    if (userData?.groups?.length > 3) {
+      Toast.show({
+        type: 'error',
+        text1: 'Group Limit Reached',
+        text2: 'You already have 3 groups, which is the maximum allowed.',
+      });
+
     }
+
     const groupId = firestore().collection('groups').doc().id;
     setCurrentGroupId(groupId);
 
@@ -254,7 +272,7 @@ const StartGroup = () => {
         lastName: userData.lastName,
         // skillLevel: skillLevel
       },
-      groupId: groupId,
+      // groupId: groupId,
       isDelisted: false,
       gender: selectedGender,
       visibility: selectedVisibility,
@@ -280,6 +298,7 @@ const StartGroup = () => {
       isGroup: true,
       activity: activity,
       title: title || '',
+      groupId: groupId,
       participants: memberUids,
       participantsDetails: participantsDetails,
       createdAt: firestore.FieldValue.serverTimestamp(),
@@ -289,15 +308,18 @@ const StartGroup = () => {
       },
     });
 
-
     // ✅ Update each party member to reflect their new group
     const memberUidsExceptLeader = memberUids.filter(uid => uid !== currentUser.uid);
 
     const updatePromises = memberUidsExceptLeader.map(uid =>
       firestore().collection('users').doc(uid).update({
-        groupId: groupId,
-        isGroupMember: true,
-        isPartyMember: false
+        selectedGroupId: groupId,
+        isPartyMember: false,
+        groups: firestore.FieldValue.arrayUnion({
+          groupId,
+          role: 'member',
+          joinedAt: new Date().toISOString(),
+        })
       })
     );
     await Promise.all(updatePromises);
@@ -306,9 +328,13 @@ const StartGroup = () => {
 
     // ✅ Mark the creator as group leader
     await firestore().collection('users').doc(currentUser.uid).update({
-      groupId: groupId,
-      isGroupLeader: true,
-      isPartyLeader: false
+      selectedGroupId: groupId,
+      isPartyLeader: false,
+      groups: firestore.FieldValue.arrayUnion({
+        groupId,
+        role: 'leader',
+        joinedAt: new Date().toISOString(),
+      })
     });
 
     navigate("GroupApp", { screen: 'MyGroupScreen' })
@@ -501,7 +527,7 @@ const StartGroup = () => {
             <Icon1 name="arrowleft" size={25} color="white" />
           </TouchableOpacity>
           <View style={styles.spacer} />
-          {!userData?.isGroupLeader ? (
+          {!isEdit ? (
             <Text style={styles.headerText}>Start a Group</Text>
           ) : (
             <Text style={styles.headerText}>Edit Group</Text>
@@ -671,7 +697,7 @@ const StartGroup = () => {
             <Text style={styles.moreOptionText}>More</Text>
           </TouchableOpacity>
 
-          {!userData?.isGroupLeader ? (
+          {!isEdit ? (
             <TouchableOpacity style={styles.startGroupBtn} onPress={() => {
               // const level = getMatchedSkillLevel(activity);
               if (!activity.trim() || !location.trim()) {

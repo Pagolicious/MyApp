@@ -70,8 +70,8 @@ const SignUpScreen = ({ navigation }: NameProps) => {
         isOnline: false,
         isPartyLeader: false,
         isPartyMember: false,
-        isGroupLeader: false,
-        isGroupMember: false,
+        // isGroupLeader: false,
+        // isGroupMember: false,
         groupId: '',
         skills: []
       });

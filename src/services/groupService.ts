@@ -1,5 +1,6 @@
 import firestore from '@react-native-firebase/firestore';
 import { Group, Member } from '../types/groupTypes';
+import { UserGroups } from '../types/userTypes';
 
 export const fetchGroupById = async (groupId: string): Promise<Group | undefined> => {
   const doc = await firestore().collection('groups').doc(groupId).get();
@@ -16,7 +17,8 @@ export const listenToUserGroupId = (
       return callback(undefined);
     }
     const userData = doc.data();
-    callback(userData?.groupId || undefined);
+    const primaryGroupId = userData?.groups?.[0]?.groupId || undefined;
+    callback(primaryGroupId);
   },
     error => {
       console.error(`Error listening to user ${userId}:`, error);
@@ -43,9 +45,17 @@ export const listenToGroupData = (
 };
 
 export const disbandGroup = async (group: Group, leaderUid: string): Promise<void> => {
+  const userRef = firestore().collection('users').doc(leaderUid);
+  const userSnap = await userRef.get();
+  const userDoc = userSnap.data();
   const groupId = group.id;
 
-  await firestore().collection("users").doc(leaderUid).update({
+  const updatedGroups = (userDoc?.groups || []).filter(
+    (g: UserGroups) => g.groupId !== group.id
+  );
+
+  await userRef.update({
+    groups: updatedGroups,
     isGroupLeader: false,
     groupId: ""
   });
@@ -69,8 +79,8 @@ export const disbandGroup = async (group: Group, leaderUid: string): Promise<voi
       });
 
       await firestore().collection("users").doc(member.uid).update({
-        isGroupMember: false,
-        groupId: ""
+        groups: updatedGroups,
+        selectedGroupId: firestore.FieldValue.delete()
       });
     })
   );

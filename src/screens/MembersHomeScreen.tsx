@@ -30,6 +30,11 @@ const MembersHomeScreen = () => {
   const [moreModalVisible, setMoreModalVisible] = useState(false)
   const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
 
+  const isGroupLeader = userData?.groups?.some(
+    group => group.groupId === currentGroupId && group.role === 'member'
+  );
+
+
   useOnlineStatus()
 
   useEffect(() => {
@@ -110,13 +115,25 @@ const MembersHomeScreen = () => {
           members: currentGroup?.members.filter((member) => member.uid !== selectedUser.uid),
         });
 
-      await firestore()
-        .collection('users')
-        .doc(selectedUser.uid)
-        .update({
-          isGroupMember: false,
-          groupId: ""
-        })
+      const userRef = firestore().collection('users').doc(selectedUser.uid);
+      const userSnap = await userRef.get();
+      const userDoc = userSnap.data();
+      const updatedGroups = (userDoc?.groups || []).filter(
+        (g: any) => g.groupId !== currentGroupId
+      );
+
+      await userRef.update({
+        groups: updatedGroups,
+        selectedGroupId: firestore.FieldValue.delete()
+      })
+
+      // await firestore()
+      //   .collection('users')
+      //   .doc(selectedUser.uid)
+      //   .update({
+      //     isGroupMember: false,
+      //     groupId: ""
+      //   })
 
       // Also remove the user from the corresponding group chat
       await firestore()
@@ -225,7 +242,7 @@ const MembersHomeScreen = () => {
                     <Text style={styles.buttonText}>Send Message</Text>
                   </Pressable>
                 )}
-                {userData?.isGroupLeader &&
+                {isGroupLeader &&
                   <Pressable
                     style={styles.buttonBottom}
                     onPress={() => handleRemoveUser(selectedUser)}

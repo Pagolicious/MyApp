@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 
 import { createStackNavigator } from '@react-navigation/stack';
-import GroupNav from '../components/GroupNav';
+// import GroupNav from '../components/GroupNav';
 
 // Screens (Only for Group Members)
 import MyGroupScreen from '../screens/MyGroupScreen';
@@ -11,9 +11,13 @@ import FindGroup from '../screens/FindGroup';
 import ProfileScreen from '../screens/ProfileScreen';
 import MembersHomeScreen from '../screens/MembersHomeScreen';
 import ChatListScreen from '../screens/ChatListScreen';
+import SelectGroupScreen
+  from '../screens/SelectGroupScreen';
+import MyGroupStack from './MyGroupStack';
 
 //Contexts
 import { useAuth } from '../context/AuthContext';
+import { useGroup } from '../context/GroupContext';
 
 // Icons
 import Icon1 from 'react-native-vector-icons/FontAwesome';
@@ -25,21 +29,58 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 const MyGroupTab = createBottomTabNavigator();
 
-const MyGroupStack = () => {
-  const { userData } = useAuth();
+// const MyGroupStack = () => {
+//   const { userData } = useAuth();
 
-  const initialRoute = userData?.isGroupLeader ? "MyGroupScreen" : "MembersHomeScreen";
+//   const initialRoute = userData?.isGroupLeader ? "MyGroupScreen" : "MembersHomeScreen";
 
-  return (
-    <View style={{ flex: 1 }}>
-      <GroupNav />
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
-        <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
-        <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
-      </Stack.Navigator>
-    </View>
-  );
-};
+//   return (
+//     <View style={{ flex: 1 }}>
+//       <GroupNav />
+//       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+//         <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
+//         <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
+//       </Stack.Navigator>
+//     </View>
+//   );
+// };
+
+// const MyGroupStack = () => {
+//   const { userData } = useAuth();
+//   const { currentGroupId } = useGroup();
+
+//   const shouldSelectGroup = !currentGroupId;
+
+//   return (
+//     <View style={{ flex: 1 }}>
+//       <GroupNav />
+//       <Stack.Navigator screenOptions={{ headerShown: false }}>
+//         {shouldSelectGroup ? (
+//           <Stack.Screen name="SelectGroupScreen" component={SelectGroupScreen} />
+//         ) : (
+//           <>
+//             <Stack.Screen name="MembersHomeScreen" component={MembersHomeScreen} />
+//             <Stack.Screen name="MyGroupScreen" component={MyGroupScreen} />
+//           </>
+//         )}
+//       </Stack.Navigator>
+//     </View>
+//   );
+// };
+
+
+// const MyGroupEntryPoint = () => {
+//   const { userData } = useAuth();
+//   if (userData.groups.length === 1) {
+//     setCurrentGroupId(userData.groups[0].groupId);
+//     return <MyGroupStack />;
+//   }
+//   return <SelectGroupScreen />;
+// };
+
+// // in tab
+// <Tab.Screen name="My Group" component={MyGroupEntryPoint} />
+
 
 const GroupTabNavigator = () => {
   return (
@@ -78,7 +119,6 @@ const GroupTabNavigator = () => {
       })}>
 
       <Tab.Screen name="My Group" component={MyGroupStack} />
-
       <Tab.Screen name="Browse" component={FindGroup} options={{ title: 'Find' }} />
       <Tab.Screen name="Chats" component={ChatListScreen} />
       <Tab.Screen name="More" component={ProfileScreen} />

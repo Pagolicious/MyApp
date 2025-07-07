@@ -37,10 +37,17 @@
 
 import { Friend } from "../types/userTypes";
 
-export type GroupTabParamList = {
-  MyGroupScreen: undefined;
-  MembersHomeScreen: undefined;
+export type MyGroupStackParamList = {
+  SelectGroupScreen: undefined;
+  GroupTopTabs: { groupId: string };
+
 };
+
+export type GroupTopTabsParamList = {
+  MyGroupScreen: { groupId: string };
+  MembersHomeScreen: { groupId: string };
+};
+
 
 export type PublicTabParamList = {
   Home: undefined;
@@ -61,7 +68,7 @@ export type RootStackParamList = {
   DateOfBirthScreen: undefined;
   FindOrStart: undefined;
   FindGroup: undefined;
-  StartGroup: undefined;
+  StartGroup: { isEdit?: boolean };
   GroupsScreen: {
     activity: string;
     date?: string;
@@ -72,6 +79,7 @@ export type RootStackParamList = {
   MyGroupScreen: undefined;
   GroupChatScreen: undefined;
   ProfileScreen: undefined;
+  SelectGroupScreen: undefined;
   MembersHomeScreen: undefined;
   FriendScreen: undefined;
   SearchPartyScreen: undefined;
@@ -85,7 +93,7 @@ export type RootStackParamList = {
   LabelScreen: { friend: Friend };
 
   // 👇 These are nested navigators that take a screen + params
-  GroupApp: { screen: keyof GroupTabParamList; params?: any };
+  GroupApp: { screen: keyof MyGroupStackParamList; params?: any };
   PublicApp: { screen: keyof PublicTabParamList; params?: any };
   Friends: { screen: keyof FriendStackParamList; params?: any };
 };

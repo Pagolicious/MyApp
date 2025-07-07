@@ -48,10 +48,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       .onSnapshot(
         (docSnapshot) => {
           if (docSnapshot.exists) {
-            setUserData(docSnapshot.data() as User);
+            const newUserData = docSnapshot.data() as User;
+            setUserData((prevUserData) => {
+              // Only update state if something actually changed
+              if (JSON.stringify(prevUserData) !== JSON.stringify(newUserData)) {
+                return newUserData;
+              }
+              return prevUserData;
+            });
           } else {
-            setUserData(null); // Handle case where user data doesn't exist
+            setUserData(null);
           }
+
         },
         (error) => {
           console.error('Error listening to user data:', error);

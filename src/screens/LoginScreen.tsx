@@ -50,10 +50,8 @@ const LoginScreen = () => {
         return;
       }
 
-      if (userData.isGroupLeader) {
-        navigate('GroupApp', { screen: 'MyGroupScreen' });
-      } else if (userData.isGroupMember) {
-        navigate('GroupApp', { screen: 'MembersHomeScreen' });
+      if (userData?.groups?.length > 0) {
+        navigate('GroupApp', { screen: 'SelectGroupScreen' });
       } else if (userData.DateOfBirth) {
         navigate('PublicApp', { screen: 'FindOrStart' })
       } else {

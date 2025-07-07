@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
+import { ActivityIndicator } from 'react-native';
 
 //Navigation
 import { navigate } from '../services/NavigationService';
@@ -32,6 +33,7 @@ import { inviteApplicant } from '../utils/inviteHelpers';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 
 //Types
 import { Applicant } from '../types/groupTypes';
@@ -44,7 +46,15 @@ const MyGroupScreen = () => {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
   );
-  const { currentGroupId, currentGroup } = useGroup();
+  const { currentGroupId, currentGroup, setCurrentGroupId } = useGroup();
+
+  const isGroupMember = userData?.groups?.some(
+    group => group.groupId === currentGroupId && group.role === 'member'
+  );
+
+  const isGroupLeader = userData?.groups?.some(
+    group => group.groupId === currentGroupId && group.role === 'leader'
+  );
 
   useOnlineStatus()
 
@@ -99,7 +109,16 @@ const MyGroupScreen = () => {
     } catch (error) {
       console.log("Coudn't remove applicants from the group", error)
     }
+  }
 
+  const handleSelectGroup = () => {
+    // setCurrentGroupId(undefined)
+    navigate('GroupApp', {
+      screen: 'My Group',
+      params: {
+        screen: 'SelectGroupScreen'
+      }
+    })
   }
 
   const handleActivateGroup = async () => {
@@ -129,6 +148,16 @@ const MyGroupScreen = () => {
   const handleInviteFriend = () => {
 
   }
+
+  if (!currentGroup) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+
 
   return (
     <View style={styles.container}>
@@ -163,7 +192,7 @@ const MyGroupScreen = () => {
           />
         </View>
 
-        {userData?.isGroupLeader && currentGroup?.visibility === "Private" && (
+        {isGroupLeader && currentGroup?.visibility === "Private" && (
           <View style={styles.privateGroupContainer}>
             <Text style={styles.privateGroupTitleText}>This group is set to private.</Text>
             <Text style={styles.activateGroupText}>
@@ -183,7 +212,7 @@ const MyGroupScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.editDelistedGroupButton}
-              onPress={() => navigate("StartGroup")}
+              onPress={() => navigate("StartGroup", { isEdit: true })}
               activeOpacity={0.7}
             >
               <Text style={styles.activateButtonText}>Edit</Text>
@@ -192,7 +221,7 @@ const MyGroupScreen = () => {
           </View>
         )}
 
-        {userData?.isGroupLeader && currentGroup?.isDelisted && (
+        {isGroupLeader && currentGroup?.isDelisted && (
           <View style={styles.activateGroupContainer}>
             <Text style={styles.activateGroupTitleText}>This group is currently
               delisted.</Text>
@@ -214,7 +243,7 @@ const MyGroupScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.editDelistedGroupButton}
-              onPress={() => navigate("StartGroup")}
+              onPress={() => navigate("StartGroup", { isEdit: true })}
               activeOpacity={0.7}
             >
               <Text style={styles.activateButtonText}>Edit</Text>
@@ -223,7 +252,7 @@ const MyGroupScreen = () => {
           </View>
         )}
 
-        {userData?.isGroupMember && currentGroup?.isDelisted && (
+        {isGroupMember && currentGroup?.isDelisted && (
           <View style={styles.activateGroupMemberContainer}>
             <Text style={styles.activateGroupTitleText}>This group is currently
               delisted.</Text>
@@ -233,16 +262,25 @@ const MyGroupScreen = () => {
           </View>
         )}
 
-        {userData?.isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
+        {isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
           <TouchableOpacity
             style={styles.editGroupButton}
-            onPress={() => navigate("StartGroup")}
+            onPress={() => navigate("StartGroup", { isEdit: true })}
             activeOpacity={0.7}
           >
             <Icon1 name="edit" size={40} color="white" />
           </TouchableOpacity>
         )}
-        {userData?.isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
+        {!currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
+          <TouchableOpacity
+            style={styles.switchGroupButton}
+            onPress={() => handleSelectGroup()}
+            activeOpacity={0.7}
+          >
+            <IonIcon name="repeat" size={40} color="white" />
+          </TouchableOpacity>
+        )}
+        {isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
           <TouchableOpacity
             style={styles.closeGroupButton}
             onPress={() => handleDelistGroup()}
@@ -431,9 +469,9 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 60 / 2,
-    backgroundColor: "green",
+    backgroundColor: 'green',
     bottom: 20,
-    right: 20,
+    left: 100,
     position: "absolute",
     justifyContent: 'center',
     alignItems: 'center',
@@ -447,7 +485,24 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 60 / 2,
-    backgroundColor: '#C41E3A',
+    backgroundColor: "#C41E3A",
+    bottom: 20,
+    right: 20,
+    position: "absolute",
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 10,          // Adds shadow on Android
+    shadowColor: '#000',   // Adds shadow on iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+
+  },
+  switchGroupButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 60 / 2,
+    backgroundColor: '#0b75c9',
     bottom: 20,
     left: 20,
     position: "absolute",
@@ -458,6 +513,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
+
   },
   slider: {
     flex: 1,

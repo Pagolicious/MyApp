@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 //Components
 import Chat from '../components/Chat';
@@ -20,18 +21,22 @@ import Icon1 from 'react-native-vector-icons/AntDesign';
 const ChatroomScreen = () => {
   const { currentUser, userData } = useAuth()
   const route = useRoute();
+  const navigation = useNavigation();
+
   const { chatId, participantsDetails } = route.params as {
     chatId: string;
     participantsDetails?: ParticipantDetails;
   };
 
   const handleGoBackButton = () => {
-    if (!userData) return;
-    if (userData.isGroupLeader || userData.isGroupMember) {
-      navigate('GroupApp', { screen: 'Chats' });
-    } else {
-      navigate('PublicApp', { screen: 'Chats' });
-    }
+    // if (!userData) return;
+    // if (userData.groups.length > 0) {
+    //   navigate('GroupApp', { screen: 'Chats' });
+    // } else {
+    //   navigate('PublicApp', { screen: 'Chats' });
+    // }
+    navigation.goBack();
+
   };
 
   return (

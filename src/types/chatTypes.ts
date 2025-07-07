@@ -11,6 +11,7 @@ export type ChatItem = {
   activity?: string;
   title?: string;
   chatName?: string;
+  groupId?: string;
   participants: string[];
   participantsDetails: ParticipantDetails;
   lastMessage?: {

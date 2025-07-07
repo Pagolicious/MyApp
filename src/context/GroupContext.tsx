@@ -56,14 +56,24 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
   const previousGroupId = useRef<string | undefined>(undefined);
 
+  // const getPrimaryGroupId = (): string | undefined => {
+  //   return currentGroupId || userData?.groupId || userData?.groups?.[0]?.groupId;
+  // };
+
   // 🔁 Listen for groupId changes
   useEffect(() => {
     if (!currentUser) return;
+    if (!userData) return
+
     const unsubscribe = listenToUserGroupId(currentUser.uid, (groupId) => {
       if (!groupId && previousGroupId.current) {
         if (!userLeftManually) {
           Toast.show({ type: 'info', text1: 'You have been removed from the group.' });
-          navigate('PublicApp', { screen: 'FindOrStart' });
+          if (userData.groups.length > 0) {
+            navigate('GroupApp', { screen: 'SelectGroupScreen' });
+          } else {
+            navigate('PublicApp', { screen: 'FindOrStart' })
+          }
 
         }
         setUserLeftManually(false);
@@ -75,12 +85,21 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [currentUser, userLeftManually]);
 
+  useEffect(() => {
+    if (userData?.selectedGroupId) {
+      setCurrentGroupId(userData.selectedGroupId);
+    }
+  }, [userData?.selectedGroupId]);
+
+
   // 🔁 Listen for group data changes
   useEffect(() => {
     if (!currentUser || !currentGroupId) {
       setCurrentGroup(undefined);
       return;
     }
+    setCurrentGroup(undefined);
+
     const unsubscribe = listenToGroupData(currentGroupId, setCurrentGroup);
     return () => unsubscribe();
   }, [currentUser, currentGroupId]);
@@ -108,7 +127,25 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
 
       setCurrentGroupId(undefined);
       setCurrentGroup(undefined);
-      navigate('PublicApp', { screen: 'FindOrStart' });
+
+      // 🔁 Fetch updated user doc
+      const userRef = firestore().collection('users').doc(currentUser.uid);
+      const freshUser = await userRef.get();
+      const userGroups = freshUser.data()?.groups || [];
+
+      if (userGroups.length > 0) {
+        Toast.show({
+          type: 'info',
+          text1: 'Group disbanded',
+          text2: 'Please select a new group.',
+        });
+
+        navigate('GroupApp', { screen: 'SelectGroupScreen' });
+      } else {
+        navigate('PublicApp', { screen: 'FindOrStart' });
+        Alert.alert(userGroups.length)
+      }
+
     } catch (error) {
       Alert.alert('Error', 'Something went wrong.');
       handleFirestoreError(error);
@@ -118,13 +155,13 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!currentUser || !userData) return;
 
-    const newGroupId = userData.groupId || undefined;
-
-    // ✅ First, update state before checking navigation
-    if (newGroupId !== currentGroupId) {
-      setCurrentGroupId(newGroupId);
+    // ✅ Only proceed if currentGroupId is NOT already set
+    if (!currentGroupId) {
+      const newGroupId = userData.selectedGroupId || userData.groups?.[0]?.groupId || undefined;
 
       if (newGroupId) {
+        setCurrentGroupId(newGroupId);
+
         console.log("✅ User's groupId updated, navigating to MyGroupScreen...");
 
         firestore()
@@ -148,12 +185,11 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
           text2: 'Redirecting to MyGroupScreen...',
         });
 
-        // ✅ Delay navigation by 2 seconds
-        setTimeout(() => navigate("GroupApp", { screen: 'MembersHomeScreen' })
-          , 2000);
+        setTimeout(() => navigate("GroupApp", { screen: 'MembersHomeScreen' }), 2000);
       }
     }
-  }, [userData]);
+  }, [userData, currentUser]);
+
 
   // 🔔 Notifications
   useEffect(() => {
@@ -192,7 +228,7 @@ export const GroupProvider = ({ children }: { children: ReactNode }) => {
     }
     setNotificationModal(false);
     setNotificationMessage(null);
-    navigate("PublicApp", { screen: 'FindOrStart' });
+    // navigate("PublicApp", { screen: 'FindOrStart' });
 
   };
 

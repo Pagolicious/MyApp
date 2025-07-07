@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { GiftedChat, IMessage, Bubble, Message } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 
@@ -15,6 +15,7 @@ import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 type ChatProps = {
   chatId: string;
+  groupId: string;
   participantsDetails?: {
     [uid: string]: {
       firstName: string;
@@ -23,7 +24,7 @@ type ChatProps = {
   };
 };
 
-const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
+const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails, groupId }) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { currentUser, userData } = useAuth();
   const { currentGroupId } = useGroup();
@@ -39,10 +40,10 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
   }
 
   useEffect(() => {
-    if (currentGroupId && currentUser) {
+    if (groupId && currentUser) {
       const unsubscribe = firestore()
         .collection('chats')
-        .doc(currentGroupId)
+        .doc(groupId)
         .collection('messages')
         .orderBy('createdAt', 'desc')
         .onSnapshot((snapshot) => {
@@ -66,14 +67,17 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
 
       return () => unsubscribe();
     }
-  }, [currentGroupId, currentUser]);
+  }, [groupId, currentUser]);
 
   useEffect(() => {
-    if (!currentGroupId) return;
+    if (!groupId) {
+      // Alert.alert('Error', 'Missing groupId!');
+      return;
 
+    }
     const typingRef = firestore()
       .collection('chats')
-      .doc(currentGroupId)
+      .doc(groupId)
       .collection('typing');
 
     const unsubscribe = typingRef.onSnapshot(snapshot => {
@@ -84,7 +88,7 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
     });
 
     return () => unsubscribe();
-  }, [currentGroupId, currentUser?.uid]);
+  }, [groupId, currentUser?.uid]);
 
   const onSend = useCallback(
     async (newMessages: IMessage[] = []) => {
@@ -93,7 +97,7 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
         createdAt: firestore.FieldValue.serverTimestamp(),
       };
 
-      const chatRef = firestore().collection('chats').doc(currentGroupId);
+      const chatRef = firestore().collection('chats').doc(groupId);
 
       try {
         await chatRef.collection('messages').add(message);
@@ -107,16 +111,18 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
         });
         await firestore()
           .collection('chats')
-          .doc(currentGroupId)
+          .doc(groupId)
           .collection('typing')
           .doc(currentUser.uid)
           .set({ isTyping: false });
 
       } catch (error) {
         handleFirestoreError(error);
+        Alert.alert(groupId, 'dawd')
+
       }
     },
-    [currentGroupId]
+    [groupId]
   );
 
 
@@ -184,7 +190,7 @@ const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
         onInputTextChanged={async (text) => {
           const typingRef = firestore()
             .collection('chats')
-            .doc(currentGroupId)
+            .doc(groupId)
             .collection('typing')
             .doc(currentUser.uid);
 
