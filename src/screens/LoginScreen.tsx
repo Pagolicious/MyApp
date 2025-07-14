@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Alert, Platform, TouchableOpacity } from 'react-native';
 import React, { useState, useContext, useEffect } from 'react';
+import database from '@react-native-firebase/database';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -8,10 +9,11 @@ import SocialMedia from '../components/SocialMedia';
 
 //Firebase
 import auth from '@react-native-firebase/auth';
+import { getDatabase } from '../firebase/getDatabase';
 
 //Context
 import { AuthContext } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext'
+// import { useGroup } from '../context/GroupContext'
 
 //Services
 import { navigate } from '../services/NavigationService';
@@ -22,49 +24,78 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    if (!currentUser || !userData) return;
+
+    if (!userData.dateOfBirth || !userData.firstName || !userData.gender) {
+      navigate('NamePage');
+    } else if (userData.groups?.length > 0) {
+      navigate('GroupApp', { screen: 'SelectGroupScreen' });
+    } else {
+      navigate('PublicApp', { screen: 'FindOrStart' });
+    }
+
+    setLoading(false);
+  }, [userData]);
+
+
+  // const loginWithEmailAndPassword = async () => {
+  //   try {
+  //     setLoading(true);
+  //     await signIn(email, password); // This updates the Firebase auth state
+
+  //     // Wait briefly to ensure `auth().currentUser` is updated
+  //     const user = auth().currentUser;
+  //     setCurrentUser(user);
+
+  //     if (!user) {
+  //       Alert.alert('User not found. Please try again.');
+  //       setLoading(false);
+  //       return;
+  //     }
+
+  //     // Wait for `userData` to be available
+  //     let retries = 10;
+  //     while (!userData && retries > 0) {
+  //       await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+  //       retries--;
+  //     }
+
+  //     if (!userData) {
+  //       Alert.alert("Error loading user data. Please try again.");
+  //       setLoading(false);
+  //       return;
+  //     }
+
+  //     if (!userData.dateOfBirth || !userData.firstName || !userData.gender) {
+  //       navigate('NamePage');
+  //     } else if (userData.groups?.length > 0) {
+  //       navigate('GroupApp', { screen: 'SelectGroupScreen' });
+  //     } else {
+  //       navigate('PublicApp', { screen: 'FindOrStart' })
+  //     }
+  //     setLoading(false);
+  //     console.log("Writing to Realtime DB");
+
+
+  //   } catch (error) {
+  //     const errorMessage =
+  //       (error as { message?: string }).message || 'An unknown error occurred';
+  //     Alert.alert(errorMessage);
+  //   }
+  // };
   const loginWithEmailAndPassword = async () => {
     try {
       setLoading(true);
-      await signIn(email, password); // This updates the Firebase auth state
-
-      // Wait briefly to ensure `auth().currentUser` is updated
-      const user = auth().currentUser;
-      setCurrentUser(user);
-
-      if (!user) {
-        Alert.alert('User not found. Please try again.');
-        setLoading(false);
-        return;
-      }
-
-      // Wait for `userData` to be available
-      let retries = 10;
-      while (!userData && retries > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-        retries--;
-      }
-
-      if (!userData) {
-        Alert.alert("Error loading user data. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      if (userData?.groups?.length > 0) {
-        navigate('GroupApp', { screen: 'SelectGroupScreen' });
-      } else if (userData.DateOfBirth) {
-        navigate('PublicApp', { screen: 'FindOrStart' })
-      } else {
-        navigate('NamePage');
-      }
-      setLoading(false);
-
+      await signIn(email, password); // this updates currentUser automatically
     } catch (error) {
       const errorMessage =
         (error as { message?: string }).message || 'An unknown error occurred';
       Alert.alert(errorMessage);
+      setLoading(false);
     }
   };
+
 
 
   return (

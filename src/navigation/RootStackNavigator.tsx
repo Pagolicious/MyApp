@@ -30,6 +30,7 @@ import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
 import ChatRoomScreen from '../screens/ChatRoomScreen'
 import LabelScreen from '../screens/Profile/LabelScreen'
 
+import PresenceDebugScreen from '../screens/PresenceDebugScreen'; // or wherever you save it
 
 //Stacks
 import FriendStack from './FriendStack';
@@ -41,7 +42,7 @@ const RootStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      // initialRouteName={currentUser ? (userData?.isGroupLeader || userData?.isGroupMember ? "GroupApp" : "PublicApp") : "SignUpScreen"}
+      initialRouteName={'LoginScreen'}
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
@@ -61,6 +62,7 @@ const RootStackNavigator = () => {
       <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
       <Stack.Screen name="ProfilePageScreen" component={ProfilePageScreen} />
       <Stack.Screen name="LabelScreen" component={LabelScreen} />
+      <Stack.Screen name="PresenceDebugScreen" component={PresenceDebugScreen} />
 
 
     </Stack.Navigator>

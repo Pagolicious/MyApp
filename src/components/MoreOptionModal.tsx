@@ -15,6 +15,9 @@ import { Dimensions } from 'react-native';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import Tooltip, { Placement } from "react-native-tooltip-2";
 
+//Contexts
+import { useAuth } from '../context/AuthContext';
+
 //Icons
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -40,8 +43,8 @@ interface Props {
   activity: string;
 }
 
-const GenderOptions = ['All', 'Women only', 'Men only'];
-const VisibilityOption = ['Public', 'Private'];
+// const GenderOptions = ['All', 'Women only', 'Men only'];
+const VisibilityOption = ['Public', 'Invites Only', 'Friends Only'];
 const screenWidth = Dimensions.get('window').width;
 
 const MoreOptionsModal: React.FC<Props> = ({
@@ -64,9 +67,26 @@ const MoreOptionsModal: React.FC<Props> = ({
   isVerifiedOnly,
   setIsVerifiedOnly,
   activity
-
 }) => {
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const { userData } = useAuth()
+
+  const GenderOptions = () => {
+    if (!userData) return
+
+    if (userData.gender === 'male') {
+      return ['All', 'Men only'];
+    }
+    if (userData.gender === 'female') {
+      return ['All', 'female only'];
+    }
+    if (userData.gender === 'other') {
+      return ['All', 'Women only', 'Men only'];
+    }
+  }
+
+  const options = GenderOptions() ?? [];
+
 
   return (
     <Modal
@@ -84,6 +104,31 @@ const MoreOptionsModal: React.FC<Props> = ({
                 <Text style={styles.closeText}>✖</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitleText}>More Filters</Text>
+
+              <Text style={styles.bodyLabel}>Gender</Text>
+              <View style={styles.segmentContainer}>
+                {options.map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => setSelectedGender(option)}
+                    android_ripple={{ color: 'rgba(0,0,0,0.2)' }}
+                    style={[
+                      styles.segment,
+                      selectedGender === option && styles.segmentSelected,
+                    ]}
+                  >
+                    <Text
+                      style={
+                        selectedGender === option
+                          ? styles.textSelected
+                          : styles.text
+                      }
+                    >
+                      {option}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
 
               <Text style={styles.bodyLabel}>Group Visibility</Text>
               <View style={styles.segmentContainer}>
@@ -110,30 +155,6 @@ const MoreOptionsModal: React.FC<Props> = ({
                 ))}
               </View>
 
-              <Text style={styles.bodyLabel}>Gender</Text>
-              <View style={styles.segmentContainer}>
-                {GenderOptions.map((option) => (
-                  <Pressable
-                    key={option}
-                    onPress={() => setSelectedGender(option)}
-                    android_ripple={{ color: 'rgba(0,0,0,0.2)' }}
-                    style={[
-                      styles.segment,
-                      selectedGender === option && styles.segmentSelected,
-                    ]}
-                  >
-                    <Text
-                      style={
-                        selectedGender === option
-                          ? styles.textSelected
-                          : styles.text
-                      }
-                    >
-                      {option}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
 
               <View style={styles.sliderContainer}>
                 <View style={styles.rangeText}>
@@ -194,14 +215,14 @@ const MoreOptionsModal: React.FC<Props> = ({
                     />
                   </View>
                 )}
-                <View style={styles.toggleRow}>
+                {/* <View style={styles.toggleRow}>
                   <Text style={styles.bodyLabel}>Friends Only</Text>
                   <CustomToggle
                     label="Friend"
                     value={isFriendsOnly}
                     onToggle={(val: boolean) => setIsFriendsOnly(val)}
                   />
-                </View>
+                </View> */}
                 <View style={styles.toggleRow}>
                   <Text style={styles.bodyLabel}>Auto-Accept Members</Text>
                   <CustomToggle

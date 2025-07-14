@@ -8,7 +8,7 @@ import CustomAvatar from './CustomAvatar';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+// import { useGroup } from '../context/GroupContext';
 
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
@@ -27,7 +27,7 @@ type ChatProps = {
 const GroupChat: React.FC<ChatProps> = ({ chatId, participantsDetails, groupId }) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { currentUser, userData } = useAuth();
-  const { currentGroupId } = useGroup();
+  // const { currentGroupId } = useGroup();
   const [isTypingUsers, setIsTypingUsers] = useState<string[]>([]);
 
 

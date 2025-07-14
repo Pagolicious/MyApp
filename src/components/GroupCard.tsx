@@ -14,7 +14,7 @@ import Toast from 'react-native-toast-message';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext'
+import { useGroupStore } from '../stores/groupStore'
 
 //Icons
 import Icon1 from 'react-native-vector-icons/Ionicons';
@@ -37,7 +37,7 @@ interface Props {
 
 const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCancelApply }) => {
   const { currentUser, userData } = useAuth()
-  const { disbandGroup } = useGroup()
+  const { disbandGroup } = useGroupStore()
   const [expanded, setExpanded] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
@@ -99,7 +99,7 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
 
     if (isOwner) {
       try {
-        disbandGroup();
+        disbandGroup(currentUser.uid);
       } catch {
         console.log('Error', 'Can not disband group');
       }

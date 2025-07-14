@@ -6,7 +6,7 @@ import { useRoute } from '@react-navigation/native';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 //Services
 import { navigate } from '../services/NavigationService';
@@ -22,7 +22,7 @@ import Icon4 from 'react-native-vector-icons/FontAwesome6';
 const FooterGroupNav = () => {
   const route = useRoute();
   const { currentUser } = useAuth();
-  const { currentGroup } = useGroup()
+  const { currentGroup } = useGroupStore()
 
   if (!currentUser) {
     return null;

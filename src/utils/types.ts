@@ -92,6 +92,9 @@ export type RootStackParamList = {
   ProfilePageScreen: { userId: string };
   LabelScreen: { friend: Friend };
 
+  PresenceDebugScreen: undefined;
+
+
   // 👇 These are nested navigators that take a screen + params
   GroupApp: { screen: keyof MyGroupStackParamList; params?: any };
   PublicApp: { screen: keyof PublicTabParamList; params?: any };

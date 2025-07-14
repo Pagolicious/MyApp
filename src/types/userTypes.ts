@@ -16,10 +16,11 @@ export interface Skills {
 
 export interface User {
   uid: string;
+  email: string;
   firstName: string;
   lastName: string;
-  DateOfBirth: FirebaseFirestoreTypes.Timestamp;
-  email: string;
+  dateOfBirth: FirebaseFirestoreTypes.Timestamp;
+  gender: 'male' | 'female' | 'other' | undefined;
   createdAt: string;
   fcmToken?: string;
   isPartyLeader: boolean; // Probably need to be removed after

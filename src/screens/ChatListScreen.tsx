@@ -6,7 +6,7 @@ import firestore from '@react-native-firebase/firestore';
 
 //Contexts
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 //Components
 import CustomAvatar from '../components/CustomAvatar';
@@ -21,7 +21,7 @@ import { ChatItem } from '../types/chatTypes';
 
 const ChatListScreen = () => {
   const { currentUser, userData } = useAuth();
-  const { setCurrentGroupId } = useGroup();
+  // const { setCurrentGroupId } = useGroupStore();
 
   const [groupedChats, setGroupedChats] = useState<{
     groupChats: ChatItem[];

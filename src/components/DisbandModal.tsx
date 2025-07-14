@@ -7,10 +7,14 @@ import firestore from '@react-native-firebase/firestore';
 
 //Context
 import { useAuth } from '../context/AuthContext'
-import { useGroup } from '../context/GroupContext'
+import { useGroupStore } from '../stores/groupStore'
 
 //Types
 import { SearchParty } from '../types/groupTypes';
+
+//Services
+import { stopListeningToGroup } from '../services/firebase/groupListener';
+import { navigate } from '../services/NavigationService';
 
 interface DisbandModalProps {
   userParty?: SearchParty | null;
@@ -19,7 +23,7 @@ interface DisbandModalProps {
 const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
   const { currentUser, userData } = useAuth()
   const [disbandModalVisible, setDisbandModalVisible] = useState(false)
-  const { disbandGroup } = useGroup()
+  const { disbandGroup, currentGroupId, setUserLeftManually } = useGroupStore()
 
 
   const handleDisbandMyParty = async () => {
@@ -64,14 +68,48 @@ const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
     }
   }
 
+  // const handleDisbandMyGroup = async () => {
+  //   if (!currentUser) return
+  //   try {
+  //     setDisbandModalVisible(false);
+  //     await disbandGroup(currentUser.uid);
+  //   } catch {
+  //     Alert.alert('Error', 'Something went wrong.');
+  //   }
+  // };
+
   const handleDisbandMyGroup = async () => {
+    if (!currentUser || !currentGroupId) {
+      Alert.alert('error')
+      return;
+    }
+    if (!userData) {
+      Alert.alert('error1')
+      return;
+    }
+    console.log('1')
     try {
+      console.log('2')
       setDisbandModalVisible(false);
-      await disbandGroup();
+      setUserLeftManually(true)
+      stopListeningToGroup();
+      await disbandGroup(currentGroupId, currentUser.uid);
+
+      if (userData.groups.length > 0) {
+        navigate('GroupApp', {
+          screen: 'My Group',
+          params: {
+            screen: 'SelectGroupScreen'
+          }
+        });
+      } else {
+        navigate('PublicApp', { screen: 'FindOrStart' })
+      }
     } catch {
       Alert.alert('Error', 'Something went wrong.');
     }
   };
+
 
   return (
     <View>

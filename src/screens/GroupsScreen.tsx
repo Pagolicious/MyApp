@@ -30,7 +30,7 @@ import firestore from '@react-native-firebase/firestore';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
@@ -68,7 +68,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [skillLevel, setSkillLevel] = useState(0);
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
-  const { currentGroupId } = useGroup();
+  const { currentGroupId } = useGroupStore();
   const { activity, date, time, groupSize, ignoreSkillInSearch } = route.params;
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [userPickedSkillLevel, setUserPickedSkillLevel] = useState(false);
@@ -125,6 +125,23 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           .filter(group => !(group.isDelisted || group.visibility === 'Private'));
 
         let filteredGroups = groupList;
+
+
+        // Filter groups based on `Friends Only`
+        const userFriends = userData?.friends || [];
+        filteredGroups = filteredGroups.filter(group => {
+          if (group.visibility === 'Friends Only') {
+
+            // Always let creator see their own group
+            if (group.createdBy.uid === currentUser.uid) return true;
+
+            // Only show if user is friends with creator
+            return userFriends.some(friend => friend.uid === group.createdBy.uid);
+          }
+          return true;
+        });
+
+
 
         // Filter groups based on `activity` parameter
         if (activity !== 'Any') {
@@ -289,7 +306,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         .doc(currentUser.uid)
         .get();
 
-      const userParty = partyDoc.exists ? partyDoc.data() : null;
+      const userParty = partyDoc.exists() ? partyDoc.data() : null;
 
       // 🔹 If user is a party leader, submit the whole party as ONE applicant
       if (userParty) {
@@ -343,6 +360,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             : group,
         ),
       );
+      console.log('Applied')
       setApplyModalVisible(false);
     } catch (error) {
       console.error('Error saving user data: ', error);

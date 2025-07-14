@@ -11,7 +11,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import Toast from 'react-native-toast-message';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -30,11 +30,28 @@ import { navigate } from '../services/NavigationService';
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
 
+const GenderOptions = ['Male', 'Female', 'Other'];
+
+
 const DOBInput = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const [dob, setDob] = useState<Date | undefined>(undefined);
   const [showPicker, setShowPicker] = useState(false);
   const [formattedDateError, setFormattedDateError] = useState(false);
+  const [genderError, setGenderError] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female' | 'other' | undefined>(undefined);
+
+  useEffect(() => {
+    if (userData?.dateOfBirth) {
+      const dobDate =
+        userData.dateOfBirth.toDate?.() ?? userData.dateOfBirth;
+      setDob(dobDate);
+    }
+    if (userData?.gender) {
+      setSelectedGender(userData?.gender)
+    }
+  }, [userData]);
+
 
   const onChange = (event: any, selectedDate?: Date) => {
     setShowPicker(false);
@@ -44,18 +61,26 @@ const DOBInput = () => {
     }
   };
 
-  const addDOB = async () => {
-    if (!currentUser) {
+  const addData = async () => {
+    if (!currentUser || !userData) {
       return;
+    }
+    if (!selectedGender || !dob) {
+      return
     }
     await firestore()
       .collection('users')
       .doc(currentUser.uid)
       .update({
-        DateOfBirth: dob,
+        dateOfBirth: dob,
+        gender: selectedGender.toLowerCase()
       })
       .then(() => {
-        navigate('PublicApp', { screen: 'FindOrStart' })
+        if (userData.groups?.length > 0) {
+          navigate('GroupApp', { screen: 'SelectGroupScreen' });
+        } else {
+          navigate('PublicApp', { screen: 'FindOrStart' })
+        }
       })
       .catch(error => {
         console.error('Error saving user data: ', error);
@@ -73,17 +98,31 @@ const DOBInput = () => {
       Toast.show({
         type: 'error',
         text1: 'Missing Information',
-        text2: 'Please enter your date of birth.',
+        text2: 'Please enter your date of birth and gender.',
       });
     }, 300);
 
   const handleSubmit = () => {
+    let hasError = false;
+
     if (!dob) {
-      setFormattedDateError(true)
-      return showToast();
+      setFormattedDateError(true);
+      hasError = true;
     } else {
-      addDOB()
+      setFormattedDateError(false);
     }
+    if (!selectedGender) {
+      setGenderError(true);
+      hasError = true;
+    } else {
+      setGenderError(false);
+    }
+    if (hasError) {
+      showToast();
+      return;
+    }
+    addData();
+
   }
 
   return (
@@ -96,7 +135,7 @@ const DOBInput = () => {
       >
         <View style={styles.content}>
 
-          <Text style={styles.headingText}>What's Your Date of Birth?</Text>
+          <Text style={styles.headingText}>What's your date of birth and gender?</Text>
           <Pressable
             onPress={() => setShowPicker(true)}
             android_ripple={{ color: 'rgba(0,0,0,0.2)' }}
@@ -117,6 +156,30 @@ const DOBInput = () => {
               maximumDate={new Date()} // prevents future dates
             />
           )}
+
+          <View style={[styles.segmentContainer, genderError && { borderColor: 'red' }]}>
+            {GenderOptions.map((option) => (
+              <Pressable
+                key={option}
+                onPress={() => setSelectedGender(option as 'male' | 'female' | 'other')}
+                android_ripple={{ color: 'rgba(0,0,0,0.2)' }}
+                style={[
+                  styles.segment,
+                  selectedGender === option && styles.segmentSelected,
+                ]}
+              >
+                <Text
+                  style={
+                    selectedGender === option
+                      ? styles.textSelected
+                      : styles.text
+                  }
+                >
+                  {option}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
           <Ripple
             rippleColor="black"
@@ -167,7 +230,34 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     textAlign: 'center',
     color: 'white'
-  }
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    backgroundColor: '#DCDCDC',
+    borderRadius: scale(8),
+    overflow: 'hidden',
+    marginTop: verticalScale(10),
+    marginBottom: verticalScale(10),
+  },
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: verticalScale(14),
+  },
+  segmentSelected: {
+    backgroundColor: '#007AFF',
+  },
+  text: {
+    color: '#000',
+    fontSize: moderateScale(12)
+  },
+  textSelected: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: moderateScale(12)
+
+  },
 });
 
 export default DOBInput;

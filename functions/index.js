@@ -18,41 +18,49 @@
 //   response.send("Hello from Firebase!");
 // });
 
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
+
 admin.initializeApp();
 
-exports.sendGroupInvitation = functions.https.onCall((data, context) => {
-  // Check if the request is authenticated
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "The function must be called while authenticated."
+const { sendGroupInvitation } = require("./helpers/inviteHelpers");
+
+
+exports.autoInviteApplicant = functions.firestore
+  .document("groups/{groupId}")
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    const groupId = context.params.groupId;
+
+    if (!after || !after.isAutoAccept) return null;
+
+    const oldApplicants = before.applicants || [];
+    const newApplicants = after.applicants || [];
+
+    const justAdded = newApplicants.filter(
+      a => !oldApplicants.some(b => b.uid === a.uid)
     );
-  }
 
-  const { fcmToken, title, body } = data;
+    const groupSnap = await admin.firestore().collection("groups").doc(groupId).get();
+    const groupData = { ...groupSnap.data(), id: groupId };
 
-  const message = {
-    token: fcmToken,
-    notification: {
-      title: title,
-      body: body,
-    },
-  };
+    const inviterSnap = await admin.firestore().collection("users").doc(groupData.createdBy.uid).get();
+    if (!inviterSnap.exists) {
+      console.log(`Inviter not found for group ${group.id}`);
+      console.log('Created By UID:', group.createdBy);
+      return; // don't proceed
+    }
+    const inviter = inviterSnap.data();
+    console.log('Inviter:', inviter);
 
-  return admin
-    .messaging()
-    .send(message)
-    .then(response => {
-      return { success: true, messageId: response };
-    })
-    .catch(error => {
-      console.error("Error sending FCM message:", error);
-      throw new functions.https.HttpsError(
-        "unknown",
-        "Failed to send FCM message",
-        error,
-      );
+    const promises = justAdded.map(async applicant => {
+      const inviteeSnap = await admin.firestore().collection("users").doc(applicant.uid).get();
+      const invitee = inviteeSnap.data();
+
+      return sendGroupInvitation(groupData, inviter, invitee, applicant.members || []);
     });
-});
+
+
+    return Promise.all(promises);
+  });

@@ -10,7 +10,7 @@ import CustomAvatar from '../../components/CustomAvatar';
 
 //Contexts
 import { useAuth } from '../../context/AuthContext';
-import { useGroup } from '../../context/GroupContext';
+import { useGroupStore } from '../../stores/groupStore';
 
 //Services
 import { navigate } from '../../services/NavigationService';
@@ -26,7 +26,7 @@ import { Friend } from '../../types/userTypes';
 
 const FriendScreen = () => {
   const { currentUser, userData } = useAuth()
-  const { currentGroup, currentGroupId } = useGroup()
+  const { currentGroup, currentGroupId } = useGroupStore()
   const [userHasGroup, setUserHasGroup] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [moreModalVisible, setMoreModalVisible] = useState(false)
@@ -175,7 +175,7 @@ const FriendScreen = () => {
       return;
     }
     setMoreModalVisible(false);
-    inviteApplicant(currentUser, currentGroup, currentGroupId, selectedFriend);
+    inviteApplicant(currentGroup.createdBy.uid, currentGroup, currentGroupId, selectedFriend);
   };
 
   const viewProfile = (userId: string) => {

@@ -9,6 +9,10 @@ import { useAuth } from '../context/AuthContext';
 //Services
 import { navigate } from '../services/NavigationService';
 
+//Stores
+import { useGroupStore } from '../stores/groupStore';
+import { useUIStore } from '../stores/uiStore';
+
 //Icons
 import Icon1 from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -22,6 +26,9 @@ const ProfileButtons = () => {
 
   const logout = async () => {
     try {
+      // Clear all app state
+      useGroupStore.getState().clearGroup();
+      useUIStore.getState().setHasUserExited(false); // optional UI reset
       await signOut()
       navigate("LoginScreen")
 
@@ -63,7 +70,7 @@ const ProfileButtons = () => {
                 <Text style={styles.profileBtnText}>Settings</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigate("AboutAppScreen")}>
+            <TouchableOpacity onPress={() => navigate("PresenceDebugScreen")}>
               <View style={[styles.btnBorder, styles.row]}>
                 <Icon1 name="perm-device-information" size={30} color="black" />
                 <Text style={styles.profileBtnText}>About App</Text>

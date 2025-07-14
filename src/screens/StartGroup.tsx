@@ -45,7 +45,7 @@ import firestore from '@react-native-firebase/firestore';
 
 // Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 //Services
 import { navigate } from '../services/NavigationService';
@@ -92,7 +92,7 @@ const StartGroup = () => {
   const [skillModalVisible, setSkillModalVisible] = useState(false)
   const [details, setDetails] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const { setCurrentGroupId, currentGroup, currentGroupId } = useGroup();
+  const { setGroupId, setGroup, currentGroup, currentGroupId } = useGroupStore();
   const [memberLimit, setMemberLimit] = useState(2);
   const [moreModalVisible, setMoreModalVisible] = useState(false);
   const [selectedGender, setSelectedGender] = useState('All');
@@ -218,8 +218,7 @@ const StartGroup = () => {
     }
 
     const groupId = firestore().collection('groups').doc().id;
-    setCurrentGroupId(groupId);
-
+    setGroupId(groupId);
     // Initialize empty members array (only party members will be added)
     let members: Member[] = [];
     let memberUids: string[] = [];
@@ -236,7 +235,7 @@ const StartGroup = () => {
       const partyDocRef = firestore().collection('searchParties').doc(currentUser.uid);
       const partyDoc = await partyDocRef.get();
 
-      if (partyDoc.exists) {
+      if (partyDoc.exists()) {
         const partyData = partyDoc.data();
         const partyMembers = partyData?.members || [];
 
@@ -255,36 +254,71 @@ const StartGroup = () => {
       }
     }
 
-    await firestore().collection('groups').doc(groupId).set({
-      activity: activity,
-      location: location,
-      title: title,
+    const newGroup = {
+      id: groupId,
+      activity,
+      location,
+      title,
       fromDate: fromDate.toISOString(),
       fromTime: formatTime(fromTime),
       toDate: toDate.toISOString(),
       toTime: formatTime(toTime),
-      skillLevel: skillLevel,
-      memberLimit: memberLimit,
-      details: details,
+      skillLevel,
+      memberLimit,
+      details,
       createdBy: {
         uid: currentUser.uid,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        // skillLevel: skillLevel
       },
-      // groupId: groupId,
       isDelisted: false,
       gender: selectedGender,
       visibility: selectedVisibility,
-      minAge: minAge,
-      maxAge: maxAge,
-      isIgnoreSkillLevel: isIgnoreSkillLevel,
-      isFriendsOnly: isFriendsOnly,
-      isAutoAccept: isAutoAccept,
-      isVerifiedOnly: isVerifiedOnly,
-      members: members,
-      memberUids: memberUids
-    })
+      minAge,
+      maxAge,
+      isIgnoreSkillLevel,
+      isFriendsOnly,
+      isAutoAccept,
+      isVerifiedOnly,
+      members,
+      memberUids,
+      applicants: []
+    }
+
+
+    // await firestore().collection('groups').doc(groupId).set({
+    //   activity: activity,
+    //   location: location,
+    //   title: title,
+    //   fromDate: fromDate.toISOString(),
+    //   fromTime: formatTime(fromTime),
+    //   toDate: toDate.toISOString(),
+    //   toTime: formatTime(toTime),
+    //   skillLevel: skillLevel,
+    //   memberLimit: memberLimit,
+    //   details: details,
+    //   createdBy: {
+    //     uid: currentUser.uid,
+    //     firstName: userData.firstName,
+    //     lastName: userData.lastName,
+    //     // skillLevel: skillLevel
+    //   },
+    //   // groupId: groupId,
+    //   isDelisted: false,
+    //   gender: selectedGender,
+    //   visibility: selectedVisibility,
+    //   minAge: minAge,
+    //   maxAge: maxAge,
+    //   isIgnoreSkillLevel: isIgnoreSkillLevel,
+    //   isFriendsOnly: isFriendsOnly,
+    //   isAutoAccept: isAutoAccept,
+    //   isVerifiedOnly: isVerifiedOnly,
+    //   members: members,
+    //   memberUids: memberUids
+    // })
+
+    await firestore().collection('groups').doc(groupId).set(newGroup)
+    setGroup(newGroup)
 
     const participantsDetails = members.reduce((acc, member) => {
       acc[member.uid] = {
@@ -343,6 +377,7 @@ const StartGroup = () => {
 
   const editGroup = async () => {
     if (!currentUser) return
+    if (!currentGroupId) return
 
     try {
       const updateData: GroupUpdate = {

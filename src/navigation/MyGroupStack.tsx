@@ -6,7 +6,7 @@ import MembersHomeScreen from '../screens/MembersHomeScreen';
 // import GroupNav from '../components/GroupNav';
 import { View, Alert } from 'react-native';
 import { MyGroupStackParamList } from '../utils/types';
-import { useGroup } from '../context/GroupContext';
+// import { useGroup } from '../context/GroupContext';
 import GroupTopTabs from './GroupTopTabs';
 
 const Stack = createStackNavigator<MyGroupStackParamList>();

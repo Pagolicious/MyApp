@@ -23,7 +23,7 @@ import firestore from '@react-native-firebase/firestore';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 //Hooks
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -46,7 +46,7 @@ const MyGroupScreen = () => {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
     null,
   );
-  const { currentGroupId, currentGroup, setCurrentGroupId } = useGroup();
+  const { currentGroupId, currentGroup } = useGroupStore();
 
   const isGroupMember = userData?.groups?.some(
     group => group.groupId === currentGroupId && group.role === 'member'
@@ -63,7 +63,6 @@ const MyGroupScreen = () => {
       setApplicants([]);
       return;
     }
-
     setApplicants(currentGroup.applicants);
   }, [currentGroup]);
 
@@ -83,11 +82,13 @@ const MyGroupScreen = () => {
       return;
     }
     setModalVisible(false);
-    inviteApplicant(currentUser, currentGroup, currentGroupId, selectedApplicant);
+    inviteApplicant(currentGroup.createdBy.uid, currentGroup, currentGroupId, selectedApplicant);
   };
 
   const declineApplicant = async (selectedApplicant: Applicant | null) => {
     setModalVisible(false);
+    if (!currentGroupId) return
+
     try {
       await firestore()
         .collection('groups')
@@ -101,6 +102,8 @@ const MyGroupScreen = () => {
   }
 
   const handleDelistGroup = async () => {
+    if (!currentGroupId) return
+
     try {
       await firestore().collection('groups').doc(currentGroupId).update({
         applicants: [],
@@ -123,6 +126,7 @@ const MyGroupScreen = () => {
 
   const handleActivateGroup = async () => {
     if (!currentGroup) return
+    if (!currentGroupId) return
 
     const currentMembers = currentGroup?.members ?? [];
     console.log(currentMembers.length, currentGroup?.memberLimit)
@@ -166,7 +170,7 @@ const MyGroupScreen = () => {
         style={styles.backgroundImage}
 
       >
-        {currentGroup?.visibility === "Private" && (
+        {currentGroup?.visibility === "Invites Only" && (
           <View style={styles.overlay} />
         )}
         {currentGroup?.isDelisted && (
@@ -192,9 +196,9 @@ const MyGroupScreen = () => {
           />
         </View>
 
-        {isGroupLeader && currentGroup?.visibility === "Private" && (
+        {isGroupLeader && currentGroup?.visibility === "Invites Only" && (
           <View style={styles.privateGroupContainer}>
-            <Text style={styles.privateGroupTitleText}>This group is set to private.</Text>
+            <Text style={styles.privateGroupTitleText}>This group is set to Invites Only.</Text>
             <Text style={styles.activateGroupText}>
               The group is currently private, and only invited members can join.
             </Text>
@@ -262,7 +266,7 @@ const MyGroupScreen = () => {
           </View>
         )}
 
-        {isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
+        {isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility !== "Invites Only" && (
           <TouchableOpacity
             style={styles.editGroupButton}
             onPress={() => navigate("StartGroup", { isEdit: true })}
@@ -271,7 +275,7 @@ const MyGroupScreen = () => {
             <Icon1 name="edit" size={40} color="white" />
           </TouchableOpacity>
         )}
-        {!currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
+        {!currentGroup?.isDelisted && currentGroup?.visibility !== "Invites Only" && (
           <TouchableOpacity
             style={styles.switchGroupButton}
             onPress={() => handleSelectGroup()}
@@ -280,7 +284,7 @@ const MyGroupScreen = () => {
             <IonIcon name="repeat" size={40} color="white" />
           </TouchableOpacity>
         )}
-        {isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility === "Public" && (
+        {isGroupLeader && !currentGroup?.isDelisted && currentGroup?.visibility !== "Invites Only" && (
           <TouchableOpacity
             style={styles.closeGroupButton}
             onPress={() => handleDelistGroup()}

@@ -10,7 +10,7 @@ import LeaveModal from '../components/LeaveModal';
 
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 //Hooks
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -21,8 +21,11 @@ import Icon1 from 'react-native-vector-icons/Feather';
 //Types
 import { Friend } from '../types/userTypes';
 
+//Services
+import { navigate } from '../services/NavigationService';
+
 const MembersHomeScreen = () => {
-  const { currentGroupId, currentGroup, disbandGroup } = useGroup();
+  const { currentGroupId, currentGroup, clearGroup } = useGroupStore();
   const members = currentGroup?.members ?? [];
   const { currentUser, userData } = useAuth()
   const [loading, setLoading] = useState(true);
@@ -31,23 +34,29 @@ const MembersHomeScreen = () => {
   const [selectedUser, setSelectedUser] = useState<Friend | null>(null);
 
   const isGroupLeader = userData?.groups?.some(
-    group => group.groupId === currentGroupId && group.role === 'member'
+    group => group.groupId === currentGroupId && group.role === 'leader'
   );
 
-
-  useOnlineStatus()
+  console.log(currentGroupId)
+  // useOnlineStatus()
 
   useEffect(() => {
     setLoading(!(currentGroup?.members?.length || currentGroup?.createdBy));
   }, [currentGroup]);
+
+  // useEffect(() => {
+  //   if (currentUser && userData) {
+  //     initGroupListeners(currentUser.uid, userData);
+  //   }
+  // }, [currentUser, userData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setLoading(true);
     setTimeout(() => {
       setRefreshing(false);
-      setLoading(false); // Reset loading after refresh
-    }, 1000); // Simulate a refresh delay
+      setLoading(false);
+    }, 1000);
   }, []);
 
 
@@ -103,7 +112,7 @@ const MembersHomeScreen = () => {
   }
 
   const handleRemoveUser = async (selectedUser: Friend | null) => {
-    if (!selectedUser) {
+    if (!selectedUser || !currentGroupId) {
       return
     }
     try {
@@ -143,7 +152,6 @@ const MembersHomeScreen = () => {
           participants: firestore.FieldValue.arrayRemove(selectedUser.uid),
           [`participantsDetails.${selectedUser.uid}`]: firestore.FieldValue.delete()
         });
-
 
       setMoreModalVisible(false)
     } catch (error) {

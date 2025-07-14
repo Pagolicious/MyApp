@@ -6,18 +6,18 @@ import handleFirestoreError from './firebaseErrorHandler';
 
 //Types
 import { Group, Applicant } from '../types/groupTypes';
-import { AuthUser } from '../types/userTypes';
+import { AuthUser, User } from '../types/userTypes';
 
 export const inviteApplicant = async (
-  currentUser: AuthUser,
+  senderUid: string,
   currentGroup: Group,
   currentGroupId: string,
   selectedApplicant: Applicant
 ) => {
-  if (!currentUser) {
-    Alert.alert("Error", "User is not authenticated. Please log in.");
-    return;
-  }
+  // if (!currentUser) {
+  //   Alert.alert("Error", "User is not authenticated. Please log in.");
+  //   return;
+  // }
 
   try {
     if (!currentGroup || !currentGroupId) {
@@ -31,7 +31,7 @@ export const inviteApplicant = async (
       .collection('groupInvitations')
       .doc(invitationId)
       .set({
-        sender: currentUser.uid,
+        sender: senderUid,
         receiver: selectedApplicant.uid,
         groupId: currentGroupId,
         activity: currentGroup?.activity || 'Unknown',

@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 import { navigate } from '../services/NavigationService';
 
 import { useAuth } from './AuthContext';
-import { useGroup } from './GroupContext';
+import { useGroupStore } from '../stores/groupStore';
 
 import TimedPopup from '../components/PartyInvitationPopup';
 import handleFirestoreError from '../utils/firebaseErrorHandler';
@@ -42,7 +42,7 @@ export const useInvitation = () => {
 
 export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { currentUser, userData } = useAuth();
-  const { setCurrentGroupId } = useGroup();
+  // const { setCurrentGroupId } = useGroupStore();
 
   const [groupInvitation, setGroupInvitation] = useState<GroupInvitation | null>(null);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -130,7 +130,7 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
         const chatRef = firestore().collection('chats').doc(groupInvitation.groupId);
 
         const chatDoc = await chatRef.get();
-        if (chatDoc.exists) {
+        if (chatDoc.exists()) {
           const newParticipants = allMembersToAdd.map(m => m.uid);
           const newDetails = allMembersToAdd.reduce((acc, m) => {
             acc[m.uid] = {
@@ -184,7 +184,7 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
           });
         }
 
-        setCurrentGroupId(undefined);
+        // setCurrentGroupId(undefined);
         setTimeout(() => {
           navigate('GroupApp', { screen: 'SelectGroupScreen' });
         }, 100);
@@ -230,7 +230,7 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
         const partyRef = firestore().collection('searchParties').doc(partyInvitation.sender);
         const partyDoc = await partyRef.get();
 
-        if (partyDoc.exists) {
+        if (partyDoc.exists()) {
           await partyRef.update({
             members: firestore.FieldValue.arrayUnion(newMember),
           });

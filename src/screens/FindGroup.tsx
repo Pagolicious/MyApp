@@ -15,7 +15,7 @@ import CustomToggle from '../components/CustomToggle';
 import sportsList from "../assets/JsonFiles/sportsList.json"
 
 //Contexts
-import { useGroup } from '../context/GroupContext';
+// import { useGroup } from '../context/GroupContext';
 import { useAuth } from '../context/AuthContext';
 
 //Services

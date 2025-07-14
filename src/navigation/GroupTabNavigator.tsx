@@ -17,7 +17,7 @@ import MyGroupStack from './MyGroupStack';
 
 //Contexts
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+// import { useGroup } from '../context/GroupContext';
 
 // Icons
 import Icon1 from 'react-native-vector-icons/FontAwesome';

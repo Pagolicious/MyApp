@@ -39,12 +39,13 @@ import FriendRequestScreen from './screens/Profile/FriendRequestScreen';
 
 //Components
 import { useAuth } from './context/AuthContext';
+import GroupNotificationModal from './components/GroupNotificationModal';
 
 //Contexts
 import { AuthProvider } from './context/AuthContext';
-import { GroupProvider } from './context/GroupContext';
+// import { GroupProvider } from './context/GroupContext';
 import { InvitationProvider } from './context/InvitationContext';
-import { ModalProvider } from './context/ModalContext';
+// import { ModalProvider } from './context/ModalContext';
 
 //Services
 import { navigationRef } from './services/NavigationService';
@@ -108,12 +109,14 @@ function App(): React.JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <OnlineStatusWrapper />
-        <GroupProvider>
-          <InvitationProvider>
-            <ModalProvider>
-              <NavigationContainer ref={navigationRef}>
+        {/* <GroupProvider> */}
+        <InvitationProvider>
+          {/* <ModalProvider> */}
+          <GroupNotificationModal />
 
-                {/* <NavigationContainer ref={navigationRef}>
+          <NavigationContainer ref={navigationRef}>
+
+            {/* <NavigationContainer ref={navigationRef}>
                 <Stack.Navigator
                   initialRouteName="SignUpScreen"
                   screenOptions={{
@@ -147,13 +150,13 @@ function App(): React.JSX.Element {
 
                 </Stack.Navigator>
               </NavigationContainer> */}
-                <RootStackNavigator />
-                {/* <AppNavigator /> */}
-              </NavigationContainer>
-              <Toast position="top" topOffset={50} />
-            </ModalProvider>
-          </InvitationProvider>
-        </GroupProvider>
+            <RootStackNavigator />
+            {/* <AppNavigator /> */}
+          </NavigationContainer>
+          <Toast position="top" topOffset={50} />
+          {/* </ModalProvider> */}
+        </InvitationProvider>
+        {/* </GroupProvider> */}
       </AuthProvider>
     </GestureHandlerRootView>
   );

@@ -14,9 +14,15 @@ import { Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ripple from 'react-native-material-ripple';
 
+//Hooks
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
+
 //Context
 import { useAuth } from '../context/AuthContext';
-import { useGroup } from '../context/GroupContext';
+import { useGroupStore } from '../stores/groupStore';
+
+//Services
+import { stopListeningToGroup } from '../services/firebase/groupListener';
 
 //Types
 import { UserGroups } from '../types/userTypes';
@@ -34,7 +40,7 @@ import FIcon from 'react-native-vector-icons/Feather';
 // Simple template to start
 const SelectGroupScreen = () => {
   const { userData, currentUser } = useAuth();
-  const { setCurrentGroupId, currentGroupId } = useGroup(); // You'll need this from context
+  const { setGroupId, setGroup } = useGroupStore();
   const groups: UserGroups[] = userData?.groups || [];
   const navigation = useNavigation<StackNavigationProp<MyGroupStackParamList>>();
   const [fullGroups, setFullGroups] = useState<Record<string, Group>>({});
@@ -46,14 +52,14 @@ const SelectGroupScreen = () => {
   // const cardHeight = (screenHeight - HEADER_HEIGHT) / CARD_COUNT;
 
   const size = moderateScale(50);
-
+  useOnlineStatus()
 
   useEffect(() => {
     const fetchGroupDetails = async () => {
       const results: Record<string, Group> = {};
       for (const g of groups) {
         const doc = await firestore().collection('groups').doc(g.groupId).get();
-        if (doc.exists) {
+        if (doc.exists()) {
           results[g.groupId] = doc.data() as Group;
         }
       }
@@ -67,17 +73,29 @@ const SelectGroupScreen = () => {
 
 
 
-  const handleSelect = async (group: any) => {
+  const handleSelect = async (userGroup: UserGroups) => {
     if (!currentUser) return
-    try {
-      // 1. Set local context
-      setCurrentGroupId(group.groupId);
 
+    const group = fullGroups[userGroup.groupId];
+    if (!group) {
+      Alert.alert("Error", "Could not load group data.");
+      return;
+    }
+    try {
+      stopListeningToGroup();
+      // 1. Set local context
+      setGroupId(group.id);
+      setGroup(group)
+      console.log(group)
+      // console.log(fullGroups)
       // 2. Save selection to Firestore
-      await firestore()
-        .collection('users')
-        .doc(currentUser.uid)
-        .update({ selectedGroupId: group.groupId });
+      // await firestore()
+      //   .collection('users')
+      //   .doc(currentUser.uid)
+      //   .update({ selectedGroupId: group.id });
+
+      // const { initGroupDataListeners } = useGroupStore.getState();
+      // initGroupDataListeners(currentUser.uid, userData); // 🔥 critical step
 
       // 3. Navigate
       navigate("GroupTopTabs");

@@ -221,8 +221,8 @@ const ProfilePageScreen = () => {
         <View style={styles.userInformation}>
           <Text style={styles.profileNameText}>{profileUserData?.firstName} {profileUserData?.lastName}</Text>
           <Text style={styles.profileAgeLocationText}>
-            {profileUserData?.DateOfBirth
-              ? `${calculateAge(new Date(profileUserData.DateOfBirth.toDate()))} years old, Göteborg`
+            {profileUserData?.dateOfBirth
+              ? `${calculateAge(new Date(profileUserData.dateOfBirth.toDate()))} years old, Göteborg`
               : 'Göteborg'}
           </Text>
         </View>

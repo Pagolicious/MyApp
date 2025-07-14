@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { AppState } from 'react-native';
+import { collection, doc } from '@react-native-firebase/firestore';
+
 
 export const useOnlineStatus = () => {
   useEffect(() => {

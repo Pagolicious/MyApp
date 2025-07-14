@@ -6,7 +6,7 @@ import firestore from '@react-native-firebase/firestore';
 
 //Context
 import { useAuth } from '../context/AuthContext'
-import { useGroup } from '../context/GroupContext'
+import { useGroupStore } from '../stores/groupStore'
 
 //Services
 import { navigate } from '../services/NavigationService';
@@ -21,7 +21,7 @@ interface LeaveModalProps {
 const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
   const { currentUser, userData } = useAuth()
   const [leaveModalVisible, setLeaveModalVisible] = useState(false)
-  const { currentGroup, currentGroupId, setUserLeftManually } = useGroup()
+  const { currentGroup, currentGroupId, setUserLeftManually, clearGroup } = useGroupStore()
 
 
   const handleLeaveParty = async () => {
@@ -118,7 +118,9 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
           type: 'system',
         });
 
+      clearGroup();
       setLeaveModalVisible(false);
+
       if (updatedGroups.length > 0) {
         navigate('GroupApp', {
           screen: 'My Group',
