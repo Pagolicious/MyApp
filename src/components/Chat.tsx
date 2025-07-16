@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, IMessage, Bubble, Message } from 'react-native-gifted-chat';
+import { GiftedChat, IMessage, Bubble, Message, BubbleProps } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import { getDatabase } from '../firebase/getDatabase';
 
 //Components
 import CustomAvatar from './CustomAvatar';
@@ -12,31 +14,26 @@ import { useAuth } from '../context/AuthContext';
 //Utils
 import handleFirestoreError from '../utils/firebaseErrorHandler';
 
+//Types
+import { ChatParameter } from '../types/chatTypes';
+
 type ChatProps = {
   chatId: string;
-  participantsDetails?: {
-    [uid: string]: {
-      firstName: string;
-      lastName: string;
-    };
-  };
+  otherUser: {
+    uid: string;
+    firstName: string;
+    lastName: string;
+  } | null;
 };
 
-const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
+
+const Chat: React.FC<ChatProps> = ({ chatId, otherUser }) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { currentUser, userData } = useAuth();
   const [isTyping, setIsTyping] = useState(false);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const getOtherUser = () => {
-    if (!participantsDetails || !currentUser) return null;
-    const otherUid = Object.keys(participantsDetails).find(uid => uid !== currentUser.uid);
-    if (!otherUid) return null;
-    return { uid: otherUid, ...participantsDetails[otherUid] };
-  };
-
-  const otherUser = getOtherUser();
   const otherUserName = otherUser?.firstName || 'Someone';
-
 
   if (!currentUser) {
     return (
@@ -103,21 +100,18 @@ const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
 
 
   useEffect(() => {
-    const otherUser = getOtherUser();
     if (!otherUser) return;
 
-    const typingRef = firestore()
-      .collection('chats')
-      .doc(chatId)
-      .collection('typing')
-      .doc(otherUser.uid);
+    const typingRef = getDatabase()
+      .ref(`typingStatus/${chatId}/${otherUser.uid}`);
 
-    const unsubscribe = typingRef.onSnapshot(doc => {
-      const data = doc.data();
-      setIsTyping(data?.isTyping || false);
+    typingRef.on('value', snapshot => {
+      const isTyping = snapshot.val();
+      setIsTyping(!!isTyping);
     });
 
-    return () => unsubscribe();
+
+    return () => typingRef.off();
   }, [chatId, currentUser.uid]);
 
   const onSend = useCallback(
@@ -129,24 +123,19 @@ const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
       };
 
       const chatRef = firestore().collection('chats').doc(chatId);
-      const typingRef = firestore()
-        .collection('chats')
-        .doc(chatId)
-        .collection('typing')
-        .doc(currentUser.uid);
+      getDatabase()
+        .ref(`typingStatus/${chatId}/${currentUser.uid}`)
+        .set(false);
 
       try {
         await chatRef.collection('messages').add(message);
 
-        // 👇 Update the lastMessage field in parent chat doc
         await chatRef.update({
           lastMessage: {
             text: message.text,
             createdAt: firestore.FieldValue.serverTimestamp(),
           }
         });
-        await typingRef.set({ isTyping: false });
-
       } catch (error) {
         handleFirestoreError(error);
       }
@@ -158,11 +147,27 @@ const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
   const renderAvatar = (props: any) => {
     const { _id, name } = props.currentMessage.user;
 
-    return <CustomAvatar uid={_id} firstName={name} size={30} />;
+    return (
+      <View style={styles.avatarContainer}>
+        <CustomAvatar uid={_id} firstName={name} size={30} />
+      </View>
+    )
   };
 
   const renderMessage = (props: any) => {
-    const { currentMessage } = props;
+    const { currentMessage, previousMessage, nextMessage } = props;
+
+    const isDifferentFromPrevious =
+      previousMessage?.user?._id !== currentMessage.user?._id;
+
+    const isDifferentFromNext =
+      nextMessage?.user?._id !== currentMessage.user?._id;
+
+    // Choose margin top or bottom depending on where the other user is
+    const containerStyle = {
+      marginTop: isDifferentFromPrevious ? 10 : 2,
+      marginBottom: isDifferentFromNext ? 10 : 2,
+    };
 
     if (currentMessage?.user?._id === 'system') {
       return (
@@ -172,40 +177,74 @@ const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
       );
     }
 
-    // For all others, render the default GiftedChat message
-    return <Message {...props} />;
+    const current = new Date(currentMessage.createdAt);
+    const previous = previousMessage?.createdAt
+      ? new Date(previousMessage.createdAt)
+      : null;
+
+    const diffInMinutes =
+      previous && current
+        ? Math.abs(current.getTime() - previous.getTime()) / 60000
+        : 0;
+
+    const showTimeSeparator = previous && diffInMinutes > 5;
+
+    return (
+      <>
+        {showTimeSeparator && (
+          <View style={styles.timeSeparator}>
+            <Text style={styles.timeSeparatorText}>
+              {current.toLocaleTimeString('sv-SE', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              })}
+            </Text>
+          </View>
+        )}
+        <View style={containerStyle}>
+
+          <Message {...props} />
+        </View>
+      </>
+    );
   };
 
   // Custom renderBubble to show username above the message bubble
-  const renderBubble = (props: any) => {
-    const { currentMessage } = props;
+  const renderBubble = (props: BubbleProps<IMessage>) => {
+    const { currentMessage, previousMessage } = props;
     const isOtherUser = currentMessage?.user?._id !== currentUser.uid;
 
-    const readBy = currentMessage?.readBy || [];
+    const isEmojiOnly = /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F680}-\u{1F6FF}\u2764\uFE0F\u200D]{1,5}$/u.test(
+      currentMessage.text.trim()
+    );
+
+    if (isEmojiOnly) {
+      return (
+        <View>
+          <Text style={styles.emojiOnlyText}>
+            {currentMessage.text}
+          </Text>
+        </View>
+
+      );
+    }
 
     return (
-      <View>
-        {isOtherUser && currentMessage?.user?.name && (
-          <Text style={styles.username}>{currentMessage.user.name}</Text>
-        )}
-        <Bubble {...props}
-          wrapperStyle={{
-            left: isOtherUser
-              ? styles.otherUserBubble // Bubble style for other users
-              : undefined,
-            right: styles.currentUserBubble, // Bubble style for current user
-          }} />
-        {currentMessage.user._id === currentUser.uid && readBy.length > 1 && (
-          <Text style={styles.readStatus}>Read</Text>
-        )}
-      </View>
+      <Bubble {...props}
+        wrapperStyle={{
+          left: isOtherUser
+            ? [styles.bubble, styles.otherUserBubble]
+            : undefined,
+          right: [styles.bubble, styles.currentUserBubble],
+        }} />
     );
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
+      style={styles.container}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70}
     >
       <GiftedChat
@@ -214,27 +253,34 @@ const Chat: React.FC<ChatProps> = ({ chatId, participantsDetails }) => {
         user={{
           _id: currentUser.uid,
           name: userData?.firstName,
-          // avatar: userData?.avatar
         }}
         renderBubble={renderBubble}
         renderMessage={renderMessage}
         renderAvatar={renderAvatar}
-        onInputTextChanged={async (text) => {
-          const typingRef = firestore()
-            .collection('chats')
-            .doc(chatId)
-            .collection('typing')
-            .doc(currentUser.uid);
+        onInputTextChanged={(text: string) => {
 
-          await typingRef.set({ isTyping: text.length > 0 });
+          getDatabase()
+            .ref(`typingStatus/${chatId}/${currentUser.uid}`)
+            .set(text.length > 0);
+
+          if (typingTimeout.current) {
+            clearTimeout(typingTimeout.current);
+          }
+          typingTimeout.current = setTimeout(() => {
+            getDatabase()
+              .ref(`typingStatus/${chatId}/${currentUser.uid}`)
+              .set(false);
+          }, 5000);
         }}
-        renderFooter={() =>
+        renderTime={() => null}
+        renderChatFooter={() =>
           isTyping ? (
-            <Text style={{ marginLeft: 10, marginBottom: 5, color: 'gray' }}>
+            <Text style={{ marginLeft: 15, marginBottom: 5, color: 'gray' }}>
               {otherUserName} is typing...
             </Text>
           ) : null
         }
+      // isScrollToBottomEnabled={true}
       />
     </KeyboardAvoidingView>
 
@@ -246,38 +292,71 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontWeight: 'bold',
-    marginBottom: 2,
-    marginLeft: 10,
+    marginBottom: verticalScale(2),
+    marginLeft: scale(10),
     color: 'grey'
+  },
+  bubble: {
+    maxWidth: '75%',
+    paddingHorizontal: scale(10),
+    paddingVertical: verticalScale(8),
+    borderRadius: 16,
   },
   otherUserBubble: {
     backgroundColor: '#E0E0E0',
-    padding: 10,
+    padding: moderateScale(10),
+    // marginVertical: verticalScale(5),
     borderRadius: 15,
   },
   currentUserBubble: {
     backgroundColor: '#007AFF',
-    padding: 10,
+    padding: moderateScale(10),
+    // marginVertical: verticalScale(5),
     borderRadius: 15,
+  },
+  avatarContainer: {
+    marginVertical: verticalScale(5),
   },
   systemMessageContainer: {
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: verticalScale(5),
   },
   systemMessageText: {
     fontStyle: 'italic',
     color: 'gray',
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   readStatus: {
-    fontSize: 11,
+    fontSize: moderateScale(11),
     color: 'gray',
     textAlign: 'right',
-    marginRight: 10,
-    marginTop: 2,
+    marginRight: scale(10),
+    marginTop: verticalScale(2),
   },
+  emojiOnlyText: {
+    fontSize: moderateScale(40),
+  },
+  timeSeparator: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  timeSeparatorText: {
+    fontSize: 11,
+    color: 'gray',
+    backgroundColor: '#e0e0e0',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+
+
+
+
+
+
+
 
 
 });
