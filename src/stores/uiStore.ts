@@ -2,12 +2,12 @@ import { create } from 'zustand';
 
 interface UIStore {
   notificationModal: boolean;
-  notificationMessage: string | null;
+  notificationMessage: string | { id: string; message: string }[];
   notificationId: string | null;
   hasUserExited: boolean;
 
   setNotificationModal: (visible: boolean) => void;
-  setNotificationMessage: (message: string | null) => void;
+  setNotificationMessage: (msg: string | { id: string; message: string }[]) => void;
   setNotificationId: (id: string | null) => void;
   setHasUserExited: (exited: boolean) => void;
   closeNotificationModal: () => void;
@@ -15,14 +15,14 @@ interface UIStore {
 
 export const useUIStore = create<UIStore>((set) => ({
   notificationModal: false,
-  notificationMessage: null,
+  notificationMessage: '',
   notificationId: null,
   hasUserExited: false,
 
   setNotificationModal: (visible) => set({ notificationModal: visible }),
-  setNotificationMessage: (message) => set({ notificationMessage: message }),
+  setNotificationMessage: (msg) => set({ notificationMessage: msg }),
   setNotificationId: (id) => set({ notificationId: id }),
   setHasUserExited: (exited) => set({ hasUserExited: exited }),
   closeNotificationModal: () =>
-    set({ notificationModal: false, notificationMessage: null, notificationId: null }),
+    set({ notificationModal: false, notificationMessage: '', notificationId: null }),
 }));

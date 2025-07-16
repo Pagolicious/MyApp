@@ -1,4 +1,5 @@
 import { Member } from './groupTypes';
+import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 export interface GroupInvitation {
   id: string;
@@ -29,4 +30,19 @@ export interface PartyInvitation {
   firstName: string;
   lastName: string;
   status: 'pending' | 'accepted' | 'declined';
+}
+
+export interface GroupNotification {
+  id: string;
+  type: string;
+  userId: string;
+  groupId: string;
+  read: boolean;
+  groupData: {
+    activity: string;
+    location: string;
+    title?: string;
+  };
+  message: string;
+  timestamp: FirebaseFirestoreTypes.Timestamp;
 }

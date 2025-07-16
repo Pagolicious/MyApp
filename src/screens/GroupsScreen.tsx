@@ -295,7 +295,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log("not online")
       return;
     }
-
     let applicantData: Applicant;
     const now = new Date().toISOString();
 
@@ -504,7 +503,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <FlatList
               data={groups}
-              style={{ marginTop: verticalScale(15) }}
+              // style={{ marginTop: verticalScale(15) }}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <GroupCard group={item} currentUserId={currentUser?.uid || ''}
@@ -660,44 +659,6 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
   },
-  flatListContainer: {
-    marginTop: verticalScale(10),
-  },
-  card: {
-    backgroundColor: '#6A9AB0',
-    padding: scale(15),
-    marginTop: verticalScale(10),
-    marginHorizontal: scale(10),
-    borderRadius: moderateScale(15),
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: verticalScale(2) },
-    shadowOpacity: 0.25,
-    shadowRadius: moderateScale(3.84),
-    elevation: 5,
-  },
-  column: {
-    flexDirection: 'row',
-  },
-  cardContentActivity: {
-    flex: 1,
-  },
-  cardContentDate: {
-    flex: 1,
-  },
-  cardContentPeople: {
-    justifyContent: 'center',
-  },
-  cardText: {
-    fontSize: moderateScale(16),
-    fontWeight: 'bold',
-    color: 'black',
-  },
-  cardTextPeople: {
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    color: 'black',
-  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -724,14 +685,6 @@ const styles = StyleSheet.create({
   setLevelContainer: {
     alignItems: 'center',
   },
-  modalDetailContainer: {
-    width: scale(260),
-    height: verticalScale(100),
-    borderRadius: moderateScale(5),
-    backgroundColor: '#F9F6EE',
-    borderWidth: 1,
-    borderColor: 'grey',
-  },
   input: {
     height: verticalScale(100),
     width: scale(260),
@@ -741,10 +694,6 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(5),
     backgroundColor: 'white',
     fontSize: moderateScale(16),
-  },
-  modalDetailText: {
-    padding: scale(10),
-    color: 'black',
   },
   closeIcon: {
     position: 'absolute',

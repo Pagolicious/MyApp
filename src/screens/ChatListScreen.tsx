@@ -194,10 +194,12 @@ const ChatListScreen = () => {
       onPress={() => {
         if (item.isGroup) {
           // setCurrentGroupId(item.groupId);
-          Alert.alert(item.groupId || 'Missing')
           navigate('GroupChatScreen', {
             chatId: item.id,
             groupId: item.groupId,
+            activity: item.activity,
+            title: item.title,
+            chatName: item.chatName,
             participantsDetails: item.participantsDetails
           })
 
@@ -224,7 +226,11 @@ const ChatListScreen = () => {
             : getOtherParticipantName(item)}
         </Text>
         <Text style={styles.chatSubtitle} numberOfLines={1}>
-          {item.lastMessage?.text || 'No messages yet'}
+          {item.lastMessage?.text
+            ? item.lastMessage.text.length > 25
+              ? item.lastMessage.text.slice(0, 25) + '...'
+              : item.lastMessage.text
+            : 'No messages yet'}
         </Text>
       </View>
 

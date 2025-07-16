@@ -37,7 +37,7 @@ interface Props {
 
 const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCancelApply }) => {
   const { currentUser, userData } = useAuth()
-  const { disbandGroup } = useGroupStore()
+  const { disbandGroup, currentGroupId } = useGroupStore()
   const [expanded, setExpanded] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
@@ -94,12 +94,13 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
     }
   };
 
-  const onPressButton = () => {
+  const onPressButton = (groupId: string) => {
     if (!currentUser || !userData) return
+    if (!groupId) return
 
     if (isOwner) {
       try {
-        disbandGroup(currentUser.uid);
+        disbandGroup(groupId, currentUser.uid);
       } catch {
         console.log('Error', 'Can not disband group');
       }
@@ -251,7 +252,7 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
         </View>
         {showSubmit && (
           <TouchableOpacity
-            onPress={onPressButton}
+            onPress={() => onPressButton(group.id)}
             style={[
               styles.submitButton,
               { backgroundColor: isApplicant || isOwner || isMember ? '#C41E3A' : '#007AFF' }

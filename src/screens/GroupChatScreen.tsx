@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { navigate } from '../services/NavigationService';
 
 //Types
-import { ParticipantDetails } from '../types/chatTypes';
+import { GroupChatParameter, ParticipantDetails } from '../types/chatTypes';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
@@ -23,11 +23,7 @@ const GroupChatScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
 
-  const { chatId, participantsDetails, groupId } = route.params as {
-    groupId: string;
-    chatId: string;
-    participantsDetails?: ParticipantDetails;
-  };
+  const { chatId, participantsDetails, groupId, activity, title, chatName } = route.params as GroupChatParameter
 
   const handleGoBackButton = () => {
     navigation.goBack();
@@ -43,7 +39,7 @@ const GroupChatScreen = () => {
           <Icon1 name="arrowleft" size={25} color="white" />
         </TouchableOpacity>
         <View style={styles.spacer} />
-        <Text style={styles.headerText}>Chat</Text>
+        <Text style={styles.headerText}>{chatName || title || activity}</Text>
         <View style={styles.spacer} />
       </View>
       {!currentUser ? (

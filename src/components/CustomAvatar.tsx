@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 interface Avatar {
-  uid: string,
-  firstName: string,
-  size: number
+  uid: string;
+  firstName: string;
+  size: number;
+  style?: object;
 }
 
 // Define the colors array inside the component
@@ -33,7 +34,7 @@ const colors = [
   '#ADD8E6', // Soft Pastel Blue ☁️
 ];
 
-const CustomAvatar: React.FC<Avatar> = ({ uid, firstName, size }) => {
+const CustomAvatar: React.FC<Avatar> = ({ uid, firstName, size, style }) => {
 
   // Function to determine the color based on userId
   const getColorForUser = (uid: string) => {
@@ -61,6 +62,7 @@ const CustomAvatar: React.FC<Avatar> = ({ uid, firstName, size }) => {
           height: size,
           borderRadius: size / 2,
         },
+        style
       ]}
     >
       <Text style={[styles.letter, { fontSize: size / 2 }]}>{letter}</Text>

@@ -15,13 +15,13 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
   const groupSnap = await groupRef.get();
   const groupData = groupSnap.data();
   const three: string = '3';
-  console.log(three);
+  // console.log(three);
   if (!groupSnap.exists || !groupData) throw new Error("Group not found");
 
   const members = groupData.members || [];
 
   const four: string = '4';
-  console.log(four);
+  // console.log(four);
   // Delete group
 
   // Notify & update each member
@@ -35,15 +35,15 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
         (g: UserGroups) => g.groupId !== groupData.id
       );
       const five: string = '5';
-      console.log(five);
+      // console.log(five);
       const statusSnap = await getDatabase().ref(`status/${member.uid}`).once('value');
       const isOnline = statusSnap.val()?.online;
 
-      console.log(isOnline);
+      // console.log(isOnline);
 
-      const message = groupData.activity === "Custom"
-        ? `${groupData.title} at ${groupData.location} was disbanded by the leader.`
-        : `${groupData.activity} group at ${groupData.location} was disbanded by the leader.`;
+      // const message = groupData.activity === "Custom"
+      //   ? `${groupData.title} at ${groupData.location} was disbanded by the leader.`
+      //   : `${groupData.activity} group at ${groupData.location} was disbanded by the leader.`;
 
       if (!isOnline) {
         const six: string = '6';
@@ -51,10 +51,12 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
         await firestore().collection('groupNotifications').add({
           userId: member.uid,
           type: "GROUP_DELETED",
-          groupActivity: groupData.activity,
-          groupTitle: groupData.title,
-          groupLocation: groupData.location,
-          message: message,
+          groupData: {
+            activity: groupData.activity,
+            title: groupData.title,
+            location: groupData.location,
+          },
+          message: '',
           groupId,
           timestamp: firestore.FieldValue.serverTimestamp(),
           read: false,
@@ -68,8 +70,8 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
 
     })
   );
-  const seven: string = '7';
-  console.log(seven);
+  // const seven: string = '7';
+  // console.log(seven);
   const chatRef = firestore().collection('chats').doc(groupId);
   const messages = await chatRef.collection('messages').get();
 

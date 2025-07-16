@@ -42,11 +42,11 @@ const RootStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={'LoginScreen'}
+      // initialRouteName={'LoginScreen'}
       screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
       <Stack.Screen name="GroupApp" component={GroupTabNavigator} />
       <Stack.Screen name="PublicApp" component={PublicTabNavigator} />
       <Stack.Screen name="GroupsScreen" component={GroupsScreen} />

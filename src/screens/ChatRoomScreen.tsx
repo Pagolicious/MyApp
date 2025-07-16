@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { navigate } from '../services/NavigationService';
 
 //Types
-import { ParticipantDetails } from '../types/chatTypes';
+import { ChatParameter, ParticipantDetails } from '../types/chatTypes';
 
 //Icons
 import Icon1 from 'react-native-vector-icons/AntDesign';
@@ -23,10 +23,17 @@ const ChatroomScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
 
-  const { chatId, participantsDetails } = route.params as {
-    chatId: string;
-    participantsDetails?: ParticipantDetails;
+  const { chatId, participantsDetails } = route.params as ChatParameter
+
+  const getOtherUser = () => {
+    if (!participantsDetails || !currentUser) return null;
+    const otherUid = Object.keys(participantsDetails).find(uid => uid !== currentUser.uid);
+    if (!otherUid) return null;
+    return { uid: otherUid, ...participantsDetails[otherUid] };
   };
+
+  const otherUser = getOtherUser();
+
 
   const handleGoBackButton = () => {
     // if (!userData) return;
@@ -46,7 +53,7 @@ const ChatroomScreen = () => {
           <Icon1 name="arrowleft" size={25} color="white" />
         </TouchableOpacity>
         <View style={styles.spacer} />
-        <Text style={styles.headerText}>Chat</Text>
+        <Text style={styles.headerText}>{otherUser?.firstName} {otherUser?.lastName}</Text>
         <View style={styles.spacer} />
       </View>
       {!currentUser ? (
@@ -54,7 +61,7 @@ const ChatroomScreen = () => {
       ) : (
         <>
           <View style={styles.chatContainer}>
-            <Chat chatId={chatId} participantsDetails={participantsDetails} />
+            <Chat chatId={chatId} otherUser={otherUser} />
           </View>
           <View style={styles.footerContainer}>
           </View>
@@ -89,6 +96,7 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
+    // marginVertical: 10
   },
   footerContainer: {
   },
