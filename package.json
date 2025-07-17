@@ -12,6 +12,7 @@
   "dependencies": {
     "@arelstone/react-native-swipe-button": "^0.3.0",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
+    "@react-native-assets/slider": "^11.0.8",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/blur": "^4.4.1",
     "@react-native-community/datetimepicker": "^8.4.2",
@@ -60,6 +61,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-walkthrough-tooltip": "^1.6.0",
     "rimraf": "^6.0.1",
+    "rn-range-slider": "^2.2.2",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

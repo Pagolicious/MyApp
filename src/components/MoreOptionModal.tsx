@@ -87,6 +87,43 @@ const MoreOptionsModal: React.FC<Props> = ({
 
   const options = GenderOptions() ?? [];
 
+  const calculateAge = (birthDate: Date): number => {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--; // birthday hasn't happened yet this year
+    }
+    return age;
+  };
+
+  if (!userData) return
+  const age = calculateAge(new Date(userData.dateOfBirth.toDate()));
+  const rangeSpan = 20;
+
+  const minLimit = Math.max(18, age - rangeSpan / 2);
+  const maxLimit = Math.min(70, age + rangeSpan / 2);
+
+
+  // const minRange = () => {
+  //   if (!userData) return
+
+  //   minRange = calculateAge(new Date(userData.dateOfBirth.toDate())) - rangeSpan / 2
+  // }
+
+  // React.useEffect(() => {
+  //   if (userData && userData.dateOfBirth) {
+  //     const age = calculateAge(new Date(userData.dateOfBirth.toDate()));
+  //     const rangeSpan = 20; // You can make this customizable
+  //     const proposedMin = Math.max(18, age - rangeSpan / 2);
+  //     const proposedMax = Math.min(70, age + rangeSpan / 2);
+
+  //     setMinAge(Math.floor(proposedMin));
+  //     setMaxAge(Math.ceil(proposedMax));
+  //   }
+  // }, [userData]);
 
   return (
     <Modal
@@ -176,9 +213,13 @@ const MoreOptionsModal: React.FC<Props> = ({
                     onValuesChange={(values) => {
                       setMinAge(values[0]);
                       setMaxAge(values[1]);
+
                     }}
                     selectedStyle={{ backgroundColor: '#007AFF' }}
                     markerStyle={{ backgroundColor: '#007AFF' }}
+                    sliderLength={280}
+                    minMarkerOverlapDistance={5} // 👈 Force a minimum 10-year gap
+                    allowOverlap={false}
                   />
                 </View>
               </View>

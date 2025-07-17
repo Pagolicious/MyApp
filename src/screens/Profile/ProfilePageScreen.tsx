@@ -55,7 +55,7 @@ const ProfilePageScreen = () => {
     if (!finalUserId) return;
 
     const doc = await firestore().collection('users').doc(finalUserId).get();
-    if (doc.exists) {
+    if (doc.exists()) {
       const user = doc.data();
       if (user) {
         setProfileUserData(user as User);
@@ -158,25 +158,25 @@ const ProfilePageScreen = () => {
   ];
 
 
-  const getSportIcon = (sport: string, size = 40, color = '#50C878') => {
-    switch (sport.toLowerCase()) {
-      case 'football':
-        return <FAIcon name="soccer-ball-o" size={size} color="#4CAF50" />;
-      case 'table tennis':
-        return <FA5Icon name="table-tennis" size={size} color="#D32F2F" />;
-      case 'badminton':
-        return <MCIcon name="badminton" size={size} color="#03A9F4" />;
-      case 'basket':
-        return <FA6Icon name="basketball" size={size} color="#FFA500" />;
-      case 'tennis':
-        return <IonIcon name="tennisball" size={size} color="#8BC34A" />;
-      case 'volleyball':
-        return <FA6Icon name="volleyball" size={size} color="#FFD54F" />;
+  // const getSportIcon = (sport: string, size = 40, color = '#50C878') => {
+  //   switch (sport.toLowerCase()) {
+  //     case 'football':
+  //       return <FAIcon name="soccer-ball-o" size={size} color="#4CAF50" />;
+  //     case 'table tennis':
+  //       return <FA5Icon name="table-tennis" size={size} color="#D32F2F" />;
+  //     case 'badminton':
+  //       return <MCIcon name="badminton" size={size} color="#03A9F4" />;
+  //     case 'basket':
+  //       return <FA6Icon name="basketball" size={size} color="#FFA500" />;
+  //     case 'tennis':
+  //       return <IonIcon name="tennisball" size={size} color="#8BC34A" />;
+  //     case 'volleyball':
+  //       return <FA6Icon name="volleyball" size={size} color="#FFD54F" />;
 
-      default:
-        return <IonIcon name="help-circle-outline" size={size} color={color} />;
-    }
-  };
+  //     default:
+  //       return <IonIcon name="help-circle-outline" size={size} color={color} />;
+  //   }
+  // };
 
   const calculateAge = (birthDate: Date): number => {
     const today = new Date();
