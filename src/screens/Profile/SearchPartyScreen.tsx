@@ -77,23 +77,8 @@ const SearchPartyScreen = () => {
 
   }
 
-  const handleGoBackButton = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => handleGoBackButton()}>
-          <Icon1 name="arrowleft" size={25} color="white" />
-        </TouchableOpacity>
-        <View style={styles.spacer} />
-        <Text style={styles.headerText}>Search Party</Text>
-        <View style={styles.spacer} />
-
-      </View>
       {userParty &&
         <View style={styles.partyLeaderContainer}>
           <View style={styles.row}>
@@ -197,22 +182,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-  },
-  header: {
-    height: 65,
-    backgroundColor: "#5f4c4c",
-    padding: 15,
-    alignItems: "center",
-    flexDirection: "row",
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginRight: 20,
-  },
-  spacer: {
-    flex: 1,
   },
   partyLeaderContainer: {
     justifyContent: 'space-between',

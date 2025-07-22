@@ -9,14 +9,16 @@ import {
   SectionListData,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { navigate } from '../../services/NavigationService';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../utils/types';
 
-type RootStackParamList = {
-  ProfileScreen: undefined;
-  PasswordScreen: undefined;
-  PushSettings: undefined;
-  SoundSettings: undefined;
-};
+// type RootStackParamList = {
+//   ProfileScreen: undefined;
+//   PasswordScreen: undefined;
+//   PushSettings: undefined;
+//   SoundSettings: undefined;
+// };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -34,74 +36,74 @@ const SETTINGS: SettingSection[] = [
   {
     title: 'Account',
     data: [
-      { key: 'Profile Info', screen: 'ProfileScreen' },
-      { key: 'Change email/password', screen: 'PasswordScreen' },
+      { key: 'Profile Info', screen: 'EditProfileScreen' },
+      { key: 'Change email/password', screen: 'EditProfileScreen' },
     ],
   },
   {
     title: 'Appearance',
     data: [
-      { key: 'Theme (Light, Dark)', screen: 'ProfileScreen' },
-      { key: 'Font size / Accessibility', screen: 'PasswordScreen' },
+      { key: 'Theme (Light, Dark)', screen: 'EditProfileScreen' },
+      { key: 'Font size / Accessibility', screen: 'EditProfileScreen' },
     ],
   },
   {
     title: 'Discovery Preferences',
     data: [
-      { key: 'Search radius', screen: 'PushSettings' },
-      { key: 'Set search default settings', screen: 'SoundSettings' },
-      { key: 'Display friends group always first', screen: 'SoundSettings' },
+      { key: 'Search radius', screen: 'EditProfileScreen' },
+      { key: 'Set search default settings', screen: 'EditProfileScreen' },
+      { key: 'Display friends group always first', screen: 'EditProfileScreen' },
     ],
   },
   {
     title: 'Notifications',
     data: [
-      { key: 'Push Notifications', screen: 'PushSettings' },
-      { key: 'Sound & Vibration', screen: 'SoundSettings' },
+      { key: 'Push Notifications', screen: 'EditProfileScreen' },
+      { key: 'Sound & Vibration', screen: 'EditProfileScreen' },
     ],
   },
   {
     title: 'Language & Region',
     data: [
-      { key: 'App language', screen: 'ProfileScreen' },
-      { key: 'Region format', screen: 'PasswordScreen' },
+      { key: 'App language', screen: 'EditProfileScreen' },
+      { key: 'Region format', screen: 'EditProfileScreen' },
     ],
   },
   {
     title: 'Privacy & Safety',
     data: [
-      { key: 'Who can view my profile', screen: 'ProfileScreen' },
-      { key: 'Blocked users', screen: 'PasswordScreen' },
-      { key: 'Location Visibility', screen: 'PasswordScreen' },
+      { key: 'Who can view my profile', screen: 'EditProfileScreen' },
+      { key: 'Blocked users', screen: 'EditProfileScreen' },
+      { key: 'Location Visibility', screen: 'EditProfileScreen' },
     ],
   },
   {
     title: 'Billing & Subscription',
     data: [
-      { key: 'Manage subscription', screen: 'ProfileScreen' },
-      { key: 'Payment methods', screen: 'PasswordScreen' },
-      { key: 'Purchase history', screen: 'PasswordScreen' },
-      { key: 'Billing support', screen: 'PasswordScreen' },
+      { key: 'Manage subscription', screen: 'EditProfileScreen' },
+      { key: 'Payment methods', screen: 'EditProfileScreen' },
+      { key: 'Purchase history', screen: 'EditProfileScreen' },
+      { key: 'Billing support', screen: 'EditProfileScreen' },
 
     ],
   },
   {
     title: 'Help & Support',
     data: [
-      { key: 'Contact support', screen: 'ProfileScreen' },
-      { key: 'Payment methods', screen: 'PasswordScreen' },
-      { key: 'FAQs / Knowledge base', screen: 'PasswordScreen' },
-      { key: 'Report a bug', screen: 'PasswordScreen' },
-      { key: 'Submit feedback', screen: 'PasswordScreen' },
+      { key: 'Contact support', screen: 'EditProfileScreen' },
+      { key: 'Payment methods', screen: 'EditProfileScreen' },
+      { key: 'FAQs / Knowledge base', screen: 'EditProfileScreen' },
+      { key: 'Report a bug', screen: 'EditProfileScreen' },
+      { key: 'Submit feedback', screen: 'EditProfileScreen' },
 
     ],
   },
   {
     title: 'About',
     data: [
-      { key: 'App version', screen: 'ProfileScreen' },
-      { key: 'Terms of Service', screen: 'PasswordScreen' },
-      { key: 'Privacy Policy', screen: 'PasswordScreen' },
+      { key: 'App version', screen: 'EditProfileScreen' },
+      { key: 'Terms of Service', screen: 'EditProfileScreen' },
+      { key: 'Privacy Policy', screen: 'EditProfileScreen' },
 
     ],
   },
@@ -114,7 +116,7 @@ const SettingsScreen: React.FC = () => {
     <View style={styles.sectionContainer}>
       <Text style={styles.sectionTitle}>{section.title}</Text>
       {section.data.map((item, index) => (
-        <TouchableOpacity key={index} onPress={() => navigation.navigate(item.screen)}>
+        <TouchableOpacity key={index} onPress={() => navigate(item.screen)}>
           <View style={[styles.itemRow, index < section.data.length - 1 && styles.itemBorder]}>
             <Text>{item.key}</Text>
           </View>

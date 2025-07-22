@@ -121,16 +121,12 @@ const LeaveModal: React.FC<LeaveModalProps> = ({ userParty }) => {
       clearGroup();
       setLeaveModalVisible(false);
 
-      if (updatedGroups.length > 0) {
-        navigate('GroupApp', {
-          screen: 'My Group',
-          params: {
-            screen: 'SelectGroupScreen'
-          }
-        });
-      } else {
-        navigate('PublicApp', { screen: 'FindOrStart' })
-      }
+      navigate('TabNav', {
+        screen: 'My Groups',
+        params: {
+          screen: 'SelectGroupScreen'
+        }
+      });
 
     } catch {
       Alert.alert('Error', 'Something went wrong.');

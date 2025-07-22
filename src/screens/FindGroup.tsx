@@ -136,15 +136,12 @@ const FindGroup = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={{ paddingBottom: verticalScale(10) }}
+        contentContainerStyle={styles.content}
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Find a Group</Text>
-        </View>
 
-        <View style={styles.bodyContainer}>
+        <View style={[styles.bodyContainer, { borderBottomColor: '#ddd' }]}>
           <Text style={styles.bodyTitle}>Activity</Text>
           <SearchableDropdown
             value={activity}
@@ -153,7 +150,7 @@ const FindGroup = () => {
             highlightItems={['any', 'custom', 'sports']}
           />
         </View>
-        <View style={styles.bodyContainer}>
+        <View style={[styles.bodyContainer, { borderBottomColor: '#ddd' }]}>
           <Text style={styles.bodyTitle}>Location</Text>
 
           <TextInput
@@ -164,6 +161,9 @@ const FindGroup = () => {
         </View>
         <View style={[
           styles.bodyContainer,
+          {
+            borderBottomColor: useDateFilter ? '#ddd' : '#fff' // ✅ Dynamic color
+          },
           !useDateFilter && { backgroundColor: '#d3d3d3' }
         ]}>
           <View style={styles.row}>
@@ -194,6 +194,9 @@ const FindGroup = () => {
         </View>
         <View style={[
           styles.bodyContainer,
+          {
+            borderBottomColor: useTimeFilter ? '#ddd' : '#fff' // ✅ Dynamic color
+          },
           !useTimeFilter && { backgroundColor: '#d3d3d3' }
         ]}>
           <View style={styles.row}>
@@ -225,8 +228,12 @@ const FindGroup = () => {
         </View>
         <View style={[
           styles.bodyContainer,
+          {
+            borderBottomColor: useMemberFilter ? '#ddd' : '#fff' // ✅ Dynamic color
+          },
           !useMemberFilter && { backgroundColor: '#d3d3d3' }
         ]}>
+
           <View style={styles.row}>
             <View style={styles.groupSizeContainer}>
               <Text style={styles.bodyLabel}>Group Size</Text>
@@ -244,16 +251,15 @@ const FindGroup = () => {
             </View>
             <View style={styles.toggleContainer}>
               <CustomToggle
-                label="Time"
+                label="Member"
                 value={useMemberFilter}
                 onToggle={(val: boolean) => setUseMemberFilter(val)}
               />
             </View>
           </View>
         </View>
-        <View style={[
-          styles.bodyContainer,
-          !useSkillLevelFilter && { backgroundColor: '#d3d3d3' }
+        <View style={[styles.bottomBodyContainer,
+        !useSkillLevelFilter && { backgroundColor: '#d3d3d3' }
         ]}>
           <View style={styles.row}>
             <View style={styles.skillLevelContainer}>
@@ -274,7 +280,7 @@ const FindGroup = () => {
                 <View style={styles.tooltipBtnContainer}>
 
                   <TouchableOpacity style={styles.tooltipBtn} onPress={() => setTooltipVisible(true)}>
-                    <Icon name="info-outline" size={25} color="white" />
+                    <Icon name="info-outline" size={22} color="white" />
                   </TouchableOpacity>
                 </View>
 
@@ -282,7 +288,7 @@ const FindGroup = () => {
             </View>
             <View style={styles.toggleContainer}>
               <CustomToggle
-                label="Time"
+                label="Skill Level"
                 value={useSkillLevelFilter}
                 onToggle={(val: boolean) => setUseSkillLevelFilter(val)}
               />
@@ -290,10 +296,11 @@ const FindGroup = () => {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <MyButton title={'Find a Group'} onPress={SearchGroup} />
-        </View>
+
       </ScrollView>
+      <View style={styles.buttonContainer}>
+        <MyButton title={'Find a Group'} onPress={SearchGroup} />
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -302,57 +309,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: verticalScale(65),
-    backgroundColor: '#5f4c4c',
-    padding: moderateScale(15),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerText: {
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    color: 'white',
+  content: {
+    margin: moderateScale(20),
+    borderRadius: 10,
+    backgroundColor: '#f5f5f5',
+    overflow: 'hidden',
+    // overflow: 'hidden',
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+
+    // Android shadow
+    elevation: 3,
   },
   bodyContainer: {
     borderBottomWidth: 1,
-    borderColor: 'grey',
+    backgroundColor: '#fff'
+    // borderColor: 'grey',
+    // margin: 20,
+
+  },
+  bottomBodyContainer: {
+    backgroundColor: '#fff'
+
   },
   bodyTitle: {
     marginTop: verticalScale(15),
     paddingLeft: scale(20),
-    fontSize: moderateScale(17),
+    fontSize: moderateScale(13),
     color: 'grey',
   },
   input: {
     borderBottomColor: 'gray',
     paddingLeft: scale(20),
-    fontSize: moderateScale(25),
-  },
-  activityContainer: {
-    borderBottomWidth: 1,
-    borderColor: 'grey',
-  },
-  dropdown: {
-    marginTop: verticalScale(5),
-    maxHeight: verticalScale(220),
-    backgroundColor: 'white',
-  },
-  dropdownItem: {
-    padding: moderateScale(10),
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  dropdownText: {
-    fontSize: moderateScale(16),
-  },
-  selectedText: {
-    marginTop: verticalScale(10),
-    fontSize: moderateScale(16),
-  },
-  backgroundImage: {
-    flex: 1,
-    resizeMode: 'cover',
+    fontSize: moderateScale(20),
   },
   buttonContainer: {
     paddingHorizontal: scale(10),
@@ -361,7 +353,7 @@ const styles = StyleSheet.create({
   bodyLabel: {
     marginTop: verticalScale(15),
     paddingLeft: scale(20),
-    fontSize: moderateScale(17),
+    fontSize: moderateScale(13),
     color: 'grey',
   },
   row: {
@@ -382,22 +374,24 @@ const styles = StyleSheet.create({
   skillLevelContainer: {
     flex: 2,
     flexDirection: 'row'
+
   },
   toggleContainer: {
     justifyContent: 'center',
     marginHorizontal: scale(20),
+
   },
   dateButton: {
-    fontSize: moderateScale(25),
+    // fontSize: moderateScale(25),
     paddingBottom: verticalScale(10),
   },
   timeButton: {
-    fontSize: moderateScale(25),
+    // fontSize: moderateScale(25),
     paddingBottom: verticalScale(10),
   },
   dateTimeText: {
     paddingHorizontal: scale(20),
-    fontSize: moderateScale(25),
+    fontSize: moderateScale(20),
     color: 'black',
   },
   stepperContainer: {
@@ -419,7 +413,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   memberLimitValue: {
-    fontSize: moderateScale(24),
+    fontSize: moderateScale(20),
     marginHorizontal: scale(20),
   },
   skillLevelText: {
@@ -429,10 +423,10 @@ const styles = StyleSheet.create({
   tooltipBtnContainer: {
   },
   tooltipBtn: {
-    fontSize: moderateScale(14),
+    // fontSize: moderateScale(12),
     marginHorizontal: scale(20),
-    marginVertical: verticalScale(12),
-    padding: moderateScale(5),
+    marginVertical: verticalScale(13),
+    padding: moderateScale(3),
     borderRadius: 5,
     backgroundColor: '#36454F',
   }

@@ -191,24 +191,8 @@ const ProfilePageScreen = () => {
   };
 
 
-  const handleGoBackButton = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  };
-
   return (
     <ScrollView style={{ flex: 1 }}>
-
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => handleGoBackButton()}>
-          <ADIcon name="arrowleft" size={25} color="white" />
-        </TouchableOpacity>
-        <View style={styles.spacer} />
-        <Text style={styles.headerText}>Profile</Text>
-        <View style={styles.spacer} />
-
-      </View>
 
       <View style={styles.topSection}>
         <View style={styles.avatar}>
@@ -297,22 +281,6 @@ const ProfilePageScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-  },
-  header: {
-    height: verticalScale(65),
-    backgroundColor: "#5f4c4c",
-    padding: moderateScale(15),
-    alignItems: "center",
-    flexDirection: "row",
-  },
-  headerText: {
-    fontSize: moderateScale(20),
-    fontWeight: "bold",
-    color: "white",
-    marginRight: scale(20),
-  },
-  spacer: {
-    flex: 1,
   },
   topSection: {
     alignItems: 'center',

@@ -116,7 +116,7 @@ const MyGroupScreen = () => {
 
   const handleSelectGroup = () => {
     // setCurrentGroupId(undefined)
-    navigate('GroupApp', {
+    navigate('TabNav', {
       screen: 'My Group',
       params: {
         screen: 'SelectGroupScreen'

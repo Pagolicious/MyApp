@@ -49,7 +49,7 @@ const LabelScreen = () => {
       .doc(currentUser.uid)
       .onSnapshot(docSnap => {
         const data = docSnap.data();
-        const friendDoc = data?.friends.find((f: any) => f.uid === friend.uid);
+        const friendDoc = data?.friends.find((f: Friend) => f.uid === friend.uid);
         if (friendDoc?.labels) {
           setUserLabels(friendDoc.labels);
         } else {
@@ -89,7 +89,7 @@ const LabelScreen = () => {
 
       if (!data?.friends) return;
 
-      const updatedFriends = data.friends.map((f: any) => {
+      const updatedFriends = data.friends.map((f: Friend) => {
         if (f.uid === friend.uid) {
           const newLabels = (f.labels || []).filter((label: string) => label !== labelToRemove);
           return { ...f, labels: newLabels };

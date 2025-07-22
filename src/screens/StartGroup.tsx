@@ -371,7 +371,7 @@ const StartGroup = () => {
       })
     });
 
-    navigate("GroupApp", { screen: 'MyGroupScreen' })
+    navigate("TabNav", { screen: 'MyGroupScreen' })
 
   };
 
@@ -422,7 +422,7 @@ const StartGroup = () => {
     } catch (error) {
       console.log("Coudn't edit group", error)
     }
-    navigate("GroupApp", { screen: "MyGroupScreen" });
+    navigate("TabNav", { screen: "MyGroupScreen" });
   }
 
   let syncTimeCheck = 0;
@@ -556,19 +556,6 @@ const StartGroup = () => {
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
       >
-
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon1 name="arrowleft" size={25} color="white" />
-          </TouchableOpacity>
-          <View style={styles.spacer} />
-          {!isEdit ? (
-            <Text style={styles.headerText}>Start a Group</Text>
-          ) : (
-            <Text style={styles.headerText}>Edit Group</Text>
-          )}
-          <View style={styles.spacer} />
-        </View>
         <View style={styles.bodyContainer}>
           <Text style={styles.bodyLabel}>Activity</Text>
           <SearchableDropdown
@@ -868,22 +855,6 @@ const StartGroup = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  header: {
-    height: verticalScale(65),
-    backgroundColor: '#5f4c4c',
-    padding: scale(15),
-    alignItems: 'center',
-    flexDirection: "row",
-  },
-  headerText: {
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    color: 'white',
-    marginRight: scale(20),
-  },
-  spacer: {
     flex: 1,
   },
   bodyContainer: {

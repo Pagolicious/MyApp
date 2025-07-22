@@ -76,11 +76,7 @@ const DOBInput = () => {
         gender: selectedGender.toLowerCase()
       })
       .then(() => {
-        if (userData.groups?.length > 0) {
-          navigate('GroupApp', { screen: 'SelectGroupScreen' });
-        } else {
-          navigate('PublicApp', { screen: 'FindOrStart' })
-        }
+        navigate('TabNav', { screen: 'SelectGroupScreen' });
       })
       .catch(error => {
         console.error('Error saving user data: ', error);

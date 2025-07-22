@@ -37,7 +37,7 @@ interface NewLabelModalProps {
 
 const SearchableDropdown: React.FC<NewLabelModalProps> = ({ friend, currentUserId, onLabelAdded, placeholder }) => {
   const [searchText, setSearchText] = useState('');
-  const cleanSportsList = sportsList.filter(sport => sport.toLowerCase() !== 'any');
+  const cleanSportsList = sportsList.filter(sport => sport.toLowerCase() !== 'any' && sport.toLowerCase() !== 'sports');
   const [filteredOptions, setFilteredOptions] = useState(cleanSportsList);
   const [visible, setVisible] = useState(false);
   const inputRef = useRef<TextInput>(null);

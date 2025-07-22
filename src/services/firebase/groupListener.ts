@@ -36,8 +36,10 @@ export const listenToGroup = (groupId: string, currentUserUid: string) => {
       // } else {
       //   navigate('PublicApp', { screen: 'FindOrStart' })
       // }
-      navigate('GroupApp', {
-        screen: 'My Group',
+      console.log('navigate_1')
+
+      navigate('TabNav', {
+        screen: 'My Groups',
         params: {
           screen: 'SelectGroupScreen'
         }
@@ -60,9 +62,10 @@ export const listenToGroup = (groupId: string, currentUserUid: string) => {
         text1: 'Group disbanded or you were removed.',
         text2: 'Redirecting to Select Group...',
       });
+      console.log('navigate_2')
 
-      setTimeout(() => navigate('GroupApp', {
-        screen: 'My Group',
+      setTimeout(() => navigate('TabNav', {
+        screen: 'My Groups',
         params: {
           screen: 'SelectGroupScreen'
         }

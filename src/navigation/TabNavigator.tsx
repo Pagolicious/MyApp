@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 import { createStackNavigator } from '@react-navigation/stack';
 // import GroupNav from '../components/GroupNav';
@@ -18,6 +19,9 @@ import MyGroupStack from './MyGroupStack';
 //Contexts
 import { useAuth } from '../context/AuthContext';
 // import { useGroup } from '../context/GroupContext';
+
+//Components
+// import CustomHeader from '../components/CustomHeader';
 
 // Icons
 import Icon1 from 'react-native-vector-icons/FontAwesome';
@@ -83,6 +87,58 @@ const MyGroupTab = createBottomTabNavigator();
 
 
 const GroupTabNavigator = () => {
+  const ChatsStack = createStackNavigator();
+
+  const ChatsStackNavigator = () => (
+    <ChatsStack.Navigator
+      screenOptions={{
+        headerShown: true
+      }}
+    >
+      <ChatsStack.Screen
+        name="ChatListScreen"
+        component={ChatListScreen}
+        options={{
+          title: 'Chat List',
+          headerLeft: () => null,
+          headerStyle: {
+            backgroundColor: '#5f4c4c',
+          },
+          headerTitleStyle: {
+            fontSize: moderateScale(25),
+            // fontWeight: 'bold',
+            color: 'white'
+          },
+        }}
+      />
+    </ChatsStack.Navigator>
+  );
+
+  const FindGroupStackNavigator = () => (
+    <ChatsStack.Navigator
+      screenOptions={{
+        headerShown: true
+      }}
+    >
+      <ChatsStack.Screen
+        name="FindGroup"
+        component={FindGroup}
+        options={{
+          title: 'Find a Group',
+          headerLeft: () => null,
+          headerStyle: {
+            backgroundColor: '#5f4c4c',
+          },
+          headerTitleStyle: {
+            fontSize: moderateScale(25),
+            // fontWeight: 'bold',
+            color: 'white'
+          },
+        }}
+      />
+    </ChatsStack.Navigator>
+  );
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -93,10 +149,10 @@ const GroupTabNavigator = () => {
           let iconName: string = '';
           let IconComponent: React.ElementType = Icon1; // Default icon
 
-          if (route.name === 'My Group') {
+          if (route.name === 'My Groups') {
             IconComponent = Icon1;
             iconName = 'group';
-          } else if (route.name === 'Browse') {
+          } else if (route.name === 'Search') {
             IconComponent = Icon4;
             iconName = 'users-viewfinder';
           } else if (route.name === 'Chats') {
@@ -118,9 +174,9 @@ const GroupTabNavigator = () => {
         },
       })}>
 
-      <Tab.Screen name="My Group" component={MyGroupStack} />
-      <Tab.Screen name="Browse" component={FindGroup} options={{ title: 'Find' }} />
-      <Tab.Screen name="Chats" component={ChatListScreen} />
+      <Tab.Screen name="My Groups" component={MyGroupStack} />
+      <Tab.Screen name="Search" component={FindGroupStackNavigator} />
+      <Tab.Screen name="Chats" component={ChatsStackNavigator} />
       <Tab.Screen name="More" component={ProfileScreen} />
 
     </Tab.Navigator>

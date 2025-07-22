@@ -34,28 +34,8 @@ const ChatroomScreen = () => {
 
   const otherUser = getOtherUser();
 
-
-  const handleGoBackButton = () => {
-    // if (!userData) return;
-    // if (userData.groups.length > 0) {
-    //   navigate('GroupApp', { screen: 'Chats' });
-    // } else {
-    //   navigate('PublicApp', { screen: 'Chats' });
-    // }
-    navigation.goBack();
-
-  };
-
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBackButton}>
-          <Icon1 name="arrowleft" size={25} color="white" />
-        </TouchableOpacity>
-        <View style={styles.spacer} />
-        <Text style={styles.headerText}>{otherUser?.firstName} {otherUser?.lastName}</Text>
-        <View style={styles.spacer} />
-      </View>
       {!currentUser ? (
         <Text>Please log in to view groups.</Text>
       ) : (
@@ -76,22 +56,6 @@ export default ChatroomScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  header: {
-    height: 65,
-    backgroundColor: "#5f4c4c",
-    padding: 15,
-    alignItems: "center",
-    flexDirection: "row",
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginRight: 20,
-  },
-  spacer: {
     flex: 1,
   },
   chatContainer: {

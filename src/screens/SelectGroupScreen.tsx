@@ -14,6 +14,9 @@ import { Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ripple from 'react-native-material-ripple';
 
+//Screens
+import FindOrStart from './FindOrStart';
+
 //Hooks
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 
@@ -40,10 +43,15 @@ import FIcon from 'react-native-vector-icons/Feather';
 // Simple template to start
 const SelectGroupScreen = () => {
   const { userData, currentUser } = useAuth();
+
   const { setGroupId, setGroup } = useGroupStore();
   const groups: UserGroups[] = userData?.groups || [];
   const navigation = useNavigation<StackNavigationProp<MyGroupStackParamList>>();
   const [fullGroups, setFullGroups] = useState<Record<string, Group>>({});
+
+  // if (!groups || groups.length === 0) {
+  //   return <FindOrStart />;
+  // }
 
   // const { height: screenHeight } = Dimensions.get('window');
 
@@ -139,11 +147,8 @@ const SelectGroupScreen = () => {
   const handleFindGroup = () => {
     if (!userData) return;
 
-    if (userData.groups.length > 0) {
-      navigate('GroupApp', { screen: 'Browse' })
-    } else {
-      navigate('PublicApp', { screen: 'Find a Group' })
-    }
+    navigate('TabNav', { screen: 'Search' })
+
   }
 
   //   const AnimatedRippleButton = ({ icon, label, onPress }) => {
@@ -185,145 +190,145 @@ const SelectGroupScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Select Group</Text>
-      </View>
-      <View style={styles.cardContainer}>
+      {!groups || groups.length === 0 ? (
+        <FindOrStart />
+      ) : (
+        <View style={styles.cardContainer}>
 
-        {paddedGroups.map((group, index) => (
-          // <View style={styles.cardWrapper}>
+          {paddedGroups.map((group, index) => (
+            // <View style={styles.cardWrapper}>
 
-          <Pressable
-            key={group?.groupId ?? `placeholder-${index}`}
-            // style={[
-            //   styles.card,
-            //   !group && styles.disabledCard,
+            <Pressable
+              key={group?.groupId ?? `placeholder-${index}`}
+              // style={[
+              //   styles.card,
+              //   !group && styles.disabledCard,
 
-            // ]}
-            style={({ pressed }) => [
-              styles.card,
-              !group && styles.disabledCard,
+              // ]}
+              style={({ pressed }) => [
+                styles.card,
+                !group && styles.disabledCard,
 
-              {
-                transform: [{ scale: pressed ? 0.96 : 1 }],
-                backgroundColor: pressed ? '#ddd' : '#blue',
-              },
-            ]}
-            onPress={() => group && handleSelect(group)}
-            disabled={!group}
-          >
-            {/* <Ripple
+                {
+                  transform: [{ scale: pressed ? 0.96 : 1 }],
+                  backgroundColor: pressed ? '#ddd' : '#blue',
+                },
+              ]}
+              onPress={() => group && handleSelect(group)}
+              disabled={!group}
+            >
+              {/* <Ripple
                             rippleColor="black"
                             rippleContainerBorderRadius={10}
                             style={styles.button}
                             onPress={handleSubmit}
                           ></Ripple> */}
 
-            {group ? (
-              <View style={styles.cardContent}>
+              {group ? (
+                <View style={styles.cardContent}>
 
-                <LinearGradient
-                  colors={['#F97316', '#FB923C']} // darker orange → lighter orange
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.topDesignCard}
-                >
-                  {fullGroups[group.groupId]?.activity === "Custom" ? (
-                    <Text style={styles.titleText}>{fullGroups[group.groupId]?.title}</Text>
-                  ) :
-                    <Text style={styles.titleText}>{fullGroups[group.groupId]?.activity}</Text>
-                  }
-                </LinearGradient>
+                  <LinearGradient
+                    colors={['#F97316', '#FB923C']} // darker orange → lighter orange
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.topDesignCard}
+                  >
+                    {fullGroups[group.groupId]?.activity === "Custom" ? (
+                      <Text style={styles.titleText}>{fullGroups[group.groupId]?.title}</Text>
+                    ) :
+                      <Text style={styles.titleText}>{fullGroups[group.groupId]?.activity}</Text>
+                    }
+                  </LinearGradient>
 
-                <View style={styles.groupInfo}>
-                  <View style={styles.contentRow}>
-                    <Icon3 name="location-on" size={25} color="black" />
-                    <Text style={styles.locationText}>{fullGroups[group.groupId]?.location}, adress...</Text>
-                  </View>
-                  <View style={styles.contentRow}>
-                    <View style={styles.clockIconContainer}>
-                      <Icon4 name="clock" size={20} color="black" />
+                  <View style={styles.groupInfo}>
+                    <View style={styles.contentRow}>
+                      <Icon3 name="location-on" size={25} color="black" />
+                      <Text style={styles.locationText}>{fullGroups[group.groupId]?.location}, adress...</Text>
                     </View>
-                    <Text style={styles.timeText}>
-                      {fullGroups[group.groupId]?.fromTime} - {fullGroups[group.groupId]?.toTime}, {new Date(fullGroups[group.groupId]?.fromDate).
-                        toLocaleDateString('sv-SE', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        })}</Text>
-                  </View>
-                  <View style={styles.contentRow}>
-                    <View style={styles.peopleIconContainer}>
-                      <Icon2 name="people" size={22} color="black" />
+                    <View style={styles.contentRow}>
+                      <View style={styles.clockIconContainer}>
+                        <Icon4 name="clock" size={20} color="black" />
+                      </View>
+                      <Text style={styles.timeText}>
+                        {fullGroups[group.groupId]?.fromTime} - {fullGroups[group.groupId]?.toTime}, {new Date(fullGroups[group.groupId]?.fromDate).
+                          toLocaleDateString('sv-SE', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}</Text>
                     </View>
-                    <Text style={styles.membersText}>{fullGroups[group.groupId]?.memberUids.length} of {fullGroups[group.groupId]?.memberLimit} people joined</Text>
+                    <View style={styles.contentRow}>
+                      <View style={styles.peopleIconContainer}>
+                        <Icon2 name="people" size={22} color="black" />
+                      </View>
+                      <Text style={styles.membersText}>{fullGroups[group.groupId]?.memberUids.length} of {fullGroups[group.groupId]?.memberLimit} people joined</Text>
+                    </View>
+                    {/* <Text>Role: {group.role}</Text> */}
                   </View>
-                  {/* <Text>Role: {group.role}</Text> */}
+                  <View style={styles.roleCard}>
+                    <Text style={styles.roleText}>
+                      {group.role.charAt(0).toUpperCase() + group.role.slice(1)}
+                    </Text>
+                  </View>
+                  <LinearGradient
+                    colors={['#F97316', '#FB923C']} // darker orange → lighter orange
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.bottomDesignCard}
+                  >
+                  </LinearGradient>
                 </View>
-                <View style={styles.roleCard}>
-                  <Text style={styles.roleText}>
-                    {group.role.charAt(0).toUpperCase() + group.role.slice(1)}
-                  </Text>
-                </View>
-                <LinearGradient
-                  colors={['#F97316', '#FB923C']} // darker orange → lighter orange
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.bottomDesignCard}
-                >
-                </LinearGradient>
-              </View>
 
-            ) : (
-              <View style={styles.noGroupContainer}>
-                <Text style={styles.placeholderText}>No Group</Text>
+              ) : (
+                <View style={styles.noGroupContainer}>
+                  <Text style={styles.placeholderText}>No Group</Text>
 
-                <View style={styles.noGroupContent}>
-                  <View style={styles.row}>
-                    <View style={styles.createGroupContainer}>
-                      <Pressable style={({ pressed }) => [
-                        styles.createGroupButton,
-                        {
-                          transform: [{ scale: pressed ? 0.96 : 1 }],
-                          backgroundColor: pressed ? '#ddd' : '#fff',
-                        },
-                      ]}
-                        onPress={handleCreateGroup}
-                      >
-                        <FIcon name="plus" size={27} color="#0f5e9c" />
-                      </Pressable>
+                  <View style={styles.noGroupContent}>
+                    <View style={styles.row}>
+                      <View style={styles.createGroupContainer}>
+                        <Pressable style={({ pressed }) => [
+                          styles.createGroupButton,
+                          {
+                            transform: [{ scale: pressed ? 0.96 : 1 }],
+                            backgroundColor: pressed ? '#ddd' : '#fff',
+                          },
+                        ]}
+                          onPress={handleCreateGroup}
+                        >
+                          <FIcon name="plus" size={27} color="#0f5e9c" />
+                        </Pressable>
 
-                      <Text style={styles.createGroupText}>Create Group</Text>
-                    </View>
-                    <View style={styles.orContainer}>
-                      <Text style={styles.orText}>Or</Text>
-                    </View >
-                    <View style={styles.findGroupContainer}>
-                      <Pressable style={({ pressed }) => [
-                        styles.findGroupButton,
-                        {
-                          transform: [{ scale: pressed ? 0.96 : 1 }],
-                          backgroundColor: pressed ? '#ddd' : '#fff',
-                        },
-                      ]}
-                        onPress={handleFindGroup}
-                      >
-                        <FIcon name="search" size={22} color="#0f5e9c" />
-                      </Pressable>
-                      <Text style={styles.findGroupText}>Find Group</Text>
+                        <Text style={styles.createGroupText}>Create Group</Text>
+                      </View>
+                      <View style={styles.orContainer}>
+                        <Text style={styles.orText}>Or</Text>
+                      </View >
+                      <View style={styles.findGroupContainer}>
+                        <Pressable style={({ pressed }) => [
+                          styles.findGroupButton,
+                          {
+                            transform: [{ scale: pressed ? 0.96 : 1 }],
+                            backgroundColor: pressed ? '#ddd' : '#fff',
+                          },
+                        ]}
+                          onPress={handleFindGroup}
+                        >
+                          <FIcon name="search" size={22} color="#0f5e9c" />
+                        </Pressable>
+                        <Text style={styles.findGroupText}>Find Group</Text>
 
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
-            )}
+              )}
 
-          </Pressable>
-          // </View>
+            </Pressable>
+            // </View>
 
-        ))}
-      </View>
-
+          ))}
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -335,19 +340,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // backgroundColor: '#FFF',
-  },
-  header: {
-    height: verticalScale(65),
-    backgroundColor: '#5f4c4c',
-    padding: moderateScale(15),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: scale(20),
-  },
-  headerText: {
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    color: 'white',
   },
   cardContainer: {
     flex: 1,

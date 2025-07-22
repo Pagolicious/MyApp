@@ -486,7 +486,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text>Please log in to view groups.</Text>
       ) : (
         <>
-          <View style={styles.header}>
+          {/* <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <ADIcon name="arrowleft" size={25} color="white" />
             </TouchableOpacity>
@@ -496,7 +496,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
                 <PartyDisplay />
               </View>
             )}
-          </View>
+          </View> */}
           <ImageBackground
             source={require('../assets/BackgroundImages/whiteBackground.jpg')}
             style={styles.backgroundImage}
@@ -631,30 +631,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: verticalScale(65),
-    backgroundColor: '#5f4c4c',
-    paddingHorizontal: scale(15),
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  headerText: {
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    color: 'white',
-    position: 'absolute',
-    left: '50%',
-    transform: [{ translateX: -scale(20) }],
-  },
-  partyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    width: scale(160),
-    height: verticalScale(40),
-    position: 'relative',
-  },
+  // header: {
+  //   height: verticalScale(65),
+  //   backgroundColor: '#5f4c4c',
+  //   paddingHorizontal: scale(15),
+  //   alignItems: 'center',
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  // },
+  // headerText: {
+  //   fontSize: moderateScale(20),
+  //   fontWeight: 'bold',
+  //   color: 'white',
+  //   position: 'absolute',
+  //   left: '50%',
+  //   transform: [{ translateX: -scale(20) }],
+  // },
+  // partyContainer: {
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   overflow: 'hidden',
+  //   width: scale(160),
+  //   height: verticalScale(40),
+  //   position: 'relative',
+  // },
   backgroundImage: {
     flex: 1,
     resizeMode: 'cover',

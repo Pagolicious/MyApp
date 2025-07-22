@@ -26,8 +26,7 @@ const GroupTopTabs = () => {
           },
           tabBarStyle: {
             backgroundColor: '#5f4c4c',
-            height: 80, // 🔺 increase from default (~48)
-            paddingTop: verticalScale(15),
+            height: verticalScale(45), // 🔺 increase from default (~48)
           },
           tabBarActiveTintColor: '#00BFFF',
           tabBarInactiveTintColor: 'lightgray',

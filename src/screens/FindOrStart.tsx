@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native';
 import React from 'react';
 import Toast from 'react-native-toast-message';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Hooks
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
@@ -41,23 +42,35 @@ const FindOrStart = () => {
     <View style={styles.container}>
       {/* <View style={styles.content} /> */}
       <ImageBackground
-        source={require('../assets/BackgroundImages/whiteBackground.jpg')} // Path to your background image
-        style={styles.backgroundImage} // Style for the background image
+        source={require('../assets/BackgroundImages/whiteBackground.jpg')}
+        style={styles.backgroundImage}
       >
-        <View style={styles.buttonContainer}>
+        <View style={styles.content}>
 
-          <TouchableOpacity onPress={() => navigate('PublicApp', { screen: 'Find a Group' })} style={styles.button}>
-            <Text style={styles.buttonText}>Find a group</Text>
-          </TouchableOpacity>
-          <View style={styles.lineContainer}>
-            <View style={styles.line} />
-            <Text style={styles.textOr}>Or</Text>
-            <View style={styles.line} />
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText}>You're not part of any groups yet.</Text>
           </View>
+          <View style={styles.buttonContainer}>
 
-          <TouchableOpacity onPress={handleStartGroup} style={styles.button}>
-            <Text style={styles.buttonText}>Start a group</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() =>
+              navigate('TabNav', {
+                screen: 'Search',
+                params: {
+                  screen: 'FindGroup'
+                }
+              })} style={styles.button}>
+              <Text style={styles.buttonText}>Find a group</Text>
+            </TouchableOpacity>
+            <View style={styles.lineContainer}>
+              <View style={styles.line} />
+              <Text style={styles.textOr}>Or</Text>
+              <View style={styles.line} />
+            </View>
+
+            <TouchableOpacity onPress={handleStartGroup} style={styles.button}>
+              <Text style={styles.buttonText}>Start a group</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ImageBackground>
     </View>
@@ -72,39 +85,59 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
   },
-  buttonContainer: {
+  content: {
     flex: 1,
     justifyContent: 'center',
+    // alignItems: 'center',
+  },
+  messageContainer: {
+    // marginVertical: 50,
     alignItems: 'center',
-    padding: 25,
+  },
+  messageText: {
+    fontSize: moderateScale(16),
+    textAlign: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: '#C41E3A', // or any accent color
+    paddingBottom: 5,
+    fontWeight: 'bold'
+  },
+  buttonContainer: {
+    // flex: 1,
+    // justifyContent: 'center',
+    // alignItems: 'center',
+    marginVertical: verticalScale(30),
+    padding: moderateScale(25),
+    // borderWidth: 1
   },
   button: {
-    height: 50,
+    // height: verticalScale(40),
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 15,
     backgroundColor: '#C41E3A',
+    padding: scale(10)
   },
   buttonText: {
     color: 'white',
-    fontSize: 20,
+    fontSize: moderateScale(20),
   },
   lineContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 40,
-    marginBottom: 40,
+    marginTop: verticalScale(40),
+    marginBottom: verticalScale(40),
   },
   line: {
     flex: 1,
     height: 1,
     backgroundColor: 'black',
-    marginHorizontal: 10,
+    marginHorizontal: scale(10),
   },
   textOr: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     textAlign: 'center',
   },
 

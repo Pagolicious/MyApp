@@ -49,12 +49,12 @@ export type GroupTopTabsParamList = {
 };
 
 
-export type PublicTabParamList = {
-  Home: undefined;
-  'Find a Group': undefined;
-  Chats: undefined;
-  More: undefined;
-};
+// export type PublicTabParamList = {
+//   Home: undefined;
+//   'Find a Group': undefined;
+//   Chats: undefined;
+//   More: undefined;
+// };
 
 export type FriendStackParamList = {
   FriendScreen: undefined;
@@ -91,12 +91,12 @@ export type RootStackParamList = {
   FriendRequestScreen: undefined;
   ProfilePageScreen: { userId: string };
   LabelScreen: { friend: Friend };
-
+  EditProfileScreen: undefined;
   PresenceDebugScreen: undefined;
 
 
   // 👇 These are nested navigators that take a screen + params
-  GroupApp: { screen: keyof MyGroupStackParamList; params?: any };
-  PublicApp: { screen: keyof PublicTabParamList; params?: any };
+  TabNav: { screen: keyof MyGroupStackParamList; params?: any };
+  // PublicApp: { screen: keyof PublicTabParamList; params?: any };
   Friends: { screen: keyof FriendStackParamList; params?: any };
 };

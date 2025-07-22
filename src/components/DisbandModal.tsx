@@ -95,16 +95,12 @@ const DisbandModal: React.FC<DisbandModalProps> = ({ userParty }) => {
       stopListeningToGroup();
       await disbandGroup(currentGroupId, currentUser.uid);
 
-      if (userData.groups.length > 0) {
-        navigate('GroupApp', {
-          screen: 'My Group',
-          params: {
-            screen: 'SelectGroupScreen'
-          }
-        });
-      } else {
-        navigate('PublicApp', { screen: 'FindOrStart' })
-      }
+      navigate('TabNav', {
+        screen: 'My Groups',
+        params: {
+          screen: 'SelectGroupScreen'
+        }
+      });
     } catch {
       Alert.alert('Error', 'Something went wrong.');
     }

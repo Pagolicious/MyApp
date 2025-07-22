@@ -1,9 +1,11 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import GroupTabNavigator from './GroupTabNavigator';
-import PublicTabNavigator from './PublicTabNavigator';
+import GroupTabNavigator from './TabNavigator';
+// import PublicTabNavigator from './PublicTabNavigator';
 import { navigationRef } from '../services/NavigationService';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 
 import { RootStackParamList } from '../utils/types';
 import { useAuth } from '../context/AuthContext';
@@ -29,11 +31,22 @@ import AboutAppScreen from '../screens/Profile/AboutAppScreen';
 import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
 import ChatRoomScreen from '../screens/ChatRoomScreen'
 import LabelScreen from '../screens/Profile/LabelScreen'
+import EditProfileScreen from '../screens/settings/EditProfileScreen'
 
-import PresenceDebugScreen from '../screens/PresenceDebugScreen'; // or wherever you save it
+import PresenceDebugScreen from '../screens/PresenceDebugScreen';
+
+//Types
+import { GroupChatParameter, ParticipantDetails } from '../types/chatTypes';
+
+//Component
+import PartyDisplay from '../components/PartyDisplay';
 
 //Stacks
 import FriendStack from './FriendStack';
+
+// Icons
+import Icon from 'react-native-vector-icons/Feather';
+
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -42,26 +55,139 @@ const RootStackNavigator = () => {
 
   return (
     <Stack.Navigator
-      // initialRouteName={'LoginScreen'}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: true,
+        title: '',
+        headerStyle: {
+          backgroundColor: '#5f4c4c',
+        },
+        headerTitleStyle: {
+          fontSize: moderateScale(25),
+          color: 'white',
+        },
+        headerTintColor: 'white',
+      }}
     >
-      <Stack.Screen name="LoginScreen" component={LoginScreen} />
-      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-      <Stack.Screen name="GroupApp" component={GroupTabNavigator} />
-      <Stack.Screen name="PublicApp" component={PublicTabNavigator} />
-      <Stack.Screen name="GroupsScreen" component={GroupsScreen} />
-      <Stack.Screen name="StartGroup" component={StartGroup} />
-      <Stack.Screen name="NamePage" component={NamePage} />
-      <Stack.Screen name="DateOfBirthScreen" component={DateOfBirthScreen} />
-      <Stack.Screen name="GroupChatScreen" component={GroupChatScreen} />
-      <Stack.Screen name="Friends" component={FriendStack} />
-      <Stack.Screen name="SearchPartyScreen" component={SearchPartyScreen} />
-      <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
-      <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
-      <Stack.Screen name="SettingScreen" component={SettingScreen} />
+
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SignUpScreen"
+        component={SignUpScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TabNav"
+        component={GroupTabNavigator}
+        options={{ headerShown: false }}
+      />
+      {/* <Stack.Screen
+        name="PublicApp"
+        component={PublicTabNavigator}
+        options={{ headerShown: false }}
+      /> */}
+      <Stack.Screen
+        name="GroupsScreen"
+        component={GroupsScreen}
+        options={{
+          title: 'Groups',
+          headerRight: () =>
+            userData && (userData.isPartyLeader || userData.isPartyMember) ? (
+              <View style={styles.partyContainer}>
+                <PartyDisplay />
+              </View>
+            ) : null,
+        }}
+      />
+      <Stack.Screen
+        name="StartGroup"
+        component={StartGroup}
+        options={({ route }) => ({
+          title: route?.params?.isEdit ? 'Edit Group' : 'Create a Group'
+        })}
+      />
+      <Stack.Screen
+        name="NamePage"
+        component={NamePage}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DateOfBirthScreen"
+        component={DateOfBirthScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GroupChatScreen"
+        component={GroupChatScreen}
+        options={({ route }) => {
+          const { chatName, title, activity } = (route.params ?? {}) as Partial<GroupChatParameter>;
+          return {
+            title: chatName || title || activity || 'Chat',
+          };
+        }}
+      />
+      <Stack.Screen
+        name="ChatRoomScreen"
+        component={ChatRoomScreen}
+        options={({ route }) => {
+          const { otherFirstName, otherLastName } = (route.params ?? {}) as {
+            otherFirstName?: string;
+            otherLastName?: string;
+          };
+          return {
+            title: `${otherFirstName ?? ''} ${otherLastName ?? ''}`.trim() || 'Chat',
+          };
+        }}
+      />
+      <Stack.Screen
+        name="Friends"
+        component={FriendStack}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SearchPartyScreen"
+        component={SearchPartyScreen}
+        options={{ title: 'Search Party' }}
+      />
+
+
+      <Stack.Screen
+        name="SettingScreen"
+        component={SettingScreen}
+        options={{ title: 'Settings' }}
+      />
+      <Stack.Screen
+        name="ProfilePageScreen"
+        component={ProfilePageScreen}
+        options={({ navigation }) => ({
+          title: 'Profile',
+          headerRight: () => (
+            <View style={styles.iconContainer}>
+              <Icon
+                name="edit"
+                size={22}
+                color="white"
+                style={{ marginRight: 15 }}
+                onPress={() => navigation.navigate('EditProfileScreen')}
+              />
+            </View>
+
+          ),
+        })} />
+      <Stack.Screen
+        name="LabelScreen"
+        component={LabelScreen}
+        options={{ title: 'Labels' }}
+      />
+      <Stack.Screen
+        name="EditProfileScreen"
+        component={EditProfileScreen}
+        options={{ title: 'Edit Profile' }}
+      />
       <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
-      <Stack.Screen name="ProfilePageScreen" component={ProfilePageScreen} />
-      <Stack.Screen name="LabelScreen" component={LabelScreen} />
       <Stack.Screen name="PresenceDebugScreen" component={PresenceDebugScreen} />
 
 
@@ -70,3 +196,17 @@ const RootStackNavigator = () => {
 };
 
 export default RootStackNavigator;
+
+const styles = StyleSheet.create({
+  partyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: scale(160),
+    height: verticalScale(40),
+    paddingRight: scale(10),
+  },
+  iconContainer: {
+    marginHorizontal: scale(10)
+  }
+});

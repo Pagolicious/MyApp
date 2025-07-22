@@ -29,10 +29,13 @@ const LoginScreen = () => {
 
     if (!userData.dateOfBirth || !userData.firstName || !userData.gender) {
       navigate('NamePage');
-    } else if (userData.groups?.length > 0) {
-      navigate('GroupApp', { screen: 'SelectGroupScreen' });
     } else {
-      navigate('PublicApp', { screen: 'FindOrStart' });
+      navigate('TabNav', {
+        screen: 'My Groups',
+        params: {
+          screen: 'SelectGroupScreen'
+        }
+      })
     }
 
     setLoading(false);

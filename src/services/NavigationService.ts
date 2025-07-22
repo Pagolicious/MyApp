@@ -15,5 +15,6 @@ import { NavigationContainerRef, StackActions, ParamListBase } from '@react-navi
 export const navigationRef = React.createRef<NavigationContainerRef<ParamListBase>>();
 
 export function navigate(name: string, params?: object) {
+  // console.log('navigation', name, params)
   navigationRef.current?.navigate(name, params);
 }

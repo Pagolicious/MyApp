@@ -13,6 +13,7 @@ import {
   Dimensions,
   Keyboard,
 } from 'react-native';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 const { height } = Dimensions.get('window');
 
@@ -123,32 +124,32 @@ const SearchableDropdown: React.FC<Props> = ({ value, onChange, options, placeho
 
 const styles = StyleSheet.create({
   input: {
-    height: 50,
-    paddingLeft: 20,
-    fontSize: 25,
+    height: verticalScale(40),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(20),
   },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingTop: 80,
-    paddingHorizontal: 20,
+    paddingTop: verticalScale(80),
+    paddingHorizontal: scale(20),
   },
   dropdownContainer: {
     backgroundColor: 'white',
     borderRadius: 10,
     maxHeight: height * 0.48,
-    padding: 10,
+    padding: moderateScale(10),
   },
   dropdown: {
-    marginTop: 10,
+    marginTop: verticalScale(10),
   },
   dropdownItem: {
-    padding: 12,
+    padding: moderateScale(12),
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
   },
 });
 

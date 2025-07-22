@@ -12,8 +12,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import PublicTabNavigator from './navigation/PublicTabNavigator';
-import GroupTabNavigator from './navigation/GroupTabNavigator';
+// import PublicTabNavigator from './navigation/PublicTabNavigator';
+import GroupTabNavigator from './navigation/TabNavigator';
 import RootStackNavigator from './navigation/RootStackNavigator';
 
 //Screens
@@ -28,7 +28,7 @@ import MyGroupScreen from './screens/MyGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import MembersHomeScreen from './screens/MembersHomeScreen';
-import RequestScreen from './screens/RequestScreen';
+// import RequestScreen from './screens/RequestScreen';
 
 import FriendScreen from './screens/Profile/FriendScreen';
 import SearchPartyScreen from './screens/Profile/SearchPartyScreen';

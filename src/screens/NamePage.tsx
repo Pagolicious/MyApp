@@ -59,7 +59,6 @@ const NamePage = () => {
         lastName: lastName,
       })
       .then(() => {
-        // navigate('PublicApp', { screen: 'FindOrStart' }
         navigate('DateOfBirthScreen')
       })
       .catch(error => {

@@ -20,7 +20,7 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
 
   const members = groupData.members || [];
 
-  const four: string = '4';
+  // const four: string = '4';
   // console.log(four);
   // Delete group
 
@@ -34,7 +34,7 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
       const updatedGroups = (userData?.groups || []).filter(
         (g: UserGroups) => g.groupId !== groupData.id
       );
-      const five: string = '5';
+      // const five: string = '5';
       // console.log(five);
       const statusSnap = await getDatabase().ref(`status/${member.uid}`).once('value');
       const isOnline = statusSnap.val()?.online;

@@ -204,7 +204,9 @@ const ChatListScreen = () => {
           })
 
         } else {
-          navigate('ChatRoomScreen', { chatId: item.id, participantsDetails: item.participantsDetails });
+          const info = getOtherParticipantInfo(item);
+
+          navigate('ChatRoomScreen', { chatId: item.id, participantsDetails: item.participantsDetails, otherFirstName: info.firstName, otherLastName: info.lastName });
         }
       }}>
       <View style={styles.avatarContainer}>
@@ -239,10 +241,6 @@ const ChatListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Chats</Text>
-      </View>
-
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
       ) : groupedChats.groupChats.length === 0 && groupedChats.directChats.length === 0 ? (
@@ -301,21 +299,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-  },
-  header: {
-    height: 65,
-    backgroundColor: "#5f4c4c",
-    padding: 15,
-    alignItems: "center",
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginRight: 20,
-  },
-  spacer: {
-    flex: 1,
   },
   titleText: {
     fontWeight: 'bold',

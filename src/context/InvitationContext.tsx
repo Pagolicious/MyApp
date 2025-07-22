@@ -186,7 +186,7 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
 
         // setCurrentGroupId(undefined);
         setTimeout(() => {
-          navigate('GroupApp', { screen: 'SelectGroupScreen' });
+          navigate('TabNav', { screen: 'SelectGroupScreen' });
         }, 100);
       }
 

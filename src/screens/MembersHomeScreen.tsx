@@ -37,7 +37,7 @@ const MembersHomeScreen = () => {
     group => group.groupId === currentGroupId && group.role === 'leader'
   );
 
-  console.log(currentGroupId)
+  // console.log(currentGroupId)
   // useOnlineStatus()
 
   useEffect(() => {
