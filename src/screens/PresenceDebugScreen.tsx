@@ -1,101 +1,211 @@
-// import React, { useEffect, useState } from 'react';
-// import { View, Text, StyleSheet, ScrollView } from 'react-native';
-// import auth from '@react-native-firebase/auth';
-// import firestore from '@react-native-firebase/firestore';
-// import database from '@react-native-firebase/database';
-
-// const PresenceDebugScreen = () => {
-//   const [firestorePresence, setFirestorePresence] = useState<any>(null);
-//   const [rtdbPresence, setRtdbPresence] = useState<any>(null);
-//   const uid = auth().currentUser?.uid;
-
-//   useEffect(() => {
-//     if (!uid) return;
-
-//     const fsUnsub = firestore()
-//       .collection('users')
-//       .doc(uid)
-//       .collection('status')
-//       .doc('presence')
-//       .onSnapshot(doc => {
-//         setFirestorePresence(doc.data());
-//       });
-
-//     const rtdbRef = database().ref(`status/${uid}`);
-//     const rtdbListener = rtdbRef.on('value', snapshot => {
-//       setRtdbPresence(snapshot.val());
-//     });
-
-//     return () => {
-//       fsUnsub();
-//       rtdbRef.off('value', rtdbListener);
-//     };
-//   }, [uid]);
-
-//   return (
-//     <ScrollView contentContainerStyle={styles.container}>
-//       <Text style={styles.title}>Presence Debug</Text>
-
-//       <Text style={styles.header}>Firestore Presence</Text>
-//       <Text>{JSON.stringify(firestorePresence, null, 2)}</Text>
-
-//       <Text style={styles.header}>Realtime DB Presence</Text>
-//       <Text>{JSON.stringify(rtdbPresence, null, 2)}</Text>
-//     </ScrollView>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: { padding: 20 },
-//   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-//   header: { fontSize: 18, fontWeight: '600', marginTop: 15 },
-// });
-
-// export default PresenceDebugScreen;
-
 import React, { useState } from 'react';
-import { View, Text, Button, SafeAreaView } from 'react-native';
-import database from '@react-native-firebase/database';
-import { firebase } from '@react-native-firebase/database';
+import {
+  View,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Dimensions,
+  SafeAreaView,
+} from 'react-native';
+import MapView, { Marker, Region } from 'react-native-maps';
+import { GOOGLE_API_KEY } from '@env';
 
-const PresenceDebugScreen = () => {
-  const [kingValue, setKingValue] = useState<number | null>(null);
+interface AutocompleteSuggestion {
+  placeId: string;
+  description: string;
+}
 
-  const readKingValue = async () => {
-    console.log('Reading /king...');
+interface PlaceDetails {
+  geometry: {
+    location: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  name: string;
+  formatted_address: string;
+}
+
+const SearchLocation: React.FC = () => {
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
+  const [selected, setSelected] = useState<PlaceDetails | null>(null);
+
+  const handleChange = async (text: string) => {
+    setQuery(text);
+    if (text.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
     try {
-      const db = firebase
-        .app()
-        .database('https://react-native-myapp-29737-default-rtdb.europe-west1.firebasedatabase.app');
+      const response = await fetch(
+        `https://places.googleapis.com/v1/places:autocomplete?key=${GOOGLE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: text,
+            includedRegionCodes: ['SE'],
+            // regionCode: "SE"
+            languageCode: 'sv',
+          }),
+        }
+      );
 
-      // const snap = await db.ref('/king').once('value');
+      const json = await response.json();
+      console.log('🔍 Autocomplete Response:', JSON.stringify(json, null, 2));
 
-      const snapshot = await db.ref('/king').once('value');
-      const value = snapshot.val();
-      console.log('🔥 Fetched King Value:', value);
-      setKingValue(value);
+      if (json.suggestions) {
+        const formatted = json.suggestions.map((s: any) => ({
+          placeId: s.placePrediction.placeId,
+          description: `${s.placePrediction.structuredFormat.mainText.text}, ${s.placePrediction.structuredFormat.secondaryText.text}`,
+        }));
+        setSuggestions(formatted);
+      } else {
+        setSuggestions([]);
+      }
+
     } catch (error) {
-      console.error('❌ Failed to read /king:', error);
+      console.error('Autocomplete fetch error:', error);
     }
   };
 
 
-  return (
-    <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Button title="Load King" onPress={() => {
-        console.log('Button Pressed 🧠');
-        readKingValue();
-      }} />
+  const selectPlace = async (placeId: string) => {
+    setSuggestions([]);
+    setQuery('');
 
-      {kingValue !== null ? (
-        <Text style={{ marginTop: 20, fontSize: 18 }}>👑 King Value: {kingValue}</Text>
-      ) : (
-        <Text style={{ marginTop: 20 }}>No King value loaded yet.</Text>
-      )}
+    try {
+      const response = await fetch(
+        `https://places.googleapis.com/v1/places/${placeId}?key=${GOOGLE_API_KEY}&languageCode=sv`
+      );
+      const json = await response.json();
+
+      const lat = json.geometry.location.lat;
+      const lng = json.geometry.location.lng;
+
+      setSelected({
+        geometry: {
+          location: {
+            latitude: lat,
+            longitude: lng,
+          },
+        },
+        name: json.displayName?.text || json.name,
+        formatted_address: json.formattedAddress,
+      });
+    } catch (error) {
+      console.error('Place details error:', error);
+    }
+  };
+
+  const defaultRegion: Region = {
+    latitude: 59.3293,
+    longitude: 18.0686,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          placeholder="Search in Sweden..."
+          value={query}
+          onChangeText={handleChange}
+          autoCorrect={false}
+        />
+
+        {suggestions.length > 0 && (
+          <FlatList
+            data={suggestions}
+            keyExtractor={(item) => item.placeId}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => selectPlace(item.placeId)}
+                style={styles.suggestionItem}
+              >
+                <Text>{item.description}</Text>
+              </TouchableOpacity>
+            )}
+            style={styles.suggestionsList}
+            keyboardShouldPersistTaps="handled"
+          />
+        )}
+      </View>
+
+
+
+      {selected?.geometry?.location?.latitude &&
+        selected?.geometry?.location?.longitude && (
+          <MapView
+            style={styles.map}
+            region={{
+              latitude: selected.geometry.location.latitude,
+              longitude: selected.geometry.location.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            <Marker
+              coordinate={selected.geometry.location}
+              title={selected.name}
+              description={selected.formatted_address}
+            />
+          </MapView>
+        )}
+
     </SafeAreaView>
   );
 };
 
+const screen = Dimensions.get('window');
 
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  inputWrapper: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    zIndex: 10,
+  },
 
-export default PresenceDebugScreen;
+  input: {
+    height: 50,
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    elevation: 3,
+  },
+
+  suggestionsList: {
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    maxHeight: 200,
+    elevation: 3,
+  },
+
+  suggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  // item: {
+  //   padding: 12,
+  //   backgroundColor: '#fafafa',
+  //   borderBottomWidth: 1,
+  //   borderColor: '#eee',
+  //   zIndex: 1,
+  // },
+  map: {
+    width: screen.width,
+    height: screen.height,
+  },
+});
+
+export default SearchLocation;

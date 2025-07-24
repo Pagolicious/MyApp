@@ -71,6 +71,8 @@ const SignUpScreen = ({ navigation }: NameProps) => {
         isOnline: false,
         isPartyLeader: false,
         isPartyMember: false,
+        isDisplayAge: true,
+        isDisplayFullName: true,
         // isGroupLeader: false,
         // isGroupMember: false,
         groupId: '',

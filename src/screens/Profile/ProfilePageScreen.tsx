@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, ScrollView, } from 'react-native';
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { PieChart } from 'react-native-chart-kit';
 
@@ -7,6 +7,7 @@ import { PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
+import { navigate } from '../../services/NavigationService';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -31,6 +32,8 @@ import { User } from '../../types/userTypes';
 //Utils
 import { getSportIconConfig } from '../../utils/sportIconConfig';
 
+//Icons
+import Icon from 'react-native-vector-icons/Feather';
 
 
 const ProfilePageScreen = () => {
@@ -51,6 +54,10 @@ const ProfilePageScreen = () => {
   // };
 
 
+
+
+
+
   const fetchUser = async () => {
     if (!finalUserId) return;
 
@@ -68,7 +75,25 @@ const ProfilePageScreen = () => {
   }, [finalUserId]);
 
 
+  useLayoutEffect(() => {
+    // if (!profileUserData || !currentUser) return;
 
+    const isOwnProfile = userId === currentUser?.uid;
+
+    navigation.setOptions({
+      headerRight: () =>
+        isOwnProfile ? (
+          <View style={{ marginRight: 15 }}>
+            <Icon
+              name="edit"
+              size={22}
+              color="white"
+              onPress={() => navigate('EditProfileScreen')}
+            />
+          </View>
+        ) : null,
+    });
+  }, [navigation, currentUser]);
   // useEffect(() => {
   //   scrollToMiddle();
   // }, []);
@@ -203,16 +228,28 @@ const ProfilePageScreen = () => {
           />
         </View>
         <View style={styles.userInformation}>
-          <Text style={styles.profileNameText}>{profileUserData?.firstName} {profileUserData?.lastName}</Text>
-          <Text style={styles.profileAgeLocationText}>
-            {profileUserData?.dateOfBirth
-              ? `${calculateAge(new Date(profileUserData.dateOfBirth.toDate()))} years old, Göteborg`
-              : 'Göteborg'}
+
+          <Text style={styles.profileNameText}>
+            {profileUserData?.isDisplayFullName
+              ? `${profileUserData?.firstName} ${profileUserData?.lastName}`
+              : `${profileUserData?.firstName}.${profileUserData?.lastName?.charAt(0) ?? ''}`}
           </Text>
+          <Text style={styles.profileAgeLocationText}>
+            {profileUserData?.isDisplayAge && profileUserData?.dateOfBirth
+              ? `${calculateAge(new Date(profileUserData.dateOfBirth.toDate()))} years old`
+              : ''}
+
+            {profileUserData?.city
+              ? `${profileUserData?.isDisplayAge ? ', ' : ''}${profileUserData.city}`
+              : ''}
+          </Text>
+
+
+
         </View>
         <View style={styles.bioContainer}>
           <Text style={styles.bioText}>
-            Just moved to Gothenburg and love playing all kinds of sports — especially football, badminton, and tennis.
+            {profileUserData?.bio}
           </Text>
         </View>
 

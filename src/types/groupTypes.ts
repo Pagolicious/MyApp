@@ -24,7 +24,14 @@ export interface Group {
   id: string;
   activity: string;
   title?: string;
-  location: string;
+  location: {
+    name: string;
+    address: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
   fromDate: string;
   fromTime: string;
   toTime: string;

@@ -70,7 +70,7 @@ const ProfileButtons = () => {
                 <Text style={styles.profileBtnText}>Settings</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigate("PresenceDebugScreen")}>
+            <TouchableOpacity onPress={() => navigate("LocationSearchScreen")}>
               <View style={[styles.btnBorder, styles.row]}>
                 <Icon1 name="perm-device-information" size={30} color="black" />
                 <Text style={styles.profileBtnText}>About App</Text>

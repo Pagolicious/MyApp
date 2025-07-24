@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import messaging from '@react-native-firebase/messaging';
 import inAppMessaging from '@react-native-firebase/in-app-messaging';
 import Toast from 'react-native-toast-message';
+import 'react-native-get-random-values';
 
 // import { NewAppScreen } from '@react-native/new-app-screen';
 // import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
@@ -101,9 +102,15 @@ import useOnlineStatus from './hooks/useOnlineStatus';
 //   <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 //   <NewAppScreen templateFileName="App.tsx" />
 // </View>
+import { GOOGLE_API_KEY } from '@env';
 
+// import GooglePlacesSDK from 'react-native-google-places-sdk';
 
 function App(): React.JSX.Element {
+
+
+  // const GOOGLE_PLACES_API_KEY = "YOUR_API_KEY";
+  // GooglePlacesSDK.initialize(GOOGLE_API_KEY);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

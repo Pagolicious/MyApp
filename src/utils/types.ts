@@ -68,7 +68,12 @@ export type RootStackParamList = {
   DateOfBirthScreen: undefined;
   FindOrStart: undefined;
   FindGroup: undefined;
-  StartGroup: { isEdit?: boolean };
+  StartGroup: {
+    isEdit?: boolean;
+    location?: string;
+    activity?: string;
+    title?: string;
+  };
   GroupsScreen: {
     activity: string;
     date?: string;
@@ -92,6 +97,10 @@ export type RootStackParamList = {
   ProfilePageScreen: { userId: string };
   LabelScreen: { friend: Friend };
   EditProfileScreen: undefined;
+  LocationSearchScreen: {
+    previousActivity: string;
+    previousTitle: string
+  };
   PresenceDebugScreen: undefined;
 
 

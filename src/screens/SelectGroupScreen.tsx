@@ -243,7 +243,7 @@ const SelectGroupScreen = () => {
                   <View style={styles.groupInfo}>
                     <View style={styles.contentRow}>
                       <Icon3 name="location-on" size={25} color="black" />
-                      <Text style={styles.locationText}>{fullGroups[group.groupId]?.location}, adress...</Text>
+                      <Text style={styles.locationText}>{fullGroups[group.groupId]?.location.name}, {fullGroups[group.groupId]?.location.address}</Text>
                     </View>
                     <View style={styles.contentRow}>
                       <View style={styles.clockIconContainer}>

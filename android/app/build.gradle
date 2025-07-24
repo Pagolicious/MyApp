@@ -91,6 +91,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [GOOGLE_API_KEY: GOOGLE_API_KEY]
+
+
+
+
     }
     signingConfigs {
         debug {
@@ -122,6 +127,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.firebase:firebase-database:20.3.0'
     apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+    implementation project(':react-native-maps')
+    // implementation project(':react-native-google-places-sdk')
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

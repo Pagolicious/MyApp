@@ -25,9 +25,12 @@ export interface User {
   fcmToken?: string;
   isPartyLeader: boolean; // Probably need to be removed after
   isPartyMember: boolean; // Probably need to be removed after
-  // isGroupLeader: boolean;
-  // isGroupMember: boolean;
-  selectedGroupId: string;   // Need to be removed after
+  isDisplayFullName: boolean;
+  isDisplayAge: boolean;
+  city: string;
+  bio: string;
+  languages: string;
+  // selectedGroupId: string;   // Need to be removed after
   groups: UserGroups[];
   skills: Skills[];
   friends?: Friend[];

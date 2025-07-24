@@ -164,7 +164,7 @@ const FindGroup = () => {
           {
             borderBottomColor: useDateFilter ? '#ddd' : '#fff' // ✅ Dynamic color
           },
-          !useDateFilter && { backgroundColor: '#d3d3d3' }
+          !useDateFilter && { backgroundColor: '#e0e0e0' }
         ]}>
           <View style={styles.row}>
             <View style={styles.dateContainer}>
@@ -197,7 +197,7 @@ const FindGroup = () => {
           {
             borderBottomColor: useTimeFilter ? '#ddd' : '#fff' // ✅ Dynamic color
           },
-          !useTimeFilter && { backgroundColor: '#d3d3d3' }
+          !useTimeFilter && { backgroundColor: '#e0e0e0' }
         ]}>
           <View style={styles.row}>
             <View style={styles.timeContainer}>
@@ -231,7 +231,7 @@ const FindGroup = () => {
           {
             borderBottomColor: useMemberFilter ? '#ddd' : '#fff' // ✅ Dynamic color
           },
-          !useMemberFilter && { backgroundColor: '#d3d3d3' }
+          !useMemberFilter && { backgroundColor: '#e0e0e0' }
         ]}>
 
           <View style={styles.row}>
@@ -259,7 +259,7 @@ const FindGroup = () => {
           </View>
         </View>
         <View style={[styles.bottomBodyContainer,
-        !useSkillLevelFilter && { backgroundColor: '#d3d3d3' }
+        !useSkillLevelFilter && { backgroundColor: '#e0e0e0' }
         ]}>
           <View style={styles.row}>
             <View style={styles.skillLevelContainer}>

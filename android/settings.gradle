@@ -6,3 +6,6 @@ rootProject.name = 'myApp'
 
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// include ':react-native-google-places-sdk'
+// project(':react-native-google-places-sdk').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-google-places-sdk/android')

@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     textAlign: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: '#C41E3A', // or any accent color
+    borderBottomColor: '#C41E3A',
     paddingBottom: 5,
     fontWeight: 'bold'
   },

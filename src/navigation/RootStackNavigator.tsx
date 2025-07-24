@@ -32,6 +32,8 @@ import FriendRequestScreen from '../screens/Profile/FriendRequestScreen';
 import ChatRoomScreen from '../screens/ChatRoomScreen'
 import LabelScreen from '../screens/Profile/LabelScreen'
 import EditProfileScreen from '../screens/settings/EditProfileScreen'
+import LocationSearchScreen from '../screens/LocationSearchScreen'
+
 
 import PresenceDebugScreen from '../screens/PresenceDebugScreen';
 
@@ -105,6 +107,7 @@ const RootStackNavigator = () => {
       <Stack.Screen
         name="StartGroup"
         component={StartGroup}
+
         options={({ route }) => ({
           title: route?.params?.isEdit ? 'Edit Group' : 'Create a Group'
         })}
@@ -164,18 +167,18 @@ const RootStackNavigator = () => {
         component={ProfilePageScreen}
         options={({ navigation }) => ({
           title: 'Profile',
-          headerRight: () => (
-            <View style={styles.iconContainer}>
-              <Icon
-                name="edit"
-                size={22}
-                color="white"
-                style={{ marginRight: 15 }}
-                onPress={() => navigation.navigate('EditProfileScreen')}
-              />
-            </View>
+          // headerRight: () => (
+          //   <View style={styles.iconContainer}>
+          //     <Icon
+          //       name="edit"
+          //       size={22}
+          //       color="white"
+          //       style={{ marginRight: 15 }}
+          //       onPress={() => navigation.navigate('EditProfileScreen')}
+          //     />
+          //   </View>
 
-          ),
+          // ),
         })} />
       <Stack.Screen
         name="LabelScreen"
@@ -186,6 +189,11 @@ const RootStackNavigator = () => {
         name="EditProfileScreen"
         component={EditProfileScreen}
         options={{ title: 'Edit Profile' }}
+      />
+      <Stack.Screen
+        name="LocationSearchScreen"
+        component={LocationSearchScreen}
+        options={{ title: 'Search Location' }}
       />
       <Stack.Screen name="AboutAppScreen" component={AboutAppScreen} />
       <Stack.Screen name="PresenceDebugScreen" component={PresenceDebugScreen} />

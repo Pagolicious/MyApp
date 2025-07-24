@@ -14,7 +14,7 @@ import {
   Modal,
   Pressable
 } from 'react-native';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -25,7 +25,11 @@ import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import { Animated } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { RouteProp, useRoute } from '@react-navigation/native';
-
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { GOOGLE_API_KEY } from '@env';
+import { useFocusEffect } from '@react-navigation/native';
+// import { Keyboard } from 'react-native';
 
 //Navigation
 import { RootStackParamList } from '../utils/types';
@@ -36,7 +40,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MyButton from '../components/MyButton';
 import SearchableDropdown from '../components/SearchableDropdown';
 import MoreOptionsModal from '../components/MoreOptionModal';
-
 //Assets
 import sportsList from "../assets/JsonFiles/sportsList.json"
 
@@ -55,8 +58,20 @@ import Icon1 from 'react-native-vector-icons/AntDesign';
 
 //Types
 import { GroupUpdate, Member } from '../types/groupTypes';
+import { LocationParam } from '../types/apiTypes';
 
 type StartGroupRouteProp = RouteProp<RootStackParamList, 'StartGroup'>;
+
+
+// const route = useRoute<StartGroupRouteProp>();
+// const { isEdit = false, location: routeLocation = '' } = route.params || {};
+
+// 🔒 Safe cast
+// const [location, setLocation] = useState(
+//   typeof routeLocation === 'string'
+//     ? routeLocation
+//     : (routeLocation as LocationParam)?.address || ''
+// );
 
 
 const StartGroup = () => {
@@ -64,12 +79,17 @@ const StartGroup = () => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const route = useRoute<StartGroupRouteProp>();
-  const { isEdit = false } = route.params || {};
+  const { isEdit = false, location: routeLocation = '' } = route.params || {};
 
   const { currentUser, userData } = useAuth();
 
   const [activity, setActivity] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState<LocationParam | null>(
+    typeof routeLocation === 'object' && routeLocation !== null
+      ? routeLocation as LocationParam
+      : null
+  );
+
   const [title, setTitle] = useState('');
   const [fromDate, setFromDate] = useState(new Date());
   const [showFromDatepicker, setShowFromDatepicker] = useState(false);
@@ -120,6 +140,23 @@ const StartGroup = () => {
   );
 
 
+
+  useFocusEffect(
+    useCallback(() => {
+      Keyboard.dismiss();
+    }, [])
+  );
+
+  useEffect(() => {
+    if (route.params?.activity) {
+      setActivity(route.params.activity);
+    }
+    if (route.params?.title) {
+      setTitle(route.params.title);
+    }
+  }, [route.params?.activity, route.params?.title]);
+
+
   const handleModalClose = () => {
     Animated.timing(modalAnimation, {
       toValue: 0,
@@ -140,6 +177,7 @@ const StartGroup = () => {
   };
 
   useEffect(() => {
+
     if (skillModalVisible) {
       Animated.spring(modalAnimation, {
         toValue: 0,
@@ -215,6 +253,11 @@ const StartGroup = () => {
         text2: 'You already have 3 groups, which is the maximum allowed.',
       });
 
+    }
+
+    if (!location) {
+      Alert.alert("Missing Location", "Please select a location.");
+      return;
     }
 
     const groupId = firestore().collection('groups').doc().id;
@@ -378,6 +421,11 @@ const StartGroup = () => {
   const editGroup = async () => {
     if (!currentUser) return
     if (!currentGroupId) return
+
+    if (!location) {
+      Alert.alert("Missing Location", "Please select a location.");
+      return;
+    }
 
     try {
       const updateData: GroupUpdate = {
@@ -545,121 +593,144 @@ const StartGroup = () => {
 
 
 
+  // const contentBottomPadding = isKeyboardVisible ? 40 : 100; // Tune this value
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: verticalScale(80) }}
-        nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.bodyContainer}>
-          <Text style={styles.bodyLabel}>Activity</Text>
-          <SearchableDropdown
-            value={activity}
-            onChange={onActivityChange}
-            options={sportsList.filter(sport => sport.toLowerCase() !== 'any' && sport.toLowerCase() !== 'sports')}
-            placeholder="Search for a sport..."
-          />
-        </View>
-        {activity === "Custom" && (
-          <View style={styles.bodyContainer}>
-            <Text style={styles.bodyLabel}>Title</Text>
+    // <KeyboardAvoidingView
+    //   style={styles.container}
+    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
+    //   keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
 
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
+    // >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+
+        {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+        {/* <KeyboardAwareScrollView
+          contentContainerStyle={[styles.content, { minHeight: '100%' }]}
+          enableOnAndroid
+          extraScrollHeight={20}
+          enableAutomaticScroll={true}
+          keyboardShouldPersistTaps="handled"
+        > */}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* <View style={styles.content}> */}
+          <View style={styles.bodyContainer}>
+            <Text style={styles.bodyLabel}>Activity</Text>
+            <SearchableDropdown
+              value={activity}
+              onChange={onActivityChange}
+              options={sportsList.filter(sport => sport.toLowerCase() !== 'any' && sport.toLowerCase() !== 'sports')}
+              placeholder="Search for a sport..."
             />
           </View>
-        )}
-        <View style={styles.bodyContainer}>
-          <Text style={styles.bodyLabel}>Location</Text>
+          {activity === "Custom" && (
+            <View style={styles.bodyContainer}>
+              <Text style={styles.bodyLabel}>Title</Text>
 
-          <TextInput
-            style={styles.input}
-            value={location}
-            onChangeText={setLocation}
-          />
-        </View>
-        <View style={styles.bodyContainer}>
-          <View style={styles.row}>
-            {/* "From" Section */}
-            <View style={styles.dateContainer}>
-              <Text style={styles.bodyLabel}>From</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowFromDatepicker(true)}>
-                <Text style={styles.dateTimeText}>{formatDate(fromDate)}</Text>
-              </TouchableOpacity>
-              {showFromDatepicker && (
-                <DateTimePicker
-                  value={fromDate}
-                  mode="date"
-                  display="default"
-                  onChange={onChangeFromDate}
-                />
-              )}
+              <TextInput
+                style={styles.input}
+                value={title}
+                onChangeText={setTitle}
+              />
             </View>
-            <View style={styles.timeContainer}>
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={() => setShowFromTimepicker(true)}>
-                <Text style={styles.dateTimeText}>{formatTime(fromTime)}</Text>
-              </TouchableOpacity>
-              {showFromTimepicker && (
-                <DateTimePicker
-                  value={fromTime}
-                  mode="time"
-                  is24Hour={true}
-                  display="default"
-                  onChange={onChangeFromTime}
-                />
-              )}
+          )}
+          <View style={styles.bodyContainer}>
+            <Text style={styles.bodyLabel}>Location</Text>
+            <TouchableOpacity
+              style={styles.fakeInput}
+              onPress={() => navigate('LocationSearchScreen', {
+                previousActivity: activity, previousTitle: title
+              })}
+            >
+              <Text style={location ? styles.inputText : styles.placeholder}>
+                {typeof location === 'string'
+                  ? location
+                  : location?.name || 'Select a location'}
+              </Text>
+
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.bodyContainer}>
+            <View style={styles.row}>
+              {/* "From" Section */}
+              <View style={styles.dateContainer}>
+                <Text style={styles.bodyLabel}>From</Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowFromDatepicker(true)}>
+                  <Text style={styles.dateTimeText}>{formatDate(fromDate)}</Text>
+                </TouchableOpacity>
+                {showFromDatepicker && (
+                  <DateTimePicker
+                    value={fromDate}
+                    mode="date"
+                    display="default"
+                    onChange={onChangeFromDate}
+                  />
+                )}
+              </View>
+              <View style={styles.timeContainer}>
+                <TouchableOpacity
+                  style={styles.timeButton}
+                  onPress={() => setShowFromTimepicker(true)}>
+                  <Text style={styles.dateTimeText}>{formatTime(fromTime)}</Text>
+                </TouchableOpacity>
+                {showFromTimepicker && (
+                  <DateTimePicker
+                    value={fromTime}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={onChangeFromTime}
+                  />
+                )}
+              </View>
             </View>
           </View>
-        </View>
-        <View style={styles.bodyContainer}>
-          <View style={styles.row}>
-            {/* "To" Section */}
-            <View style={styles.dateContainer}>
-              <Text style={styles.bodyLabel}>To</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowToDatepicker(true)}>
-                <Text style={styles.dateTimeText}>{formatDate(toDate)}</Text>
-              </TouchableOpacity>
-              {showToDatepicker && (
-                <DateTimePicker
-                  value={toDate}
-                  mode="date"
-                  display="default"
-                  onChange={onChangeToDate}
-                />
-              )}
-            </View>
-            <View style={styles.timeContainer}>
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={() => setShowToTimepicker(true)}>
-                <Text style={styles.dateTimeText}>{formatTime(toTime)}</Text>
-              </TouchableOpacity>
-              {showToTimepicker && (
-                <DateTimePicker
-                  value={toTime}
-                  mode="time"
-                  is24Hour={true}
-                  display="default"
-                  onChange={onChangeToTime}
-                />
-              )}
+          <View style={styles.bodyContainer}>
+            <View style={styles.row}>
+              {/* "To" Section */}
+              <View style={styles.dateContainer}>
+                <Text style={styles.bodyLabel}>To</Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowToDatepicker(true)}>
+                  <Text style={styles.dateTimeText}>{formatDate(toDate)}</Text>
+                </TouchableOpacity>
+                {showToDatepicker && (
+                  <DateTimePicker
+                    value={toDate}
+                    mode="date"
+                    display="default"
+                    onChange={onChangeToDate}
+                  />
+                )}
+              </View>
+              <View style={styles.timeContainer}>
+                <TouchableOpacity
+                  style={styles.timeButton}
+                  onPress={() => setShowToTimepicker(true)}>
+                  <Text style={styles.dateTimeText}>{formatTime(toTime)}</Text>
+                </TouchableOpacity>
+                {showToTimepicker && (
+                  <DateTimePicker
+                    value={toTime}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={onChangeToTime}
+                  />
+                )}
+              </View>
             </View>
           </View>
-        </View>
-        {/* {activity !== "Custom" && (
+          {/* {activity !== "Custom" && (
           <View style={styles.bodyContainer}>
             <View style={styles.bodySkillTitle}>
               <Text style={styles.bodyLabel}>Skill Level</Text>
@@ -683,37 +754,40 @@ const StartGroup = () => {
             </View>
           </View>
         )} */}
-
-        <View style={styles.bodyContainer}>
-          <View style={styles.row}>
-            <Text style={styles.bodyLabel}>Set Member Limit</Text>
-            <View style={styles.stepperContainer}>
-              <TouchableOpacity style={styles.stepperButton} onPress={decrement}>
-                <Text style={styles.stepperButtonText}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.memberLimitValue}>{memberLimit}</Text>
-              <TouchableOpacity style={styles.stepperButton} onPress={increment}>
-                <Text style={styles.stepperButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-
+          <View style={styles.bodyContainer}>
+            <Text style={styles.bodyLabel}>Details</Text>
+            <TextInput
+              style={styles.areaInput}
+              multiline={true}
+              numberOfLines={3}
+              placeholder="More details about your group (optional)"
+              placeholderTextColor="gray"
+              value={details}
+              onChangeText={setDetails}
+            />
           </View>
-        </View>
+          <View style={styles.bodyContainer}>
+            <View style={styles.row}>
+              <Text style={styles.bodyLabel}>Set Member Limit</Text>
+              <View style={styles.stepperContainer}>
+                <TouchableOpacity style={styles.stepperButton} onPress={decrement}>
+                  <Text style={styles.stepperButtonText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.memberLimitValue}>{memberLimit}</Text>
+                <TouchableOpacity style={styles.stepperButton} onPress={increment}>
+                  <Text style={styles.stepperButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
 
-        <View style={styles.bodyContainer}>
-          <Text style={styles.bodyLabel}>Details</Text>
-          <TextInput
-            style={styles.areaInput}
-            multiline={true}
-            numberOfLines={3}
-            placeholder="More details about your group (optional)"
-            placeholderTextColor="gray"
-            value={details}
-            onChangeText={setDetails}
-          />
-        </View>
-      </ScrollView>
-      {!isKeyboardVisible && (
+            </View>
+          </View>
+
+
+        </ScrollView>
+        {/* </View> */}
+        {/* </KeyboardAwareScrollView> */}
+
+        {/* {!isKeyboardVisible && ( */}
         <View style={styles.footerContainer}>
           <TouchableOpacity style={styles.moreOptionBtn} onPress={() => setMoreModalVisible(true)}>
             <Text style={styles.moreOptionText}>More</Text>
@@ -722,7 +796,9 @@ const StartGroup = () => {
           {!isEdit ? (
             <TouchableOpacity style={styles.startGroupBtn} onPress={() => {
               // const level = getMatchedSkillLevel(activity);
-              if (!activity.trim() || !location.trim()) {
+              if (
+                !activity || !location
+              ) {
                 Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
                 return;
               } else if (activity === 'Custom' || skillLevel !== null || isIgnoreSkillLevel) {
@@ -739,7 +815,9 @@ const StartGroup = () => {
           ) : (
             <TouchableOpacity style={styles.startGroupBtn} onPress={() => {
               // const level = getMatchedSkillLevel(activity);
-              if (!activity.trim() || !location.trim()) {
+              if (
+                !activity || !location
+              ) {
                 Alert.alert("Missing Fields", "Please fill in both activity and location before creating a group.");
                 return;
               } else {
@@ -758,98 +836,99 @@ const StartGroup = () => {
             </TouchableOpacity>
           )}
         </View>
-      )}
-      <MoreOptionsModal
-        visible={moreModalVisible}
-        onClose={() => setMoreModalVisible(false)}
-        selectedGender={selectedGender}
-        setSelectedGender={setSelectedGender}
-        selectedVisibility={selectedVisibility}
-        setSelectedVisibility={setSelectedVisibility}
-        minAge={minAge}
-        maxAge={maxAge}
-        setMinAge={setMinAge}
-        setMaxAge={setMaxAge}
-        isIgnoreSkillLevel={isIgnoreSkillLevel}
-        setIsIgnoreSkillLevel={setIsIgnoreSkillLevel}
-        isFriendsOnly={isFriendsOnly}
-        setIsFriendsOnly={setIsFriendsOnly}
-        isAutoAccept={isAutoAccept}
-        setIsAutoAccept={setIsAutoAccept}
-        isVerifiedOnly={isVerifiedOnly}
-        setIsVerifiedOnly={setIsVerifiedOnly}
-        activity={activity}
-      />
-      <Modal
-        animationType="fade"
-        transparent
-        visible={skillModalVisible}
-        onRequestClose={handleModalClose}
-      >
-        <TouchableWithoutFeedback onPress={handleModalClose}>
-          <View style={styles.modalOverlay}>
-            {/* Block closing when clicking inside modal */}
-            <TouchableWithoutFeedback onPress={() => { }}>
-              {/* <Animated.View style={[styles.modalView, animatedModalStyle]}> */}
-              <View style={styles.modalView}>
 
-                <TouchableOpacity
-                  style={styles.closeIcon}
-                  onPress={handleModalClose}
-                >
-                  <Text style={styles.closeText}>✖</Text>
-                </TouchableOpacity>
+        {/* )} */}
+        <MoreOptionsModal
+          visible={moreModalVisible}
+          onClose={() => setMoreModalVisible(false)}
+          selectedGender={selectedGender}
+          setSelectedGender={setSelectedGender}
+          selectedVisibility={selectedVisibility}
+          setSelectedVisibility={setSelectedVisibility}
+          minAge={minAge}
+          maxAge={maxAge}
+          setMinAge={setMinAge}
+          setMaxAge={setMaxAge}
+          isIgnoreSkillLevel={isIgnoreSkillLevel}
+          setIsIgnoreSkillLevel={setIsIgnoreSkillLevel}
+          isFriendsOnly={isFriendsOnly}
+          setIsFriendsOnly={setIsFriendsOnly}
+          isAutoAccept={isAutoAccept}
+          setIsAutoAccept={setIsAutoAccept}
+          isVerifiedOnly={isVerifiedOnly}
+          setIsVerifiedOnly={setIsVerifiedOnly}
+          activity={activity}
+        />
+        <Modal
+          animationType="fade"
+          transparent
+          visible={skillModalVisible}
+          onRequestClose={handleModalClose}
+        >
+          <TouchableWithoutFeedback onPress={handleModalClose}>
+            <View style={styles.modalOverlay}>
+              {/* Block closing when clicking inside modal */}
+              <TouchableWithoutFeedback onPress={() => { }}>
+                {/* <Animated.View style={[styles.modalView, animatedModalStyle]}> */}
+                <View style={styles.modalView}>
 
-                <Text style={styles.modalTitleText}>Set a skill level</Text>
+                  <TouchableOpacity
+                    style={styles.closeIcon}
+                    onPress={handleModalClose}
+                  >
+                    <Text style={styles.closeText}>✖</Text>
+                  </TouchableOpacity>
 
-                <View style={styles.setLevelContainer}>
-                  <Text style={styles.modalText}>
-                    Before creating your group, let us know your skill level for this activity. This helps us match you with others at a similar level.
-                  </Text>
+                  <Text style={styles.modalTitleText}>Set a skill level</Text>
 
-                  <StarRating
-                    rating={skillLevel ?? 0}
-                    onChange={(newRating) => {
-                      setSkillLevel(newRating);
-                      if (newRating > 0) {
-                        Animated.spring(modalAnimation, {
-                          toValue: 1,
-                          stiffness: 120,
-                          damping: 14,
-                          mass: 1,
-                          useNativeDriver: false,
-                        }).start();
-                      }
-                    }}
-                    enableHalfStar={false}
-                  />
+                  <View style={styles.setLevelContainer}>
+                    <Text style={styles.modalText}>
+                      Before creating your group, let us know your skill level for this activity. This helps us match you with others at a similar level.
+                    </Text>
 
-                  <Text style={styles.modalObervationText}>
-                    You can NOT change your skill level later
-                  </Text>
+                    <StarRating
+                      rating={skillLevel ?? 0}
+                      onChange={(newRating) => {
+                        setSkillLevel(newRating);
+                        if (newRating > 0) {
+                          Animated.spring(modalAnimation, {
+                            toValue: 1,
+                            stiffness: 120,
+                            damping: 14,
+                            mass: 1,
+                            useNativeDriver: false,
+                          }).start();
+                        }
+                      }}
+                      enableHalfStar={false}
+                    />
 
-                  {skillLevel !== null && skillLevel > 0 && (
-                    <Animated.View style={animatedStyle}>
-                      <TouchableOpacity
-                        style={styles.submitBtnModal}
-                        onPress={async () => {
-                          await addSkillLevel()
-                          setSkillModalVisible(false)
-                        }}>
-                        <Text style={styles.submitBtnText}>Submit</Text>
-                      </TouchableOpacity>
-                    </Animated.View>
-                  )}
+                    <Text style={styles.modalObervationText}>
+                      You can NOT change your skill level later
+                    </Text>
+
+                    {skillLevel !== null && skillLevel > 0 && (
+                      <Animated.View style={animatedStyle}>
+                        <TouchableOpacity
+                          style={styles.submitBtnModal}
+                          onPress={async () => {
+                            await addSkillLevel()
+                            setSkillModalVisible(false)
+                          }}>
+                          <Text style={styles.submitBtnText}>Submit</Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    )}
+                  </View>
                 </View>
-              </View>
 
-              {/* </Animated.View> */}
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-    </KeyboardAvoidingView>
+                {/* </Animated.View> */}
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -857,86 +936,97 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  content: {
+    margin: moderateScale(20),
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    // marginBottom: verticalScale(60),
+    // overflow: 'hidden',
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+
+    // Android shadow
+    elevation: 3,
+    // flexGrow: 1
+    marginBottom: 100
+  },
   bodyContainer: {
     borderBottomWidth: 1,
-    borderColor: 'grey',
+    borderColor: '#ddd',
   },
   bodyLabel: {
     marginTop: verticalScale(15),
     paddingLeft: scale(20),
-    fontSize: moderateScale(17),
+    fontSize: moderateScale(13),
     color: 'grey',
   },
   input: {
-    height: verticalScale(50),
-    paddingLeft: scale(20),
-    fontSize: moderateScale(25),
-  },
-  areaInput: {
-    height: verticalScale(100),
+    // height: verticalScale(50),
     paddingLeft: scale(20),
     fontSize: moderateScale(20),
+  },
+  fakeInput: {
+    height: 50,
+    // borderWidth: 1,
+    borderColor: '#ccc',
+    // borderRadius: 8,
+    paddingHorizontal: scale(20),
+    justifyContent: 'center',
+    // marginTop: 8,
+    backgroundColor: '#fff',
+  },
+  inputText: {
+    fontSize: moderateScale(20),
+    color: '#000',
+  },
+  placeholder: {
+    fontSize: moderateScale(20),
+    color: '#888',
+  },
+  areaInput: {
+    height: verticalScale(80),
+    paddingLeft: scale(20),
+    fontSize: moderateScale(15),
     textAlignVertical: 'top',
   },
   activityContainer: {
-    borderBottomWidth: 1,
-    borderColor: 'grey',
+    // borderBottomWidth: 1,
+    // borderColor: 'lightgrey',
   },
   row: {
     flexDirection: 'row',
   },
+  inputWrapper: {
+    marginTop: verticalScale(10),
+    paddingHorizontal: scale(20),
+    borderWidth: 1,
+    height: 50
+  },
+
   dateContainer: {
     flex: 2,
     borderRightWidth: 1,
-    borderColor: 'grey',
+    borderColor: '#ddd',
   },
   timeContainer: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   dateButton: {
-    fontSize: moderateScale(25),
+    // fontSize: moderateScale(25),
     paddingBottom: verticalScale(10),
   },
   timeButton: {
-    fontSize: moderateScale(25),
+    // fontSize: moderateScale(25),
     paddingBottom: verticalScale(10),
   },
   dateTimeText: {
     paddingLeft: scale(20),
-    fontSize: moderateScale(25),
-    color: 'black',
-  },
-  valueContainer: {
-    position: 'absolute',
-    top: '30%',
-    padding: moderateScale(10),
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 5,
-  },
-  bodySkillTitle: {
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-    paddingRight: scale(20),
-  },
-  infoButton: {
-    backgroundColor: 'grey',
-    marginTop: verticalScale(15),
-    width: scale(30),
-    paddingVertical: verticalScale(5),
-    paddingHorizontal: scale(5),
-    alignItems: 'center',
-    borderRadius: 5,
-  },
-  infoButtonText: {
-    color: '#FFFFFF',
-    fontSize: moderateScale(16),
-    fontWeight: 'bold',
-  },
-  bodyValueTitle: {
-    marginTop: verticalScale(15),
-    paddingRight: scale(20),
-    fontSize: moderateScale(17),
+    fontSize: moderateScale(20),
     color: 'black',
   },
   sliderContainer: {
@@ -949,15 +1039,16 @@ const styles = StyleSheet.create({
     marginLeft: scale(70)
   },
   stepperButton: {
-    width: scale(30),
-    height: verticalScale(30),
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: scale(25),
+    height: verticalScale(25),
     backgroundColor: '#ccc',
-    borderRadius: 5
+    borderRadius: 5,
+    // borderWidth: 1
   },
   stepperButtonText: {
-    fontSize: moderateScale(20)
+    fontSize: moderateScale(20),
+    textAlign: 'center',
+    // borderWidth: 1
   },
   memberLimitValue: {
     fontSize: moderateScale(24),
@@ -967,11 +1058,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: moderateScale(15),
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
+    // position: 'absolute',
+    // bottom: 0,
+    // left: 0,
+    // right: 0,
+    // backgroundColor: 'transparent',
 
   },
   moreOptionBtn: {

@@ -13,6 +13,11 @@
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
 
+      <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="${GOOGLE_API_KEY}"/>
+
+
       <!-- Firebase Cloud Messaging Service -->
       <service
           android:name="com.google.firebase.messaging.FirebaseMessagingService"

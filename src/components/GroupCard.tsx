@@ -166,7 +166,7 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.cardText}>{group.activity === 'Custom' ? group.title : group.activity}</Text>
-          <Text style={styles.cardText}>{group.location}</Text>
+          <Text style={styles.cardText}>{group.location.name}</Text>
         </View>
         <View style={styles.column}>
           <Text style={styles.cardText}>
@@ -206,7 +206,7 @@ const GroupCard: React.FC<Props> = ({ group, currentUserId, onPressApply, onCanc
         >
           <View style={styles.contentRow}>
             <Icon3 name="location-on" size={25} color="black" />
-            <Text style={styles.location}>{group.location}, adress...</Text>
+            <Text style={styles.location}>{group.location.name}, {group.location.address}</Text>
             <TouchableOpacity
               onPress={() => handleMaps()}
               style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}
