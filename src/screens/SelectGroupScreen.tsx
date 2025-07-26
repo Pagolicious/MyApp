@@ -4,6 +4,7 @@ import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import LinearGradient from 'react-native-linear-gradient';
 import { Animated } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { RootStackParamList } from '../utils/types';
 
 import { navigate } from '../services/NavigationService';
 import { useNavigation } from '@react-navigation/native';
@@ -13,6 +14,8 @@ import firestore from '@react-native-firebase/firestore';
 import { Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ripple from 'react-native-material-ripple';
+import { useNavigationStore } from '../stores/navigationStore';
+import { useFocusEffect } from '@react-navigation/native';
 
 //Screens
 import FindOrStart from './FindOrStart';
@@ -61,6 +64,20 @@ const SelectGroupScreen = () => {
 
   const size = moderateScale(50);
   useOnlineStatus()
+
+
+
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     const { lastScreen, lastParams } = useNavigationStore.getState();
+
+  //     if (lastScreen && lastScreen !== 'SelectGroupScreen') {
+  //       // ✅ Type-safe navigation
+  //       navigate(lastScreen as keyof RootStackParamList, lastParams);
+  //     }
+  //   }, [])
+  // );
+
 
   useEffect(() => {
     const fetchGroupDetails = async () => {

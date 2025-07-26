@@ -1,10 +1,15 @@
-import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Switch, Platform, KeyboardAvoidingView, ImageBackground, ScrollView } from 'react-native';
-import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, PermissionsAndroid, Platform, KeyboardAvoidingView, ImageBackground, ScrollView, Keyboard } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import Tooltip, { Placement } from "react-native-tooltip-2";
+import Geolocation from 'react-native-geolocation-service';
+import type { GeoPosition } from 'react-native-geolocation-service';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useNavigationStore } from '../stores/navigationStore';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -24,11 +29,25 @@ import { navigate } from '../services/NavigationService';
 //Icons
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
+//Types
+// import { GeoPosition } from '../types/apiTypes';
+import { RootStackParamList } from '../utils/types';
+import { LocationParam } from '../types/apiTypes';
+
+type FindGroupRouteProp = RouteProp<RootStackParamList, 'FindGroup'>;
+
+const route: FindGroupRouteProp = useRoute();
 
 const FindGroup = () => {
+  const route = useRoute<FindGroupRouteProp>();
+  const routeLocation = route?.params?.location ?? '';
+
   const [activity, setActivity] = useState('Any');
-  const [Location, setLocation] = useState('Close to your location');
-  const [fromDate, setFromDate] = useState(new Date());
+  const [location, setLocation] = useState<LocationParam | null>(
+    typeof routeLocation === 'object' && routeLocation !== null
+      ? routeLocation as LocationParam
+      : null
+  ); const [fromDate, setFromDate] = useState(new Date());
   const [showFromDatepicker, setShowFromDatepicker] = useState(false);
   const [fromTime, setFromTime] = useState(() => {
     const defaultTime = new Date();
@@ -43,32 +62,97 @@ const FindGroup = () => {
   const [useSkillLevelFilter, setUseSkillLevelFilter] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
 
-  const SearchGroup = async () => {
-    try {
-      const params: { activity: string; date?: string; time?: string; groupSize?: number, ignoreSkillInSearch?: boolean } = {
-        activity: activity,
-      };
+  useFocusEffect(
+    useCallback(() => {
+      Keyboard.dismiss();
+    }, [])
+  );
 
-      if (useDateFilter) {
-        params.date = fromDate.toISOString();
-      }
-      if (useTimeFilter) {
-        params.time = fromTime.toISOString();
-      }
-      if (useMemberFilter) {
-        params.groupSize = groupSize;
-      }
-      if (useSkillLevelFilter) {
-        params.ignoreSkillInSearch = useSkillLevelFilter;
-      }
-      console.log("Search...")
-      navigate('GroupsScreen', params);
-    } catch (error) {
-      const errorMessage =
-        (error as { message?: string }).message || 'An unknown error occurred';
-      Alert.alert(errorMessage);
+
+  useEffect(() => {
+    if (route.params?.location) {
+      setLocation(route.params.location);
     }
+  }, [route.params]);
+
+
+
+
+  // const SearchGroup = async () => {
+  //   try {
+  //     const params: { activity: string; date?: string; time?: string; groupSize?: number, ignoreSkillInSearch?: boolean } = {
+  //       activity: activity,
+  //     };
+
+  //     if (useDateFilter) {
+  //       params.date = fromDate.toISOString();
+  //     }
+  //     if (useTimeFilter) {
+  //       params.time = fromTime.toISOString();
+  //     }
+  //     if (useMemberFilter) {
+  //       params.groupSize = groupSize;
+  //     }
+  //     if (useSkillLevelFilter) {
+  //       params.ignoreSkillInSearch = useSkillLevelFilter;
+  //     }
+  //     console.log("Search...")
+  //     navigate('GroupsScreen', params);
+  //   } catch (error) {
+  //     const errorMessage =
+  //       (error as { message?: string }).message || 'An unknown error occurred';
+  //     Alert.alert(errorMessage);
+  //   }
+  // };
+
+  const SearchGroup = async () => {
+    let coordinates;
+
+    if (!location || !activity) {
+      Alert.alert("Missing Fields", "Please fill in both activity and location before searching.")
+      return
+    }
+
+    if (location?.name === 'Location near you' && !location.coordinates) {
+      // Get fresh coordinates again only if not already set
+
+      const permission = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      if (permission === PermissionsAndroid.RESULTS.GRANTED) {
+        try {
+          const position = await new Promise<GeoPosition>((resolve, reject) =>
+            Geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 10000,
+            })
+          );
+          coordinates = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+        } catch (error: any) {
+          Alert.alert("Location Error", error.message || "Failed to get location.");
+          return;
+        }
+      }
+    }
+
+    const params = {
+      activity,
+      location,
+      // ...(coordinates && { coordinates }),
+      ...(useDateFilter && { date: fromDate.toISOString() }),
+      ...(useTimeFilter && { time: fromTime.toISOString() }),
+      ...(useMemberFilter && { groupSize }),
+      ...(useSkillLevelFilter && { ignoreSkillInSearch: true }),
+    };
+    navigate('GroupsScreen', params);
   };
+
+
 
   const onChangeFromDate = (
     event: DateTimePickerEvent,
@@ -153,11 +237,25 @@ const FindGroup = () => {
         <View style={[styles.bodyContainer, { borderBottomColor: '#ddd' }]}>
           <Text style={styles.bodyTitle}>Location</Text>
 
-          <TextInput
-            style={styles.input}
-            value={Location}
-            onChangeText={setLocation}
-          />
+          <TouchableOpacity
+            onPress={() => {
+              navigate('LocationSearchScreen', {
+                previousActivity: activity,
+                fromScreen: 'FindGroup'
+              });
+              // setLocation('Location near you'); // Optional: update UI immediately
+            }}
+          >
+            <TextInput
+              style={styles.input}
+              value={location?.name}
+              editable={false}
+              pointerEvents="none"
+              placeholder='Search Location...'
+              placeholderTextColor={'grey'}
+            />
+          </TouchableOpacity>
+
         </View>
         <View style={[
           styles.bodyContainer,

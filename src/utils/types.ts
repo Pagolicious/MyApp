@@ -36,6 +36,7 @@
 // };
 
 import { Friend } from "../types/userTypes";
+import { LocationParam } from "../types/apiTypes";
 
 export type MyGroupStackParamList = {
   SelectGroupScreen: undefined;
@@ -67,15 +68,19 @@ export type RootStackParamList = {
   NamePage: undefined;
   DateOfBirthScreen: undefined;
   FindOrStart: undefined;
-  FindGroup: undefined;
+  FindGroup: {
+    activity?: undefined;
+    location?: LocationParam;
+  };
   StartGroup: {
     isEdit?: boolean;
-    location?: string;
+    location?: LocationParam;
     activity?: string;
     title?: string;
   };
   GroupsScreen: {
     activity: string;
+    location: LocationParam;
     date?: string;
     time?: string;
     groupSize?: number;
@@ -98,8 +103,9 @@ export type RootStackParamList = {
   LabelScreen: { friend: Friend };
   EditProfileScreen: undefined;
   LocationSearchScreen: {
-    previousActivity: string;
-    previousTitle: string
+    previousActivity?: string;
+    previousTitle?: string;
+    fromScreen: string;
   };
   PresenceDebugScreen: undefined;
 

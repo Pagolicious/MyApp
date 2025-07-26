@@ -75,8 +75,8 @@ type StartGroupRouteProp = RouteProp<RootStackParamList, 'StartGroup'>;
 
 
 const StartGroup = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // const navigation =
+  //   useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const route = useRoute<StartGroupRouteProp>();
   const { isEdit = false, location: routeLocation = '' } = route.params || {};
@@ -644,7 +644,8 @@ const StartGroup = () => {
             <TouchableOpacity
               style={styles.fakeInput}
               onPress={() => navigate('LocationSearchScreen', {
-                previousActivity: activity, previousTitle: title
+                previousActivity: activity, previousTitle: title,
+                fromScreen: 'StartGroup'
               })}
             >
               <Text style={location ? styles.inputText : styles.placeholder}>

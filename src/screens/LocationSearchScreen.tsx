@@ -8,17 +8,22 @@ import {
   StyleSheet,
   Dimensions,
   SafeAreaView,
+  PermissionsAndroid,
+  Platform,
+  Alert
 } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { GOOGLE_API_KEY } from '@env';
 import { navigate } from '../services/NavigationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RouteProp, useRoute } from '@react-navigation/native';
-
+import Geolocation from 'react-native-geolocation-service';
+import { Linking } from 'react-native';
+import Spinner from 'react-native-loading-spinner-overlay';
 import { saveRecentSearch, getRecentSearches } from '../utils/recentSearchHelper';
 
 //Types
-import { AutocompleteSuggestion, PlaceDetails } from '../types/apiTypes';
+import { AutocompleteSuggestion, PlaceDetails, LocationParam } from '../types/apiTypes';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { RootStackParamList } from '../utils/types';
 
@@ -30,6 +35,7 @@ const SearchLocationScreeen: React.FC = () => {
   const [selected, setSelected] = useState<PlaceDetails | null>(null);
   const inputRef = useRef<TextInput>(null);
   const [recent, setRecent] = useState<AutocompleteSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
 
 
   const route = useRoute<LocationSearchRouteProp>();
@@ -148,17 +154,119 @@ const SearchLocationScreeen: React.FC = () => {
 
       // Optional: Update local state if needed
       setSelected(locationData as any);
-
-      navigate('StartGroup', {
-        location: locationData,
-        activity: route.params?.previousActivity || '',
-        title: route.params?.previousTitle || ''
-      });
+      if (route.params?.fromScreen === 'FindGroup') {
+        navigate('TabNav', {
+          screen: 'Search',
+          params: {
+            screen: 'FindGroup',
+            params: {
+              location: locationData
+            }
+          }
+        })
+      } else {
+        navigate('StartGroup', {
+          location: locationData,
+          activity: route.params?.previousActivity || '',
+          title: route.params?.previousTitle || ''
+        });
+      }
 
     } catch (error) {
       console.error('❌ selectPlace error:', error);
     }
   };
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const hasPermission = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+
+      if (hasPermission) {
+        return true;
+      }
+
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: "Location Permission",
+          message: "We need your location to find nearby groups.",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK"
+        }
+      );
+
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        return true;
+      }
+
+      // If denied
+      Alert.alert(
+        'Location Permission Needed',
+        'Location access is required to find nearby groups. Please enable it in Settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => Linking.openSettings()
+          }
+        ]
+      );
+
+      return false;
+    }
+
+    return true; // iOS assumes permission is handled in Info.plist
+  };
+
+
+
+  const handleUseCurrentLocation = async () => {
+    const granted = await requestLocationPermission();
+
+    if (!granted) {
+      Alert.alert('Permission Denied', 'Enable location permission to use this feature.');
+      return;
+    }
+
+    setLoading(true);
+
+    Geolocation.getCurrentPosition(
+      (position) => {
+        setLoading(false);
+        const locationData = {
+          name: 'Location near you',
+          address: 'Using GPS',
+          coordinates: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }
+        };
+        navigate('TabNav', {
+          screen: 'Search',
+          params: {
+            screen: 'FindGroup',
+            params: {
+              location: locationData
+            }
+          }
+        })
+      },
+      (error) => {
+        setLoading(false);
+        Alert.alert('Location Error', error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 7000,
+        maximumAge: 30000,
+      }
+    );
+
+  };
+
 
 
   const defaultRegion: Region = {
@@ -186,6 +294,13 @@ const SearchLocationScreeen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Spinner
+        visible={loading}
+        textContent="Getting your location..."
+        textStyle={{ color: '#FFF' }}
+        overlayColor="rgba(0, 0, 0, 0.5)"
+      />
+
       <View style={styles.inputWrapper}>
         <TextInput
           ref={inputRef}
@@ -219,10 +334,21 @@ const SearchLocationScreeen: React.FC = () => {
           />
         )}
       </View>
-
+      {route.params?.fromScreen === 'FindGroup' && (
+        <View style={styles.gpsLocation}>
+          <TouchableOpacity
+            style={styles.suggestionItem}
+            onPress={handleUseCurrentLocation}
+          >
+            <Text style={styles.suggestionText}>📍 Use Location near you</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.recentContainer}>
         <View style={styles.row}>
           <Text style={styles.recentHeader}>Recent Searches</Text>
+
+
           <TouchableOpacity onPress={async () => {
             await AsyncStorage.removeItem(RECENT_KEY);
             setRecent([]);
@@ -335,13 +461,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#ddd',
   },
+  gpsLocation: {
+    // borderWidth: 1,
+    marginTop: verticalScale(18),
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f6f6f6',
 
+  },
   recentContainer: {
     flex: 1,
-    marginTop: verticalScale(18),
     backgroundColor: '#f6f6f6',
-    borderTopWidth: 1,
-    borderColor: '#ddd'
   },
   row: {
     flexDirection: 'row',

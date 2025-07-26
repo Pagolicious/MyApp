@@ -69,7 +69,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [hasSkillLevel, setHasSkillLevel] = useState(false);
   const [note, setNote] = useState('');
   const { currentGroupId } = useGroupStore();
-  const { activity, date, time, groupSize, ignoreSkillInSearch } = route.params;
+  const { activity, date, time, groupSize, ignoreSkillInSearch, location } = route.params;
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [userPickedSkillLevel, setUserPickedSkillLevel] = useState(false);
   // const needsToSetSkillLevel = !hasSkillLevel && !userPickedSkillLevel && selectedGroup?.activity !== "Custom";
@@ -93,7 +93,7 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
             id: doc.id,
             activity: data.activity || '',
             title: data.title || '',
-            location: data.location || '',
+            location: data.location || null,
             fromDate: data.fromDate || '',
             fromTime: data.fromTime || '',
             memberLimit: data.memberLimit || 1,
@@ -151,6 +151,44 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
               return groupActivity !== 'custom' && groupActivity !== 'sports';
             }
             return groupActivity === activity.toLowerCase();
+          });
+        }
+
+        if (location?.name && location.name !== 'Location near you') {
+          filteredGroups = filteredGroups.filter(group =>
+            group.location?.name?.toLowerCase().includes(location.name.toLowerCase()) ||
+            group.location?.address?.toLowerCase().includes(location.name.toLowerCase())
+          );
+        }
+
+        if (location?.name === 'Location near you' && location.coordinates) {
+          const MAX_DISTANCE_KM = 30;
+
+          const toRad = (value: number) => value * Math.PI / 180;
+          const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+            const R = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+          };
+
+          filteredGroups = filteredGroups.filter(group => {
+            const loc = group.location?.coordinates;
+            if (!loc) return false;
+
+            const distance = calculateDistance(
+              location.coordinates.latitude,
+              location.coordinates.longitude,
+              loc.latitude,
+              loc.longitude
+            );
+
+            return distance <= MAX_DISTANCE_KM;
           });
         }
 

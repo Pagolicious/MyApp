@@ -45,7 +45,7 @@ const MyGroupStack = () => {
   return (
     <View style={{ flex: 1 }}>
       <Stack.Navigator
-        initialRouteName="SelectGroupScreen"
+        // initialRouteName="SelectGroupScreen"
         screenOptions={{ headerShown: true }}
       >
         <Stack.Screen name="SelectGroupScreen" component={SelectGroupScreen}
