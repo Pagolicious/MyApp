@@ -142,7 +142,6 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
         });
 
 
-
         // Filter groups based on `activity` parameter
         if (activity !== 'Any') {
           filteredGroups = filteredGroups.filter(group => {
@@ -289,10 +288,36 @@ const GroupsScreen: React.FC<Props> = ({ navigation, route }) => {
           setGroups(filteredGroups);
         }
 
+        const userGroups = groupList.filter(group =>
+          group.memberUids.includes(currentUser.uid)
+        );
+
+        // Merge them without duplicates
+        const groupIds = new Set(filteredGroups.map(g => g.id));
+        userGroups.forEach(group => {
+          if (!groupIds.has(group.id)) {
+            filteredGroups.push(group);
+          }
+        });
+
+        const memberGroups: Group[] = filteredGroups.filter(group =>
+          group.memberUids.includes(currentUser.uid)
+        );
+
+        const nonMemberGroups: Group[] = filteredGroups.filter(group =>
+          !group.memberUids.includes(currentUser.uid)
+        );
+
+        // Now show member groups first
+        setGroups([...memberGroups, ...nonMemberGroups]);
+
+
       }, error => {
         console.error('Error listening to Firestore groups:', error);
         Alert.alert('Error', 'Could not fetch groups in real time.');
       });
+
+
 
     // Cleanup the listener when the component unmounts or dependencies change
     return () => unsubscribe();

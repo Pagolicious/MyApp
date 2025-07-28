@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert, SectionList } from 'react-native';
 import React, { useEffect, useState } from 'react';
+import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 //Firebase
 import firestore from '@react-native-firebase/firestore';
@@ -18,6 +19,16 @@ import { navigate } from '../services/NavigationService';
 //Types
 import { Friend } from '../types/userTypes';
 import { ChatItem } from '../types/chatTypes';
+import { ScrollView } from 'react-native-gesture-handler';
+
+type ChatListItemType = ChatItem | Friend;
+
+type ChatSectionType = {
+  title: string;
+  data: ChatListItemType[];
+  isFriendSection: boolean;
+};
+
 
 const ChatListScreen = () => {
   const { currentUser, userData } = useAuth();
@@ -29,6 +40,26 @@ const ChatListScreen = () => {
   }>({ groupChats: [], directChats: [] });
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<Friend[]>([]);
+
+
+  const chatSections: ChatSectionType[] = [
+    {
+      title: 'Group Chats',
+      data: groupedChats.groupChats,
+      isFriendSection: false,
+    },
+    {
+      title: 'Chats',
+      data: groupedChats.directChats,
+      isFriendSection: false,
+    },
+    {
+      title: 'Start a New Chat',
+      data: friends,
+      isFriendSection: true,
+    },
+  ];
+
 
 
   const getOtherParticipantInfo = (item: ChatItem) => {
@@ -188,60 +219,90 @@ const ChatListScreen = () => {
 
 
 
-  const renderItem = ({ item }: { item: ChatItem }) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => {
-        if (item.isGroup) {
-          // setCurrentGroupId(item.groupId);
-          navigate('GroupChatScreen', {
-            chatId: item.id,
-            groupId: item.groupId,
-            activity: item.activity,
-            title: item.title,
-            chatName: item.chatName,
-            participantsDetails: item.participantsDetails
-          })
-
-        } else {
-          const info = getOtherParticipantInfo(item);
-
-          navigate('ChatRoomScreen', { chatId: item.id, participantsDetails: item.participantsDetails, otherFirstName: info.firstName, otherLastName: info.lastName });
-        }
-      }}>
-      <View style={styles.avatarContainer}>
-        {!item.isGroup && (() => {
-          const info = getOtherParticipantInfo(item);
-          return (
+  const renderItem = ({ item, section }: any) => {
+    if (section.isFriendSection) {
+      return (
+        <View style={styles.friendCard}>
+          <View style={styles.friendInfo}>
             <CustomAvatar
-              uid={info.uid || 'default-uid'}
-              firstName={info.firstName}
-              size={45}
+              uid={item.uid || 'default-uid'}
+              firstName={item.firstName || 'Unknown'}
+              size={42}
             />
-          );
-        })()}
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.chatTitle}>
-          {item.isGroup
-            ? item.chatName || (item.activity === 'Custom' ? item.title : item.activity)
-            : getOtherParticipantName(item)}
-        </Text>
-        <Text style={styles.chatSubtitle} numberOfLines={1}>
-          {item.lastMessage?.text
-            ? item.lastMessage.text.length > 25
-              ? item.lastMessage.text.slice(0, 25) + '...'
-              : item.lastMessage.text
-            : 'No messages yet'}
-        </Text>
-      </View>
+            <Text style={styles.friendName}>{item.firstName} {item.lastName}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.startChatButton}
+            onPress={() => handleStartChatWithFriend(item)}
+          >
+            <Text style={{ color: 'white' }}>Start Conversation</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return (
 
-    </TouchableOpacity>
-  );
+      <TouchableOpacity
+        style={[
+          styles.chatItem,
+          item.isGroup && styles.groupChatItem,
+          item.isGroup && {
+            borderColor: item.activity === 'Custom' ? '#8E44AD' : '#27AE60'
+          }
+        ]} onPress={() => {
+
+          if (item.isGroup) {
+            // setCurrentGroupId(item.groupId);
+            navigate('GroupChatScreen', {
+              chatId: item.id,
+              groupId: item.groupId,
+              activity: item.activity,
+              title: item.title,
+              chatName: item.chatName,
+              participantsDetails: item.participantsDetails
+            })
+
+          } else {
+            const info = getOtherParticipantInfo(item);
+
+            navigate('ChatRoomScreen', { chatId: item.id, participantsDetails: item.participantsDetails, otherFirstName: info.firstName, otherLastName: info.lastName });
+          }
+        }}>
+        <View style={styles.avatarContainer}>
+          {!item.isGroup && (() => {
+            const info = getOtherParticipantInfo(item);
+            return (
+              <CustomAvatar
+                uid={info.uid || 'default-uid'}
+                firstName={info.firstName}
+                size={45}
+              />
+            );
+          })()}
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={[styles.chatTitle, !item.isGroup && { marginHorizontal: scale(15) }]}>
+            {item.isGroup
+              ? item.chatName || item.title || item.activity || 'Unnamed Group'
+              : getOtherParticipantName(item)}
+          </Text>
+
+          <Text style={[styles.chatSubtitle, !item.isGroup && { marginHorizontal: scale(15) }]} numberOfLines={1}>
+            {item.lastMessage?.text
+              ? item.lastMessage.text.length > 25
+                ? item.lastMessage.text.slice(0, 25) + '...'
+                : item.lastMessage.text
+              : 'No messages yet'}
+          </Text>
+        </View>
+
+      </TouchableOpacity>
+    )
+  }
 
   return (
     <View style={styles.container}>
-      {loading ? (
+      {/* {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
       ) : groupedChats.groupChats.length === 0 && groupedChats.directChats.length === 0 ? (
         <Text style={styles.emptyText}>You have no messages yet.</Text>
@@ -250,12 +311,15 @@ const ChatListScreen = () => {
           {groupedChats.groupChats.length > 0 && (
             <Text style={styles.titleText}>Group Chats</Text>
           )}
-          <FlatList
-            data={groupedChats.groupChats}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={{ padding: 10 }}
-          />
+          <ScrollView style={{ padding: 10 }}>
+            {groupedChats.groupChats.map((chat) => (
+              <View key={chat.id}>
+                {renderItem({ item: chat })}
+              </View>
+            ))}
+          </ScrollView>
+
+
           {groupedChats.directChats.length > 0 && (
             <Text style={styles.titleText}>Chats</Text>
           )}
@@ -264,31 +328,54 @@ const ChatListScreen = () => {
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             contentContainerStyle={{ padding: 10 }}
-          />
-          <View style={{ padding: 10 }}>
-            <Text style={styles.titleTextNewChat}>Start a New Chat</Text>
-            {friends.map(friend => (
-              <View key={friend.uid} style={styles.friendCard}>
-                <View style={styles.friendInfo}>
-                  <CustomAvatar
-                    uid={friend.uid || 'default-uid'}
-                    firstName={friend.firstName || 'Unknown'}
-                    size={42}
-                  />
-                  <Text style={styles.friendName}>{friend.firstName} {friend.lastName}</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.startChatButton}
-                  onPress={() => handleStartChatWithFriend(friend)}
-                >
-                  <Text style={{ color: 'white' }}>Start Conversation</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
+          /> */}
+      <SectionList<ChatListItemType, ChatSectionType>
+        sections={chatSections}
+        keyExtractor={(item) => ('id' in item ? item.id : item.uid)}
+        renderItem={renderItem}
+        stickySectionHeadersEnabled={true}
+        renderSectionHeader={({ section: { title, data } }) =>
+          data.length > 0 ? (
+            <View style={styles.titleContainer}>
+              <Text style={styles.titleText}>{title}</Text>
+            </View>
+          ) : null
+        }
+        contentContainerStyle={{ padding: 10 }}
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+          ) : (
+            <Text style={styles.emptyText}>You have no messages yet.</Text>
+          )
+        }
+      />
 
-        </View>
-      )}
+      {/* <ScrollView style={{ padding: 10 }}>
+        <Text style={styles.titleTextNewChat}>Start a New Chat</Text>
+        {friends.map(friend => (
+          <View key={friend.uid} style={styles.friendCard}>
+            <View style={styles.friendInfo}>
+              <CustomAvatar
+                uid={friend.uid || 'default-uid'}
+                firstName={friend.firstName || 'Unknown'}
+                size={42}
+              />
+              <Text style={styles.friendName}>{friend.firstName} {friend.lastName}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.startChatButton}
+              onPress={() => handleStartChatWithFriend(friend)}
+            >
+              <Text style={{ color: 'white' }}>Start Conversation</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView> */}
+
+      {/* </View> */}
+      {/* ) */}
+      {/* } */}
     </View>
   );
 };
@@ -300,11 +387,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
+  dummyBox: {
+    height: 100,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+    borderRadius: 10,
+  },
+  titleContainer: {
+    // borderWidth: 1,
+    backgroundColor: '#f5f5f5',
+
+  },
   titleText: {
     fontWeight: 'bold',
-    fontSize: 20,
-    marginTop: 20,
-    marginLeft: 15
+    fontSize: moderateScale(20),
+    marginVertical: verticalScale(10)
+    // marginTop: 20,
+    // marginLeft: 15
   },
   titleTextNewChat: {
     fontWeight: 'bold',
@@ -324,10 +423,13 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2,
   },
+  groupChatItem: {
+    borderLeftWidth: 15,
+  },
   avatarContainer: {
   },
   textContainer: {
-    marginHorizontal: 15,
+    // marginHorizontal: 15,
   },
   chatTitle: {
     fontWeight: "bold",

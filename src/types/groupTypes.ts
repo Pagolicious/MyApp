@@ -1,3 +1,5 @@
+import { LocationParam } from "./apiTypes";
+
 export type GroupUpdate = Partial<Omit<Group, 'id' | 'members' | 'createdBy' | 'memberUids'>>;
 
 
@@ -24,14 +26,7 @@ export interface Group {
   id: string;
   activity: string;
   title?: string;
-  location: {
-    name: string;
-    address: string;
-    coordinates: {
-      latitude: number;
-      longitude: number;
-    };
-  };
+  location: LocationParam;
   fromDate: string;
   fromTime: string;
   toTime: string;

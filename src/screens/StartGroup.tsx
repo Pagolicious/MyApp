@@ -971,7 +971,7 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
   },
   fakeInput: {
-    height: 50,
+    height: verticalScale(50),
     // borderWidth: 1,
     borderColor: '#ccc',
     // borderRadius: 8,

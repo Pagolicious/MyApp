@@ -1,5 +1,6 @@
 import { Member } from './groupTypes';
 import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import { LocationParam } from './apiTypes';
 
 export interface GroupInvitation {
   id: string;
@@ -7,7 +8,8 @@ export interface GroupInvitation {
   sender: string;
   receiver: string;
   activity: string;
-  location: string;
+  title?: string;
+  locationName: string;
   fromDate: string;
   fromTime: string;
   toTime: string;

@@ -186,7 +186,12 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
 
         // setCurrentGroupId(undefined);
         setTimeout(() => {
-          navigate('TabNav', { screen: 'SelectGroupScreen' });
+          navigate('TabNav', {
+            screen: 'My Groups',
+            params: {
+              screen: 'SelectGroupScreen'
+            }
+          })
         }, 100);
       }
 
@@ -290,28 +295,39 @@ export const InvitationProvider: React.FC<{ children: ReactNode }> = ({ children
               <Text style={styles.modalText}>You have been invited to join:</Text>
               <View style={styles.column}>
                 <View style={styles.cardContentActivity}>
-                  <Text style={styles.cardText}>{groupInvitation.activity}</Text>
-                  <Text style={styles.cardText}>{groupInvitation.location}</Text>
+                  <Text style={styles.cardText}>
+                    {groupInvitation.activity === 'Custom' ? (
+                      groupInvitation.title
+                    ) : (
+                      groupInvitation.activity
+                    )}
+                  </Text>
+                  <Text style={styles.cardText}>{groupInvitation.locationName}</Text>
                 </View>
                 <View style={styles.cardContentDate}>
-                  <Text style={styles.cardText}>{groupInvitation.fromDate}</Text>
+                  <Text style={styles.cardText}>{new Date(groupInvitation.fromDate).toLocaleDateString('sv-SE', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}</Text>
                   <Text style={styles.cardText}>
                     {groupInvitation.fromTime} - {groupInvitation.toTime}
                   </Text>
                 </View>
               </View>
               <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => respondToGroupInvitation(groupInvitation.id, 'accepted')}
-                >
-                  <Text style={styles.buttonText}>Accept</Text>
-                </TouchableOpacity>
+
                 <TouchableOpacity
                   style={[styles.actionButton, styles.declineButton]}
                   onPress={() => respondToGroupInvitation(groupInvitation.id, 'declined')}
                 >
                   <Text style={styles.buttonText}>Decline</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => respondToGroupInvitation(groupInvitation.id, 'accepted')}
+                >
+                  <Text style={styles.buttonText}>Accept</Text>
                 </TouchableOpacity>
               </View>
             </View>

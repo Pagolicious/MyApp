@@ -14,7 +14,7 @@ import firestore from '@react-native-firebase/firestore';
 import { Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ripple from 'react-native-material-ripple';
-import { useNavigationStore } from '../stores/navigationStore';
+// import { useNavigationStore } from '../stores/navigationStore';
 import { useFocusEffect } from '@react-navigation/native';
 
 //Screens
@@ -360,6 +360,7 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     flex: 1,
+    marginVertical: verticalScale(15)
   },
   cardWrapper: {
     flex: 1, // ensures each card is 1/3 height
@@ -370,8 +371,11 @@ const styles = StyleSheet.create({
     flex: 1,
     // height: verticalScale(160),
     marginHorizontal: scale(20),
-    marginBottom: scale(20),
+    // marginBottom: scale(20),
+    marginVertical: verticalScale(10),
     borderWidth: 1,
+    // borderRightWidth: 1,
+    // borderLeftWidth: 1,
     borderColor: '#444',
     // backgroundColor: 'grey',
 
@@ -417,13 +421,14 @@ const styles = StyleSheet.create({
   contentRow: {
     flexDirection: "row",
     paddingTop: verticalScale(5),
+    // borderWidth: 1,
   },
   locationText: {
     color: '#333',
     marginHorizontal: scale(5),
     paddingTop: verticalScale(2),
-    fontSize: moderateScale(12)
-
+    fontSize: moderateScale(12),
+    flexShrink: 1,
   },
   clockIconContainer: {
     marginLeft: scale(3),

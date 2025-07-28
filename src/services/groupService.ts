@@ -54,7 +54,7 @@ export const disbandGroup = async (groupId: string, leaderUid: string) => {
           groupData: {
             activity: groupData.activity,
             title: groupData.title,
-            location: groupData.location,
+            location: groupData.location.name,
           },
           message: '',
           groupId,

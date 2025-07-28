@@ -9,7 +9,7 @@ import Geolocation from 'react-native-geolocation-service';
 import type { GeoPosition } from 'react-native-geolocation-service';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useNavigationStore } from '../stores/navigationStore';
+// import { useNavigationStore } from '../stores/navigationStore';
 
 //Components
 import MyButton from '../components/MyButton';
@@ -36,7 +36,7 @@ import { LocationParam } from '../types/apiTypes';
 
 type FindGroupRouteProp = RouteProp<RootStackParamList, 'FindGroup'>;
 
-const route: FindGroupRouteProp = useRoute();
+// const route: FindGroupRouteProp = useRoute();
 
 const FindGroup = () => {
   const route = useRoute<FindGroupRouteProp>();
@@ -237,7 +237,7 @@ const FindGroup = () => {
         <View style={[styles.bodyContainer, { borderBottomColor: '#ddd' }]}>
           <Text style={styles.bodyTitle}>Location</Text>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => {
               navigate('LocationSearchScreen', {
                 previousActivity: activity,
@@ -254,6 +254,20 @@ const FindGroup = () => {
               placeholder='Search Location...'
               placeholderTextColor={'grey'}
             />
+          </TouchableOpacity> */}
+          <TouchableOpacity
+            style={styles.fakeInput}
+            onPress={() => navigate('LocationSearchScreen', {
+              previousActivity: activity,
+              fromScreen: 'FindGroup'
+            })}
+          >
+            <Text style={location ? styles.inputText : styles.placeholder}>
+              {typeof location === 'string'
+                ? location
+                : location?.name || 'Select a location'}
+            </Text>
+
           </TouchableOpacity>
 
         </View>
@@ -396,9 +410,12 @@ const FindGroup = () => {
 
 
       </ScrollView>
-      <View style={styles.buttonContainer}>
-        <MyButton title={'Find a Group'} onPress={SearchGroup} />
-      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={SearchGroup}
+      >
+        <Text style={styles.buttonText}>Find Group</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
@@ -527,7 +544,39 @@ const styles = StyleSheet.create({
     padding: moderateScale(3),
     borderRadius: 5,
     backgroundColor: '#36454F',
-  }
+  },
+  button: {
+    height: verticalScale(50),
+    backgroundColor: '#4CBB17',
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    margin: moderateScale(15),
+  },
+  buttonText: {
+    fontSize: moderateScale(16),
+    color: "white",
+    fontWeight: "bold",
+  },
+  fakeInput: {
+    height: verticalScale(50),
+    // borderWidth: 1,
+    borderColor: '#ccc',
+    // borderRadius: 8,
+    paddingHorizontal: scale(20),
+    justifyContent: 'center',
+    // marginTop: 8,
+    backgroundColor: '#fff',
+  },
+  inputText: {
+    fontSize: moderateScale(20),
+    color: '#000',
+  },
+  placeholder: {
+    fontSize: moderateScale(20),
+    color: '#888',
+  },
+
 });
 
 
